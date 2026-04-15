@@ -153,8 +153,9 @@
 		const allOn = Boolean(getVal(settings, 'rule5.challenge_all_vpn'));
 		qsa('.cfwaf-vpn-check').forEach(function (el) {
 			el.disabled = allOn;
-			if (allOn) el.checked = true;
+			el.checked  = allOn;
 		});
+		syncFromUI(); // re-sync so individual VPN settings reflect new checked state
 	}
 
 	// ── Tabs ───────────────────────────────────────────────────────────────────

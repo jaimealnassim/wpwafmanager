@@ -139,14 +139,8 @@ class WPWAF_API {
 
 		$do_request = function( array $rules ) use ( $zone_id, $ruleset ): array {
 			if ( $ruleset ) {
-				$existing = $this->get_ruleset_detail( $zone_id, $ruleset['id'] );
-				$current  = $existing['rules'] ?? [];
-				$descs    = array_column( $rules, 'description' );
-				$filtered = array_values( array_filter(
-					$current,
-					fn( $r ) => ! in_array( $r['description'] ?? '', $descs, true )
-				) );
-				return $this->request( 'PUT', "zones/{$zone_id}/rulesets/{$ruleset['id']}", [ 'rules' => [ ...$rules, ...$filtered ] ] );
+				// Replace all existing rules with the new set (clean deploy).
+				return $this->request( 'PUT', "zones/{$zone_id}/rulesets/{$ruleset['id']}", [ 'rules' => $rules ] );
 			}
 			return $this->request( 'POST', "zones/{$zone_id}/rulesets", [
 				'name'  => 'WAF Custom Rules',
