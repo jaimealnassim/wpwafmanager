@@ -29,6 +29,7 @@ class WPWAF_Rule_Builder {
 				'allow_pingdom'        => false,
 				'allow_statuscake'     => false,
 				'allow_uptimerobot'    => false,
+				'allow_usercentrics'   => false,
 				'allow_cf_image'       => false,
 				'allow_exactdn'        => false,
 				'allow_ewww'           => false,
@@ -126,6 +127,7 @@ class WPWAF_Rule_Builder {
 				'challenge_ipvanish'   => true,
 				'challenge_quadranet'  => true,
 				'challenge_ovhfr'      => true,
+				'challenge_internetutils' => true,
 				'challenge_mullvad'    => true,
 				'challenge_privlayer'  => true,
 				'challenge_wplogin'    => true,
@@ -236,6 +238,7 @@ class WPWAF_Rule_Builder {
 			'allow_pingdom'        => [ 'Pingdom' ],
 			'allow_statuscake'     => [ 'StatusCake' ],
 			'allow_uptimerobot'    => [ 'UptimeRobot' ],
+			'allow_usercentrics'   => [ 'Usercentricsbot' ],
 			'allow_cf_image'       => [ 'Cloudflare-Image-Resizing' ],
 			'allow_exactdn'        => [ 'ExactDN' ],
 			'allow_ewww'           => [ 'ewww' ],
@@ -451,7 +454,9 @@ class WPWAF_Rule_Builder {
 			'challenge_ipvanish'   => [ 46253 ],
 			// QuadraNet: 8100 added (was missing)
 			'challenge_quadranet'  => [ 8100, 62639 ],
-			'challenge_ovhfr'      => [ 16276, 206092, 206074, 206164, 206150, 210277 ],
+			'challenge_ovhfr'      => [ 16276 ],
+			// Internet Utilities: separate ASN block distinct from OVH France (matching wafrules.com)
+			'challenge_internetutils' => [ 206092, 206074, 206164, 206150, 210277 ],
 			// Mullvad: 216025 added
 			'challenge_mullvad'    => [ 216025, 39351 ],
 			'challenge_privlayer'  => [ 51852 ],

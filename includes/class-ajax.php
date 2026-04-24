@@ -713,12 +713,17 @@ class WPWAF_Ajax {
 		$this->check();
 		$this->require_active_account();
 		$account_id = sanitize_text_field( $_POST['account_id'] ?? '' );
+		$zone_id    = sanitize_text_field( $_POST['zone_id']    ?? '' );
+		if ( empty( $account_id ) && ! empty( $zone_id ) ) {
+			// Resolve from a specific zone — only requires Zone → Zone → Read.
+			$account_id = WPWAF_Accounts::api()->get_account_id_from_zone( $zone_id );
+		}
 		if ( empty( $account_id ) ) {
-			// Auto-detect account ID
+			// Final fallback: attempt the accounts endpoint (needs broader token scope).
 			$account_id = WPWAF_Accounts::api()->get_account_id();
 		}
 		if ( empty( $account_id ) ) {
-			wp_send_json_error( [ 'message' => 'Could not determine account ID.' ] ); wp_die();
+			wp_send_json_error( [ 'message' => 'Could not determine account ID. Ensure your API token has Zone → Zone → Read permission.' ] ); wp_die();
 		}
 		$result = WPWAF_Accounts::api()->list_email_addresses( $account_id );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );

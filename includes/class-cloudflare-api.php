@@ -352,6 +352,15 @@ class WPWAF_API {
 		return $zones['result'][0]['account']['id'] ?? '';
 	}
 
+	/**
+	 * Retrieve the Cloudflare account ID from a known zone ID.
+	 * Requires only Zone → Zone → Read — always available with standard tokens.
+	 */
+	public function get_account_id_from_zone( string $zone_id ): string {
+		$result = $this->request( 'GET', "zones/{$zone_id}" );
+		return $result['result']['account']['id'] ?? '';
+	}
+
 	// ── Account-Level IP Access Rules ─────────────────────────────────────────
 
 	public function list_ip_rules( string $account_id, string $mode = '', int $page = 1 ): array {

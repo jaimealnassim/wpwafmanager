@@ -466,7 +466,7 @@ function loadZone(){
   });
 
   // Load addresses first so catch-all dropdown is populated
-  ajax('wpwaf_email_addresses_list', {}, function(res){
+  ajax('wpwaf_email_addresses_list', {zone_id:currentZone}, function(res){
     allAddresses = res.success ? (res.data.addresses || []) : [];
     var verified = allAddresses.filter(function(a){ return a.verified; });
     var badge = qs('#wpwaf-er-addr-count-badge');
@@ -734,7 +734,7 @@ qs('#wpwaf-er-modal-save').addEventListener('click', function(){
 function loadAddresses(){
   var list = qs('#wpwaf-er-addr-list');
   list.innerHTML = '<div class="wpwaf-er-loading"><span class="wpwaf-er-spinner"></span> Loading…</div>';
-  ajax('wpwaf_email_addresses_list', {}, function(res){
+  ajax('wpwaf_email_addresses_list', {zone_id:currentZone}, function(res){
     if(!res.success){ list.innerHTML = '<div class="wpwaf-er-empty">Could not load. Check API token has Account → Email Routing Addresses → Edit permission.</div>'; return; }
     allAddresses = res.data.addresses || [];
     var badge  = qs('#wpwaf-er-addr-count-badge');
