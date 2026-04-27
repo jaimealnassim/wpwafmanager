@@ -47,11 +47,12 @@
 					<p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin:0 0 10px;">Saved Accounts</p>
 					<div class="cfwaf-accounts-list" id="cfwaf-accounts-list">
 						<?php foreach ( $accounts as $acc ) :
-							$is_active  = ( $acc['id'] === $active_id );
-							$acc_label  = esc_html( $acc['label'] ?? 'Unnamed Account' );
-							$acc_method = $acc['auth_method'] === 'key' ? 'Email + Key' : 'API Token';
-							$acc_expires = (int) ( $acc['expires_at'] ?? 0 );
-							$acc_meta   = $acc_method . ( $acc_expires > 0 ? ' · Expires ' . date( 'M j', $acc_expires ) : ' · Saved forever' );
+							$is_active    = ( $acc['id'] === $active_id );
+							$is_constant  = ! empty( $acc['_constant'] );
+							$acc_label    = esc_html( $acc['label'] ?? 'Unnamed Account' );
+							$acc_method   = $acc['auth_method'] === 'key' ? 'Email + Key' : 'API Token';
+							$acc_expires  = (int) ( $acc['expires_at'] ?? 0 );
+							$acc_meta     = $acc_method . ( $is_constant ? ' · Defined in wp-config.php' : ( $acc_expires > 0 ? ' · Expires ' . date( 'M j', $acc_expires ) : ' · Saved forever' ) );
 						?>
 						<div class="cfwaf-account-item<?php echo $is_active ? ' active-account' : ''; ?>" data-account-id="<?php echo esc_attr( $acc['id'] ); ?>">
 							<div>
@@ -60,11 +61,15 @@
 							</div>
 							<span class="cfwaf-account-badge<?php echo $is_active ? ' active' : ''; ?>"><?php echo $is_active ? 'Active' : 'Inactive'; ?></span>
 							<div class="cfwaf-account-item-actions">
-								<?php if ( ! $is_active ) : ?>
-								<button type="button" class="cfwaf-btn-account-switch" data-account-id="<?php echo esc_attr( $acc['id'] ); ?>">Switch</button>
+								<?php if ( ! $is_constant ) : ?>
+									<?php if ( ! $is_active ) : ?>
+									<button type="button" class="cfwaf-btn-account-switch" data-account-id="<?php echo esc_attr( $acc['id'] ); ?>">Switch</button>
+									<?php endif; ?>
+									<button type="button" class="cfwaf-btn-account-edit" style="background:#3B8BD4;color:#fff;border:none;border-radius:5px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;" data-edit-id="<?php echo esc_attr( $acc['id'] ); ?>">Edit</button>
+									<button type="button" class="cfwaf-btn-account-delete" data-account-id="<?php echo esc_attr( $acc['id'] ); ?>">Remove</button>
+								<?php else : ?>
+									<span style="font-size:11px;color:#888;font-style:italic;">Read-only</span>
 								<?php endif; ?>
-								<button type="button" class="cfwaf-btn-account-edit" style="background:#3B8BD4;color:#fff;border:none;border-radius:5px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;" data-edit-id="<?php echo esc_attr( $acc['id'] ); ?>">Edit</button>
-								<button type="button" class="cfwaf-btn-account-delete" data-account-id="<?php echo esc_attr( $acc['id'] ); ?>">Remove</button>
 							</div>
 						</div>
 						<?php endforeach; ?>
@@ -81,6 +86,10 @@
 
 					<div class="cfwaf-account-form">
 						<input type="hidden" id="cfwaf-editing-account-id" value="">
+
+						<div class="cfwaf-notice cfwaf-notice--info" style="margin-bottom:16px;padding:10px 14px;background:#eef6ff;border-left:3px solid #3B8BD4;border-radius:4px;font-size:12px;line-height:1.6;color:#1e3a5f;">
+							<strong>Tip:</strong> You can also connect accounts via <code>wp-config.php</code> constants — no database storage, supports multiple accounts with labels. <a href="https://www.wpwafmanager.com/docs/main/general/connecting-to-cloudflare/" target="_blank" rel="noopener" style="color:#3B8BD4;text-decoration:underline;">See docs for details.</a>
+						</div>
 
 						<!-- Label row -->
 						<div class="cfwaf-form-field">
