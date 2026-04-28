@@ -83,7 +83,7 @@ class Updater {
 
 			// If new version available then set to `response`.
 			if ( version_compare( $this->client->project_version, $version_info->new_version, '<' ) ) {
-				$transient_data->response[ $this->client->basename ] = $version_info;
+				$transient_data->response[ $this->client->basename ] = (array) $version_info;
 			} else {
 				// If new version is not available then set to `no_update`.
 				// Cast to array: WP 6.8 changed update-core.php to use array-syntax
