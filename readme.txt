@@ -157,6 +157,12 @@ Zone Analytics starts with no zones selected and auto-sync off. This prevents su
 
 == Changelog ==
 
+= 1.0.6 – May 2026 =
+* Updated bundled wafrules.com ruleset to May 1, 2026
+* Rule 2 (Block Aggressive Crawlers): added time-delay/blind SQLi patterns (pg_sleep, sleep(, benchmark(, dbms_pipe, receive_message, waitfor delay variants) and encoded LFI/path traversal patterns (%2fetc%2fpasswd, %5c..%5c, %2e%2e%2f, etc.)
+* Rule 4 (Challenge VPN): expanded VPN provider list with individual ASN entries for IPVanish (AS46253), QuadraNet (AS8100, AS62639), OVH France (AS16276), Internet Utilities (AS206092/74/64/50/277), PrivateLayer (AS51852), and Mullvad (AS216025, AS39351)
+* Rule 5 (Block Web Hosts): added HostRoyale (AS207990) and Cloudvider (AS62240); expanded LeaseWeb to 6 ASNs (60781, 205544, 27411, 7203, 30633, 395954) and GoDaddy to 3 ASNs (398101, 31815, 26496)
+
 = 1.0.0 – April 2026 =
 * Initial public release
 * WAF Rules Builder — 5 battle-tested rules based on the wafrules.com ruleset (updated March 2026)

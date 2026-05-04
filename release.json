@@ -3,7 +3,7 @@
   "slug": "wpwafmanager",
   "author": "<a href='https://www.wpwafmanager.com'>WP WAF Manager</a>",
   "author_profile": "https://www.wpwafmanager.com",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "requires": "6.0",
   "tested": "6.7",
   "requires_php": "8.0",
