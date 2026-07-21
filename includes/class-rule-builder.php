@@ -67,6 +67,7 @@ class WPWAF_Rule_Builder {
 				'allow_letsencrypt'    => true,
 				'allow_ips'            => [],
 				'allow_user_agents'    => [],
+				'custom_expressions'   => [],
 			],
 			'rule2' => [
 				'enabled'              => true,
@@ -248,6 +249,24 @@ class WPWAF_Rule_Builder {
 			) );
 		}
 
+		// Sanitize custom_expressions — stored as array, one expression per entry.
+		// Migrates from old string format (newline-delimited) if needed.
+		if ( isset( $out['rule1']['custom_expressions'] ) ) {
+			$raw = $out['rule1']['custom_expressions'];
+			if ( is_string( $raw ) && $raw !== '' ) {
+				$raw = array_values( array_filter( array_map( 'trim', explode( "\n", $raw ) ) ) );
+			} elseif ( ! is_array( $raw ) ) {
+				$raw = [];
+			}
+			$out['rule1']['custom_expressions'] = array_values( array_filter(
+				array_map(
+					fn( $e ) => sanitize_text_field( wp_unslash( (string) $e ) ),
+					$raw
+				),
+				fn( $e ) => $e !== ''
+			) );
+		}
+
 		return $out;
 	}
 
@@ -344,6 +363,16 @@ class WPWAF_Rule_Builder {
 					$escaped = str_replace( '"', '\\"', $ua );
 					$parts[] = "(http.user_agent contains \"{$escaped}\")";
 				}
+			}
+		}
+
+		// Custom allow expressions — array of individual Cloudflare expressions.
+		if ( ! empty( $s['custom_expressions'] ) && is_array( $s['custom_expressions'] ) ) {
+			foreach ( $s['custom_expressions'] as $expr ) {
+				$expr = trim( (string) $expr );
+				if ( $expr === '' ) continue;
+				if ( $expr[0] !== '(' ) $expr = "({$expr})";
+				$parts[] = $expr;
 			}
 		}
 

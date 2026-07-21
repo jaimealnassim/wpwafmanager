@@ -368,6 +368,14 @@
 						<p class="cfwaf-hint cfwaf-hint-muted" id="cfwaf-allow-uas-count"></p>
 					</div>
 
+					<div class="cfwaf-section">
+						<h4>Custom Allow Expressions</h4>
+						<p class="cfwaf-hint">Add one Cloudflare expression per entry to always skip all WAF rules. Each expression is added to Rule 1 as an OR condition. Do not include the leading <code>or</code> &mdash; just the expression itself. Parentheses are added automatically.</p>
+						<div id="cfwaf-expressions-list" class="cfwaf-expr-list"></div>
+						<button type="button" id="cfwaf-expr-add" class="cfwaf-btn cfwaf-btn-sm" style="margin-top:6px;">+ Add Expression</button>
+						<p class="cfwaf-warn-text" style="margin-top:8px;">&#9888; Expressions must be valid <a href="https://developers.cloudflare.com/ruleset-engine/rules-language/" target="_blank" rel="noopener">Cloudflare rules language</a> syntax. Invalid expressions will cause the deploy to fail for that zone.</p>
+					</div>
+
 					<div class="cfwaf-notice cfwaf-notice-api-skip">
 						<div class="cfwaf-notice-api-icon">
 							<span class="dashicons dashicons-cloud"></span>

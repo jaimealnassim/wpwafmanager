@@ -92,6 +92,10 @@
 			setVal(settings, 'rule1.allow_user_agents', uas);
 		}
 
+		const exprInputs = Array.from(document.querySelectorAll('.cfwaf-expr-input'));
+		const exprs = exprInputs.map(function(el){ return el.value.trim(); }).filter(function(s){ return s !== ''; });
+		setVal(settings, 'rule1.custom_expressions', exprs);
+
 		qsa('[data-setting]').forEach(function (el) {
 			const key = el.dataset.setting;
 			if (el.type === 'checkbox') {
@@ -126,6 +130,9 @@
 			uaTA2.value = savedUAs.join('\n');
 			updateUACount();
 		}
+
+		const savedExprs = getVal(settings, 'rule1.custom_expressions') || [];
+		renderExpressionList(Array.isArray(savedExprs) ? savedExprs : []);
 
 		qsa('[data-setting]').forEach(function (el) {
 			const val = getVal(settings, el.dataset.setting);
@@ -1058,6 +1065,48 @@
 		updateUACount();
 	});
 
+	// ── Custom expressions repeater ───────────────────────────────────────────
+
+	function makeExprRow(value) {
+		const row = document.createElement('div');
+		row.className = 'cfwaf-expr-row';
+		const inp = document.createElement('input');
+		inp.type = 'text';
+		inp.className = 'cfwaf-input cfwaf-expr-input';
+		inp.value = value || '';
+		inp.placeholder = 'starts_with(http.request.uri.path, "/surecart/webhooks")';
+		inp.spellcheck = false;
+		inp.autocomplete = 'off';
+		const btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = 'cfwaf-expr-remove';
+		btn.title = 'Remove';
+		btn.textContent = '\u00d7';
+		btn.addEventListener('click', function() { row.remove(); syncFromUI(); });
+		row.appendChild(inp);
+		row.appendChild(btn);
+		return row;
+	}
+
+	function renderExpressionList(exprs) {
+		const list = qs('#cfwaf-expressions-list');
+		if (!list) return;
+		list.innerHTML = '';
+		if (!exprs || exprs.length === 0) {
+			list.appendChild(makeExprRow(''));
+		} else {
+			exprs.forEach(function(expr) { list.appendChild(makeExprRow(expr)); });
+		}
+	}
+
+	on(qs('#cfwaf-expr-add'), 'click', function() {
+		const list = qs('#cfwaf-expressions-list');
+		if (list) {
+			list.appendChild(makeExprRow(''));
+			list.lastElementChild.querySelector('.cfwaf-expr-input').focus();
+		}
+	});
+
 	// ── Expose settings helpers for export/import IIFE ───────────────────────
 	window._cfwafGetSettings = function() { return settings; };
 	window._cfwafSetSettings = function(s) { settings = s; };
@@ -1099,6 +1148,7 @@
 			verified_categories: 'array',
 			allow_ips: 'array',
 			allow_user_agents: 'array',
+			custom_expressions: 'array',
 			allow_backupbuddy: 'boolean', allow_blogvault: 'boolean', allow_updraftplus: 'boolean',
 			allow_betterstack: 'boolean', allow_gtmetrix: 'boolean', allow_pingdom: 'boolean',
 			allow_statuscake: 'boolean', allow_uptimerobot: 'boolean', allow_cf_image: 'boolean',
