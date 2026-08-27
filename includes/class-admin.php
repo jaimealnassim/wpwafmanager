@@ -30,7 +30,7 @@ class WPWAF_Admin {
 		remove_menu_page( 'wpwafmanager' );
 		// Also remove all submenu pages so they're not accessible via direct URL.
 		$submenus = [
-			'wpwafmanager-dns', 'wpwafmanager-zone-status', 'wpwafmanager-ip-rules',
+			'wpwafmanager-zones', 'wpwafmanager-dns', 'wpwafmanager-zone-status', 'wpwafmanager-ip-rules',
 			'wpwafmanager-zone-controls', 'wpwafmanager-security-events',
 			'wpwafmanager-email-routing', 'wpwafmanager-settings', 'wpwafmanager-about',
 		];
@@ -57,6 +57,14 @@ class WPWAF_Admin {
 			$cap,
 			'wpwafmanager',
 			[ $this, 'render_page' ]
+		);
+		add_submenu_page(
+			'wpwafmanager',
+			'Zones',
+			'Zones',
+			$cap,
+			'wpwafmanager-zones',
+			[ $this, 'render_zones_page' ]
 		);
 		add_submenu_page(
 			'wpwafmanager',
@@ -174,6 +182,16 @@ class WPWAF_Admin {
 		$email       = $active['email']        ?? '';
 		$api_key     = $active['api_key']      ?? '';
 		include WPWAF_DIR . 'includes/views/page-main.php';
+	}
+
+	public function render_zones_page(): void {
+		$accounts  = WPWAF_Accounts::all();
+		$active    = WPWAF_Accounts::active();
+		$has_creds = ! empty( $active );
+		$flares    = WPWAF_Zone_Flares::all();
+		$presets   = WPWAF_Zone_Flares::presets();
+		$nonce     = wp_create_nonce( 'wpwaf_nonce' );
+		include WPWAF_DIR . 'includes/views/page-zones.php';
 	}
 
 	public function render_dns_page(): void {

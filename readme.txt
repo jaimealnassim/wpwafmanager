@@ -2,9 +2,9 @@
 Contributors: nahnuplugins
 Tags: waf, firewall, dns, security, cloudflare, ip blocking, email routing, cache purge
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.22
+Stable tag: 1.0.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

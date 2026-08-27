@@ -403,3 +403,7 @@
 .cfwaf-expr-row .cfwaf-input { flex: 1; font-family: monospace; font-size: 12px; }
 .cfwaf-expr-remove { flex-shrink: 0; height: 32px; width: 32px; padding: 0; font-size: 16px; line-height: 1; border-radius: 6px; border: 1px solid #fca5a5; background: #fff; color: #dc2626; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .cfwaf-expr-remove:hover { background: #fef2f2; }
+
+/* ── Flare badges ────────────────────────────────────────────────────────── */
+.cfwaf-flare-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 10px; font-weight: 700; border-radius: 4px; border: 1px solid; vertical-align: middle; letter-spacing: .02em; line-height: 1.6; white-space: nowrap; }
+.cfwaf-zones-flare-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; border: 1px solid; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }

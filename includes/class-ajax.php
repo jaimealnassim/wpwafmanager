@@ -45,6 +45,7 @@ class WPWAF_Ajax {
 		// Plugin settings
 		add_action( 'wp_ajax_wpwaf_save_plugin_settings', [ $self, 'save_plugin_settings' ] );
 		add_action( 'wp_ajax_wpwaf_save_access_users',    [ $self, 'save_access_users' ] );
+		add_action( 'wp_ajax_wpwaf_save_zone_flare',      [ $self, 'save_zone_flare' ] );
 		add_action( 'wp_ajax_wpwaf_load_zones_for_settings', [ $self, 'load_zones_for_settings' ] );
 
 		// Zone status
@@ -1065,6 +1066,21 @@ class WPWAF_Ajax {
 			'message'      => 'Access settings saved.',
 			'allowed_ids'  => WPWAF_Access::allowed_ids(),
 		] );
+		wp_die();
+	}
+
+	// ── Zone flares ────────────────────────────────────────────────────────────
+
+	public function save_zone_flare(): void {
+		$this->check();
+		$zone_id      = sanitize_text_field( wp_unslash( $_POST['zone_id']      ?? '' ) );
+		$flare_id     = sanitize_text_field( wp_unslash( $_POST['flare_id']     ?? '' ) );
+		$custom_label = sanitize_text_field( wp_unslash( $_POST['custom_label'] ?? '' ) );
+		if ( empty( $zone_id ) ) {
+			wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die();
+		}
+		WPWAF_Zone_Flares::set( $zone_id, $flare_id, $custom_label );
+		wp_send_json_success( [ 'message' => 'Flare saved.' ] );
 		wp_die();
 	}
 

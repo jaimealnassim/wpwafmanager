@@ -1226,6 +1226,8 @@ window.cfWAF = <?php
 		'active_profile_id'        => WPWAF_Profiles::active_id(),
 		'domain_profiles'          => WPWAF_Domain_Profiles::for_js(),
 		'active_domain_profile_id' => WPWAF_Domain_Profiles::active_id(),
+		'flares'                   => WPWAF_Zone_Flares::for_js(),
+		'flare_presets'            => WPWAF_Zone_Flares::presets(),
 	] );
 ?>;
 <?php echo file_get_contents( WPWAF_DIR . 'assets/js/admin.js' ); ?>

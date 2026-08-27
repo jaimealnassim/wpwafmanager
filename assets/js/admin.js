@@ -419,9 +419,17 @@
 		list.forEach(function (z) {
 			const div = document.createElement('div');
 			div.className = 'cfwaf-zone-item';
+			const flare = (WAF.flares || {})[z.id];
+			let flareBadge = '';
+			if (flare) {
+				const preset = (WAF.flare_presets || []).find(function(p){ return p.id === flare.flare_id; });
+				const label  = flare.flare_id === 'custom' ? flare.custom_label : (preset ? preset.label : flare.flare_id);
+				const color  = preset ? preset.color : '#9ca3af';
+				flareBadge = '<span class="cfwaf-flare-badge" style="background:' + color + '22;color:' + color + ';border-color:' + color + '44">' + escHtml(label) + '</span>';
+			}
 			div.innerHTML =
 				'<input type="checkbox" class="cfwaf-zone-check" value="' + escHtml(z.id) + '">' +
-				'<div><div class="cfwaf-zone-name">' + escHtml(z.name) + '</div>' +
+				'<div><div class="cfwaf-zone-name">' + escHtml(z.name) + flareBadge + '</div>' +
 				'<div class="cfwaf-zone-plan">' + escHtml(z.plan) + '</div></div>';
 			gridEl.appendChild(div);
 		});
