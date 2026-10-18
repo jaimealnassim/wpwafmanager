@@ -4,7 +4,7 @@ declare( strict_types=1 );
 defined( 'ABSPATH' ) || exit;
 
 /**
- * DNS Manager helpers — validation and type definitions.
+ * DNS Manager helpers - validation and type definitions.
  */
 class WPWAF_DNS {
 

@@ -13,10 +13,10 @@ class WPWAF_API {
 	private const CF_BASE = 'https://api.cloudflare.com/client/v4/';
 
 	public function __construct(
-		private readonly string $auth_method,
-		private readonly string $api_token = '',
-		private readonly string $email = '',
-		private readonly string $api_key = '',
+		private string $auth_method,
+		private string $api_token = '',
+		private string $email = '',
+		private string $api_key = '',
 	) {}
 
 	private function auth_headers(): array {
@@ -33,7 +33,28 @@ class WPWAF_API {
 		};
 	}
 
+	/**
+	 * True when an endpoint path is made only of plain segments, so a value
+	 * placed into it can never climb to another endpoint ("..") or cut the
+	 * path short ("#"). The query string, if any, is not checked.
+	 */
+	private static function safe_endpoint( string $endpoint ): bool {
+		$path = explode( '?', $endpoint, 2 )[0];
+		if ( str_contains( $endpoint, '#' ) || $path === '' ) {
+			return false;
+		}
+		foreach ( explode( '/', trim( $path, '/' ) ) as $segment ) {
+			if ( $segment === '' || $segment === '.' || $segment === '..' || ! preg_match( '/^[A-Za-z0-9_.\-]+$/', $segment ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private function request( string $method, string $endpoint, array $body = [] ): array {
+		if ( ! self::safe_endpoint( $endpoint ) ) {
+			return [ 'success' => false, 'errors' => [ [ 'message' => 'Invalid Cloudflare API path.' ] ] ];
+		}
 		$args = [
 			'method'  => strtoupper( $method ),
 			'headers' => $this->auth_headers(),
@@ -61,9 +82,102 @@ class WPWAF_API {
 		$code = $result['errors'][0]['code'] ?? '';
 		$out  = $code ? "[{$code}] {$msg}" : $msg;
 		if ( (int) $code === 20127 ) {
-			$out .= ' — Your rule expression exceeds Cloudflare\'s 4096-character limit. Try moving some IPs from the Custom IP Allowlist to the IP Access Rules module instead.';
+			$out .= '. Your rule expression exceeds Cloudflare\'s 4096-character limit. Try moving some IPs from the Custom IP Allowlist to the IP Access Rules module instead.';
 		}
 		return $out;
+	}
+
+	// ── Generic access for feature modules ─────────────────────────────────────
+
+	/**
+	 * Make a Cloudflare API v4 call and return a normalised result:
+	 *   success (bool), result (mixed), result_info (array), message (string),
+	 *   code (int, first Cloudflare error code or 0).
+	 * Feature modules (Bot Control, SSL & Insights, Alerts, Turnstile, Page
+	 * Rules) use this instead of adding a dedicated method for every endpoint.
+	 */
+	public function call( string $method, string $endpoint, array $body = [] ): array {
+		$result = $this->request( $method, $endpoint, $body );
+		if ( empty( $result['success'] ) ) {
+			return [
+				'success'     => false,
+				'result'      => $result['result'] ?? null,
+				'result_info' => [],
+				'message'     => $this->first_error( $result ),
+				'code'        => (int) ( $result['errors'][0]['code'] ?? 0 ),
+			];
+		}
+		return [
+			'success'     => true,
+			'result'      => $result['result'] ?? null,
+			'result_info' => is_array( $result['result_info'] ?? null ) ? $result['result_info'] : [],
+			'message'     => '',
+			'code'        => 0,
+		];
+	}
+
+	/**
+	 * GET every page of a paginated list endpoint and merge the results.
+	 * $endpoint may already contain a query string.
+	 */
+	public function call_all( string $endpoint, int $per_page = 50, int $max_pages = 40 ): array {
+		$items = [];
+		$page  = 1;
+		$sep   = str_contains( $endpoint, '?' ) ? '&' : '?';
+		do {
+			$res = $this->call( 'GET', "{$endpoint}{$sep}per_page={$per_page}&page={$page}" );
+			if ( ! $res['success'] ) {
+				return $res;
+			}
+			$items       = array_merge( $items, is_array( $res['result'] ) ? $res['result'] : [] );
+			$total_pages = (int) ( $res['result_info']['total_pages'] ?? 1 );
+			$page++;
+		} while ( $page <= $total_pages && $page <= $max_pages );
+		return [ 'success' => true, 'result' => $items, 'result_info' => [], 'message' => '', 'code' => 0 ];
+	}
+
+	/**
+	 * Run a GraphQL Analytics API query.
+	 * Returns success, data (the "data" object) and message (first error).
+	 * GraphQL can return partial data alongside errors; success is false
+	 * whenever any error is present so callers can fall back cleanly.
+	 */
+	public function graphql( string $query, array $variables = [] ): array {
+		$args = [
+			'method'  => 'POST',
+			'headers' => $this->auth_headers(),
+			'body'    => wp_json_encode( [ 'query' => $query, 'variables' => (object) $variables ] ),
+			'timeout' => 25,
+		];
+		$args['headers']['Content-Type'] = 'application/json';
+		$response = wp_remote_request( self::CF_BASE . 'graphql', $args );
+		if ( is_wp_error( $response ) ) {
+			return [ 'success' => false, 'data' => [], 'message' => $response->get_error_message() ];
+		}
+		$decoded = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		if ( ! is_array( $decoded ) ) {
+			return [ 'success' => false, 'data' => [], 'message' => 'Invalid response from the Cloudflare GraphQL API.' ];
+		}
+		$data = is_array( $decoded['data'] ?? null ) ? $decoded['data'] : [];
+		if ( ! empty( $decoded['errors'] ) ) {
+			return [ 'success' => false, 'data' => $data, 'message' => (string) ( $decoded['errors'][0]['message'] ?? 'GraphQL error' ) ];
+		}
+		return [ 'success' => true, 'data' => $data, 'message' => '' ];
+	}
+
+	/** Cloudflare accounts this credential can see (id, name). */
+	public function list_cf_accounts(): array {
+		$res = $this->call_all( 'accounts' );
+		if ( ! $res['success'] ) {
+			return $res;
+		}
+		$accounts = [];
+		foreach ( $res['result'] as $a ) {
+			if ( ! empty( $a['id'] ) ) {
+				$accounts[] = [ 'id' => (string) $a['id'], 'name' => (string) ( $a['name'] ?? $a['id'] ) ];
+			}
+		}
+		return [ 'success' => true, 'accounts' => $accounts ];
 	}
 
 	public function verify_credentials(): array {
@@ -245,17 +359,17 @@ class WPWAF_API {
 	/**
 	 * Fetch zone analytics via Cloudflare GraphQL Analytics API.
 	 * The legacy REST endpoint (zones/{id}/analytics/dashboard) is deprecated
-	 * and returns zeros — GraphQL is the current standard.
+	 * and returns zeros - GraphQL is the current standard.
 	 */
 	public function get_zone_analytics( string $zone_id, int $days = 7 ): array {
 		$since = gmdate( 'Y-m-d', strtotime( "-{$days} days" ) );
 		$until = gmdate( 'Y-m-d' );
 
-		// Use Cloudflare GraphQL Analytics API — the legacy REST endpoint is deprecated.
+		// Use Cloudflare GraphQL Analytics API - the legacy REST endpoint is deprecated.
 		$query = 'query ZoneAnalytics($zoneTag:String!,$since:Date!,$until:Date!){'
 			. 'viewer{zones(filter:{zoneTag:$zoneTag}){'
-			. 'httpRequests1dGroups(limit:31,filter:{date_geq:$since,date_leq:$until}){'
-			. 'sum{requests cachedRequests bytes cachedBytes threats pageViews}'
+			. 'httpRequests1dGroups(limit:31,filter:{date_geq:$since,date_leq:$until},orderBy:[date_ASC]){'
+			. 'dimensions{date} sum{requests cachedRequests bytes cachedBytes threats pageViews}'
 			. '}}}}';
 
 		$payload = [
@@ -273,7 +387,7 @@ class WPWAF_API {
 			'body'    => wp_json_encode( $payload ),
 			'timeout' => 20,
 		];
-		// Override Content-Type — auth_headers() sets application/json already for token auth
+		// Override Content-Type - auth_headers() sets application/json already for token auth
 		$args['headers']['Content-Type'] = 'application/json';
 
 		$response = wp_remote_request( 'https://api.cloudflare.com/client/v4/graphql', $args );
@@ -292,8 +406,14 @@ class WPWAF_API {
 		$threats   = 0;
 		$pageviews = 0;
 
+		$series = []; // one entry per day for the overview sparkline
 		foreach ( $groups as $group ) {
 			$sum       = $group['sum'] ?? [];
+			$series[]  = [
+				'date'     => (string) ( $group['dimensions']['date'] ?? '' ),
+				'requests' => (int) ( $sum['requests'] ?? 0 ),
+				'threats'  => (int) ( $sum['threats'] ?? 0 ),
+			];
 			$requests  += (int) ( $sum['requests']       ?? 0 );
 			$cached    += (int) ( $sum['cachedRequests'] ?? 0 );
 			$bytes     += (int) ( $sum['bytes']          ?? 0 );
@@ -311,10 +431,11 @@ class WPWAF_API {
 			'pageviews'  => $pageviews,
 			'cached'     => $cached,
 			'cache_rate' => $cache_rate,
+			'series'     => $series,
 		];
 	}
 
-	// ── Zone Overview (analytics only — settings removed) ─────────────────────
+	// ── Zone Overview (analytics only - settings removed) ─────────────────────
 
 	public function get_zone_overview( string $zone_id ): array {
 		$analytics = $this->get_zone_analytics( $zone_id );
@@ -343,7 +464,7 @@ class WPWAF_API {
 
 	/**
 	 * Retrieve the Cloudflare account ID from a known zone ID.
-	 * Requires only Zone → Zone → Read — always available with standard tokens.
+	 * Requires only Zone → Zone → Read - always available with standard tokens.
 	 */
 	public function get_account_id_from_zone( string $zone_id ): string {
 		$result = $this->request( 'GET', "zones/{$zone_id}" );
@@ -403,19 +524,164 @@ class WPWAF_API {
 		return [ 'success' => true ];
 	}
 
-	// ── Zone Settings (all at once) ────────────────────────────────────────────
+	// ── Zone Settings (one request per setting) ─────────────────────────────────
+	// Cloudflare deprecated the bulk GET /zones/{zone_id}/settings endpoint
+	// (it stops working on 31 March 2027), so each setting is read with
+	// GET /zones/{zone_id}/settings/{setting_id}. The requests run in parallel.
 
-	public function get_all_zone_settings( string $zone_id ): array {
-		$result = $this->request( 'GET', "zones/{$zone_id}/settings" );
-		if ( empty( $result['success'] ) ) {
-			return [ 'success' => false, 'message' => $this->first_error( $result ) ];
+	/**
+	 * Everything the Zone Controls settings panel shows, in one parallel batch:
+	 * the listed zone settings, Smart Tiered Cache and Managed Transforms.
+	 */
+	public function get_zone_controls( string $zone_id, array $setting_ids ): array {
+		$paths = [];
+		foreach ( $setting_ids as $id ) {
+			$id = preg_replace( '/[^a-z0-9_]/', '', strtolower( (string) $id ) );
+			if ( $id !== '' ) {
+				$paths[ 'setting:' . $id ] = "zones/{$zone_id}/settings/{$id}";
+			}
 		}
-		// Key the settings by id for easy lookup
+		$paths['tiered']  = "zones/{$zone_id}/cache/tiered_cache_smart_topology_enable";
+		$paths['managed'] = "zones/{$zone_id}/managed_headers";
+
 		$settings = [];
-		foreach ( $result['result'] ?? [] as $s ) {
-			if ( isset( $s['id'] ) ) $settings[ $s['id'] ] = $s['value'];
+		$errors   = [];
+		$tiered   = null;
+		$managed  = null;
+		foreach ( $this->get_many( $paths ) as $key => $result ) {
+			$ok = ! empty( $result['success'] );
+			if ( str_starts_with( $key, 'setting:' ) ) {
+				$id = substr( $key, 8 );
+				if ( $ok && array_key_exists( 'value', (array) ( $result['result'] ?? [] ) ) ) {
+					$settings[ $id ] = $result['result']['value'];
+				} else {
+					$errors[ $id ] = $this->first_error( $result );
+				}
+			} elseif ( $key === 'tiered' ) {
+				if ( $ok ) {
+					$tiered = (string) ( $result['result']['value'] ?? 'off' );
+				} else {
+					$errors['tiered'] = $this->first_error( $result );
+				}
+			} else {
+				if ( $ok ) {
+					$managed = [];
+					foreach ( (array) ( $result['result']['managed_response_headers'] ?? [] ) as $t ) {
+						if ( ! empty( $t['id'] ) ) {
+							$managed[ (string) $t['id'] ] = [
+								'enabled'      => ! empty( $t['enabled'] ),
+								'has_conflict' => ! empty( $t['has_conflict'] ),
+							];
+						}
+					}
+				} else {
+					$errors['managed'] = $this->first_error( $result );
+				}
+			}
 		}
-		return [ 'success' => true, 'settings' => $settings ];
+		if ( empty( $settings ) && ! empty( $errors ) ) {
+			return [ 'success' => false, 'message' => reset( $errors ), 'errors' => $errors ];
+		}
+		return [ 'success' => true, 'settings' => $settings, 'tiered' => $tiered, 'managed' => $managed, 'errors' => $errors ];
+	}
+
+	/** Smart Tiered Cache: PATCH /zones/{zone_id}/cache/tiered_cache_smart_topology_enable, value on|off. */
+	public function set_smart_tiered_cache( string $zone_id, bool $on ): array {
+		$res = $this->call( 'PATCH', "zones/{$zone_id}/cache/tiered_cache_smart_topology_enable", [ 'value' => $on ? 'on' : 'off' ] );
+		return $res['success']
+			? [ 'success' => true, 'value' => (string) ( $res['result']['value'] ?? ( $on ? 'on' : 'off' ) ) ]
+			: [ 'success' => false, 'message' => $res['message'] ];
+	}
+
+	/** Managed Transforms: PATCH /zones/{zone_id}/managed_headers for one response transform. */
+	public function set_managed_response_header( string $zone_id, string $transform_id, bool $enabled ): array {
+		// The API reference lists both arrays as required; an empty request
+		// list changes nothing.
+		$res = $this->call( 'PATCH', "zones/{$zone_id}/managed_headers", [
+			'managed_request_headers'  => [],
+			'managed_response_headers' => [ [ 'id' => $transform_id, 'enabled' => $enabled ] ],
+		] );
+		if ( ! $res['success'] ) {
+			return [ 'success' => false, 'message' => $res['message'] ];
+		}
+		foreach ( (array) ( $res['result']['managed_response_headers'] ?? [] ) as $t ) {
+			if ( ( $t['id'] ?? '' ) === $transform_id ) {
+				return [ 'success' => true, 'enabled' => ! empty( $t['enabled'] ) ];
+			}
+		}
+		return [ 'success' => true, 'enabled' => $enabled ];
+	}
+
+	/**
+	 * GET several endpoints, in parallel when possible. Keys are preserved.
+	 * Uses the Requests library bundled with WordPress (WpOrg\Requests on
+	 * WordPress 6.2 and later, the global Requests class before that) with the
+	 * WordPress CA bundle. Requests that fail, or every request when the site
+	 * customises outbound HTTP, go through wp_remote_request() instead.
+	 */
+	public function get_many( array $paths ): array {
+		$out = [];
+		if ( empty( $paths ) ) return $out;
+
+		// Parallel requests go straight through the Requests library, which
+		// skips the WordPress HTTP layer. Only use them when nothing in that
+		// layer needs to apply: no proxy, no external-request blocking and no
+		// filter that intercepts or rewrites requests.
+		$class = class_exists( '\\WpOrg\\Requests\\Requests' ) ? '\\WpOrg\\Requests\\Requests'
+			: ( class_exists( '\\Requests' ) ? '\\Requests' : '' );
+		$wp_http_customised = defined( 'WP_PROXY_HOST' )
+			|| ( defined( 'WP_HTTP_BLOCK_EXTERNAL' ) && WP_HTTP_BLOCK_EXTERNAL )
+			|| ( function_exists( 'has_filter' ) && ( has_filter( 'pre_http_request' ) || has_filter( 'http_request_args' ) ) );
+
+		$pending = [];
+		foreach ( $paths as $key => $path ) {
+			if ( self::safe_endpoint( (string) $path ) ) {
+				$pending[ $key ] = (string) $path;
+			} else {
+				$out[ $key ] = [ 'success' => false, 'errors' => [ [ 'message' => 'Invalid Cloudflare API path.' ] ] ];
+			}
+		}
+
+		if ( $class !== '' && ! $wp_http_customised && count( $pending ) > 1 ) {
+			$requests = [];
+			foreach ( $pending as $key => $path ) {
+				$requests[ $key ] = [
+					'url'     => self::CF_BASE . ltrim( $path, '/' ),
+					'headers' => $this->auth_headers(),
+					'type'    => 'GET',
+				];
+			}
+			$options = [ 'timeout' => 20, 'connect_timeout' => 10 ];
+			if ( defined( 'ABSPATH' ) && defined( 'WPINC' ) && is_readable( ABSPATH . WPINC . '/certificates/ca-bundle.crt' ) ) {
+				$options['verify'] = ABSPATH . WPINC . '/certificates/ca-bundle.crt';
+			}
+			try {
+				$responses = $class::request_multiple( $requests, $options );
+				foreach ( $pending as $key => $path ) {
+					$r       = $responses[ $key ] ?? null;
+					$decoded = ( is_object( $r ) && ! ( $r instanceof \Throwable ) && isset( $r->body ) ) ? json_decode( (string) $r->body, true ) : null;
+					if ( is_array( $decoded ) ) {
+						$out[ $key ] = $decoded;
+						unset( $pending[ $key ] ); // done; anything left is retried below
+					}
+				}
+			} catch ( \Throwable $e ) {
+				// Retry everything below through the WordPress HTTP API.
+			}
+		}
+
+		// Sequential WordPress HTTP API requests: the normal path when parallel
+		// requests are not used, and the retry for any that failed.
+		foreach ( $pending as $key => $path ) {
+			$out[ $key ] = $this->request( 'GET', $path );
+		}
+
+		// Keep the caller's key order.
+		$ordered = [];
+		foreach ( array_keys( $paths ) as $key ) {
+			$ordered[ $key ] = $out[ $key ];
+		}
+		return $ordered;
 	}
 
 	public function update_zone_setting_direct( string $zone_id, string $key, mixed $value ): array {
@@ -430,12 +696,12 @@ class WPWAF_API {
 
 	public function get_security_events( string $zone_id, int $limit = 100, string $action_filter = '', int $hours = 24 ): array {
 		// firewallEventsAdaptive requires: Pro plan+, datetime range filter, and zone scoped via parent zones().
-		// The filter does NOT accept zoneTag — zone is already selected by zones(filter:{zoneTag:...}).
+		// The filter does NOT accept zoneTag - zone is already selected by zones(filter:{zoneTag:...}).
 		$has_action = $action_filter !== '';
 		$since      = gmdate( 'Y-m-d\TH:i:s\Z', time() - ( $hours * 3600 ) );
 		$until      = gmdate( 'Y-m-d\TH:i:s\Z' );
 
-		// Build filter object — datetime range is REQUIRED by the schema
+		// Build filter object - datetime range is REQUIRED by the schema
 		$filter_fields = 'datetime_geq:$since,datetime_leq:$until';
 		if ( $has_action ) $filter_fields .= ',action:$action';
 
@@ -558,7 +824,7 @@ class WPWAF_API {
 		return [ 'success' => true, 'address' => $result['result'] ?? [] ];
 	}
 
-	// ── Email Routing — catch-all rule ────────────────────────────────────────
+	// ── Email Routing - catch-all rule ────────────────────────────────────────
 
 	public function get_catch_all_rule( string $zone_id ): array {
 		$result = $this->request( 'GET', "zones/{$zone_id}/email/routing/rules/catch_all" );

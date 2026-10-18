@@ -20,14 +20,14 @@ class WPWAF_Rule_Builder {
 					'Search Engine Crawler', 'Search Engine Optimization',
 					'Security', 'Webhooks',
 				],
-				// Optional verified bot categories — off by default (added May 2026)
+				// Optional verified bot categories - off by default (added May 2026)
 				'allow_aggregator'             => false,
 				'allow_ai_assistant'           => false,
 				'allow_ai_crawler'             => false,
 				'allow_ai_search'              => false,
 				'allow_archiver'               => false,
 				'allow_social_media_marketing' => false,
-				// All individual UA services are off by default — opt-in
+				// All individual UA services are off by default - opt-in
 				'allow_backupbuddy'    => false,
 				'allow_blogvault'      => false,
 				'allow_updraftplus'    => false,
@@ -71,7 +71,7 @@ class WPWAF_Rule_Builder {
 			],
 			'rule2' => [
 				'enabled'              => true,
-				// Known search engines in verified categories — block=false to avoid conflict with Rule 1
+				// Known search engines in verified categories - block=false to avoid conflict with Rule 1
 				'block_yandex'         => false,
 				'block_sogou'          => false,
 				'block_semrush'        => false,
@@ -86,17 +86,17 @@ class WPWAF_Rule_Builder {
 				'block_sqlmap'         => true,
 				'block_masscan'        => true,
 				'block_nmap'           => true,
-				// xmlrpc is a major brute-force vector — on by default
+				// xmlrpc is a major brute-force vector - on by default
 				'block_xmlrpc'         => true,
 				'block_wpconfig'       => false,
-				// wp-json needed by Gutenberg, WooCommerce, mobile apps — off by default
+				// wp-json needed by Gutenberg, WooCommerce, mobile apps - off by default
 				'block_wpjson'         => false,
 				'block_wpinstall'      => false,
 				'block_wlwmanifest'    => true,
 				'block_readme'         => true,
 				'block_license'        => true,
 				'block_sensitive_paths'=> true,
-				// NOTE: block_wpcron added v1.0.14 — intentionally false by default.
+				// NOTE: block_wpcron added v1.0.14 - intentionally false by default.
 				// DO NOT change this default to true in future rule syncs without a
 				// migration notice. Sites using a real server cron that hits wp-cron.php
 				// via HTTP will break if this is enabled without warning.
@@ -122,7 +122,7 @@ class WPWAF_Rule_Builder {
 				'block_cloudvider' => true,
 				'block_tor'        => true,
 				'action'           => 'block',
-				// Exploit URI patterns (synced May 2026 — wafrules.com bundles these with Web Hosts/TOR)
+				// Exploit URI patterns (synced May 2026 - wafrules.com bundles these with Web Hosts/TOR)
 				'block_union_sqli'    => true,
 				'block_lfi_traversal' => true,
 				'block_legacy_paths'  => true,
@@ -238,7 +238,7 @@ class WPWAF_Rule_Builder {
 			) );
 		}
 
-		// Sanitize allow_user_agents — strip empty lines, limit length per entry.
+		// Sanitize allow_user_agents - strip empty lines, limit length per entry.
 		if ( isset( $out['rule1']['allow_user_agents'] ) ) {
 			$out['rule1']['allow_user_agents'] = array_values( array_filter(
 				array_map(
@@ -249,7 +249,7 @@ class WPWAF_Rule_Builder {
 			) );
 		}
 
-		// Sanitize custom_expressions — stored as array, one expression per entry.
+		// Sanitize custom_expressions - stored as array, one expression per entry.
 		// Migrates from old string format (newline-delimited) if needed.
 		if ( isset( $out['rule1']['custom_expressions'] ) ) {
 			$raw = $out['rule1']['custom_expressions'];
@@ -366,7 +366,7 @@ class WPWAF_Rule_Builder {
 			}
 		}
 
-		// Custom allow expressions — array of individual Cloudflare expressions.
+		// Custom allow expressions - array of individual Cloudflare expressions.
 		if ( ! empty( $s['custom_expressions'] ) && is_array( $s['custom_expressions'] ) ) {
 			foreach ( $s['custom_expressions'] as $expr ) {
 				$expr = trim( (string) $expr );
@@ -383,7 +383,7 @@ class WPWAF_Rule_Builder {
 			'action_parameters' => [
 				'ruleset'  => 'current',
 				'phases'   => [
-					// Note: http_request_firewall_custom is intentionally omitted —
+					// Note: http_request_firewall_custom is intentionally omitted -
 					// 'ruleset: current' already skips remaining custom rules,
 					// and explicitly listing it causes [20120] errors on Free plans.
 					'http_ratelimit',
@@ -497,7 +497,7 @@ class WPWAF_Rule_Builder {
 			$parts[] = '(ip.src.country in {"T1"})';
 		}
 
-		// Exploit URI patterns (wafrules.com bundles these with Web Hosts/TOR — May 2026 sync)
+		// Exploit URI patterns (wafrules.com bundles these with Web Hosts/TOR - May 2026 sync)
 		if ( ! empty( $s['block_union_sqli'] ) ) {
 			foreach ( [ 'union%2f%2a%2a%2fselect', 'union%20select', 'information_schema', 'concat(', 'load_file(', 'into%20outfile' ] as $t ) {
 				$parts[] = "(lower(http.request.uri.query) contains \"{$t}\")";
@@ -595,7 +595,7 @@ class WPWAF_Rule_Builder {
 		foreach ( $vpn_asns as $key => $nums ) {
 			if ( ! empty( $s[ $key ] ) ) $asns = [ ...$asns, ...$nums ];
 		}
-		// Deduplicate ASNs — some are shared across providers (9009, 209854)
+		// Deduplicate ASNs - some are shared across providers (9009, 209854)
 		$asns = array_values( array_unique( $asns ) );
 
 		if ( ! empty( $asns ) ) {

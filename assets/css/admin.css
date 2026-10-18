@@ -345,12 +345,12 @@
 .cfwaf-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px; margin-top: 10px; }
 .cfwaf-cat-card { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; cursor: pointer; padding: 5px 6px; border-radius: 5px; transition: background .1s; }
 .cfwaf-cat-card:hover { background: #f5f5f5; }
-/* Hide the native checkbox — it is replaced by the styled one below */
+/* Hide the native checkbox - it is replaced by the styled one below */
 .cfwaf-cat-card input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 17px !important; height: 17px !important; min-width: 17px; border: 2px solid #9ca3af; border-radius: 4px; background: #fff; cursor: pointer; flex-shrink: 0; margin: 0 !important; margin-top: 1px !important; position: relative; transition: border-color .15s, background .15s; }
 .cfwaf-cat-card input[type="checkbox"]:checked { background: #111111; border-color: #111111; }
 .cfwaf-cat-card input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 4px; top: 1px; width: 6px; height: 10px; border: 2px solid #fff; border-top: none; border-left: none; transform: rotate(45deg); }
 .cfwaf-cat-card input[type="checkbox"]:hover:not(:checked) { border-color: #374151; }
-/* Hide the custom card-check/inner divs — we use the native checkbox directly */
+/* Hide the custom card-check/inner divs - we use the native checkbox directly */
 .cfwaf-cat-card-inner { display: contents; }
 .cfwaf-cat-card-check { display: none; }
 .cfwaf-cat-card-text { flex: 1; min-width: 0; }

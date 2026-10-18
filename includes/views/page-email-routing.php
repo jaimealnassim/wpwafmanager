@@ -107,7 +107,9 @@ $active_id = WPWAF_Accounts::active_id();
 .wpwaf-er-toast{position:fixed;bottom:24px;right:24px;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;color:#fff;z-index:999999;}
 .wpwaf-er-toast.ok{background:#059669;}.wpwaf-er-toast.err{background:#dc2626;}
 
+.wpwaf-er-howto{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
 @media(max-width:660px){
+  .wpwaf-er-howto{grid-template-columns:1fr;}
   .wpwaf-er-modal-overlay{align-items:flex-end;padding:0;}
   .wpwaf-er-modal{max-width:100%;border-radius:16px 16px 0 0;}
   .wpwaf-er-add-addr-row{flex-direction:column;}
@@ -118,7 +120,7 @@ $active_id = WPWAF_Accounts::active_id();
   <div class="wpwaf-er-header">
     <div>
       <h1><span class="dashicons dashicons-email-alt"></span> Email Routing</h1>
-      <div class="wpwaf-er-header-sub">Manage Cloudflare email forwarding — forward any address on your domain to any inbox</div>
+      <div class="wpwaf-er-header-sub">Manage Cloudflare email forwarding. Forward any address on your domain to any inbox</div>
     </div>
   </div>
 
@@ -136,20 +138,20 @@ $active_id = WPWAF_Accounts::active_id();
   </div>
 
   <!-- How it works -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+  <div class="wpwaf-er-howto">
     <div style="background:#fff;border:2px solid var(--er-border);border-radius:8px;padding:14px 16px;">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--er-muted);margin-bottom:6px;">STEP 1 — ONE TIME SETUP</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--er-muted);margin-bottom:6px;">STEP 1: ONE TIME SETUP</div>
       <div style="font-size:13px;font-weight:700;color:var(--er-dark);margin-bottom:4px;">📬 Add &amp; verify your inbox</div>
       <div style="font-size:12px;color:var(--er-muted);">Go to <strong>Destination Addresses</strong> tab → enter your Gmail or any inbox → Cloudflare emails you a verification link → click it.</div>
     </div>
     <div style="background:#fff;border:2px solid var(--er-border);border-radius:8px;padding:14px 16px;">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--er-muted);margin-bottom:6px;">STEP 2 — CREATE RULES</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--er-muted);margin-bottom:6px;">STEP 2: CREATE RULES</div>
       <div style="font-size:13px;font-weight:700;color:var(--er-dark);margin-bottom:4px;">📋 Set up forwarding</div>
       <div style="font-size:12px;color:var(--er-muted);">Go to <strong>Forwarding Rules</strong> tab → pick a zone → click <strong>+ Add Rule</strong> → choose which address on your domain forwards to your verified inbox.</div>
     </div>
   </div>
 
-  <!-- Account selector — always shown -->
+  <!-- Account selector - always shown -->
   <div class="wpwaf-er-account-bar">
     <label class="wpwaf-er-account-label" for="wpwaf-er-account-select">Account</label>
     <select id="wpwaf-er-account-select" class="wpwaf-er-account-select">
@@ -172,7 +174,7 @@ $active_id = WPWAF_Accounts::active_id();
 
     <div class="wpwaf-er-controls">
       <select id="wpwaf-er-zone" class="wpwaf-er-select">
-        <option value="">— Select a zone —</option>
+        <option value="">Select a zone</option>
       </select>
       <button class="wpwaf-er-btn wpwaf-er-btn-ghost" id="wpwaf-er-sync-btn" disabled title="Reload rules and catch-all from Cloudflare">↻ Sync</button>
       <button class="wpwaf-er-btn wpwaf-er-btn-primary" id="wpwaf-er-add-btn" disabled>+ Add Rule</button>
@@ -221,7 +223,7 @@ $active_id = WPWAF_Accounts::active_id();
         <div style="background:var(--er-bg);border:1px solid var(--er-border);border-radius:8px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div>
             <div style="font-size:13px;font-weight:700;">Also enable Catch-All</div>
-            <div style="font-size:11px;color:var(--er-muted);">Forward <em>all</em> email on this domain to the same inbox — even addresses you haven't specifically set up</div>
+            <div style="font-size:11px;color:var(--er-muted);">Forward <em>all</em> email on this domain to the same inbox, even addresses you haven't specifically set up</div>
           </div>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
             <input type="checkbox" id="wpwaf-er-catchall-enabled" style="accent-color:var(--er-orange);width:17px;height:17px;cursor:pointer;">
@@ -263,7 +265,7 @@ $active_id = WPWAF_Accounts::active_id();
     <div class="wpwaf-er-notice">
       <span class="dashicons dashicons-info" style="flex-shrink:0;margin-top:1px;"></span>
       <div>
-        <strong>Destination addresses are account-level</strong> — they're shared across all your zones.
+        <strong>Destination addresses are account-level</strong> and shared across all your zones.
         Add an email address here, Cloudflare will send a verification link to it.
         Once verified, it becomes available to use in forwarding rules.
       </div>
@@ -278,7 +280,7 @@ $active_id = WPWAF_Accounts::active_id();
         <div class="wpwaf-er-loading"><span class="wpwaf-er-spinner"></span> Loading…</div>
       </div>
       <div class="wpwaf-er-add-addr-row">
-        <input type="email" id="wpwaf-er-new-addr" placeholder="your@gmail.com — Cloudflare will send a verification email">
+        <input type="email" id="wpwaf-er-new-addr" placeholder="your@gmail.com (Cloudflare will send a verification email)">
         <button class="wpwaf-er-btn wpwaf-er-btn-primary" id="wpwaf-er-add-addr-btn">Add &amp; Send Verification</button>
       </div>
       <div id="wpwaf-er-addr-msg" style="padding:0 16px 12px;font-size:12px;display:none;"></div>
@@ -307,7 +309,7 @@ $active_id = WPWAF_Accounts::active_id();
           <span class="wpwaf-er-field-hint">Examples: <code>contact</code>, <code>info</code>, <code>hello</code>, <code>support</code></span>
         </div>
         <div class="wpwaf-er-field">
-          <label>To — verified destination</label>
+          <label>To (verified destination)</label>
           <select id="wpwaf-er-to-select">
             <option value="">Loading verified addresses…</option>
           </select>
@@ -384,14 +386,14 @@ var accountSelEl = document.getElementById('wpwaf-er-account-select');
 if (accountSelEl) {
   accountSelEl.addEventListener('change', function(){
     pluginAccountId = this.value;
-    accountId = ''; // reset CF account ID — will re-fetch
+    accountId = ''; // reset CF account ID - will re-fetch
     allAddresses = [];
     currentZone = ''; currentZoneName = '';
     // Switch active account then reload zones
     ajax('wpwaf_switch_account', {account_id: pluginAccountId}, function(){
       // Reload zone dropdown
       var sel = qs('#wpwaf-er-zone');
-      if(sel) sel.innerHTML = '<option value="">— Select a zone —</option>';
+      if(sel) sel.innerHTML = '<option value="">Select a zone</option>';
       if(qs('#wpwaf-er-status-bar')) qs('#wpwaf-er-status-bar').style.display = 'none';
       if(qs('#wpwaf-er-table-wrap')) qs('#wpwaf-er-table-wrap').style.display = 'none';
       if(qs('#wpwaf-er-add-btn')) qs('#wpwaf-er-add-btn').disabled = true;
@@ -525,10 +527,10 @@ function populateCatchAllDest(currentDest){
   if(!sel) return;
   var verified = allAddresses.filter(function(a){ return a.verified; });
   if(!verified.length){
-    sel.innerHTML = '<option value="">No verified addresses — see Destination Addresses tab</option>';
+    sel.innerHTML = '<option value="">No verified addresses. See the Destination Addresses tab</option>';
     return;
   }
-  sel.innerHTML = '<option value="">— Select destination inbox —</option>'
+  sel.innerHTML = '<option value="">Select destination inbox</option>'
     + verified.map(function(a){
         return '<option value="' + escHtml(a.email) + '"' + (a.email === currentDest ? ' selected' : '') + '>' + escHtml(a.email) + '</option>';
       }).join('');
@@ -597,7 +599,7 @@ function loadRules(){
   ajax('wpwaf_email_rules_list', {zone_id:currentZone}, function(res){
     var tbody = qs('#wpwaf-er-tbody');
     if(!res.success){ tbody.innerHTML = '<tr><td colspan="4" class="wpwaf-er-empty">Could not load rules.</td></tr>'; return; }
-    // Filter out system catch-all rules (type:'all' or no matcher value) — managed in the card above
+    // Filter out system catch-all rules (type:'all' or no matcher value) - managed in the card above
     var rules = (res.data.rules || []).filter(function(r){
       if(!r.matchers || !r.matchers.length) return false;
       var m = r.matchers[0];
@@ -651,7 +653,7 @@ function loadRules(){
       btn.addEventListener('click', function(){
         var from   = this.dataset.from || 'this rule';
         var ruleId = this.dataset.id;
-        if(!ruleId){ toast('Cannot delete — no rule ID found. Delete it directly in the Cloudflare dashboard.', false); return; }
+        if(!ruleId){ toast('Cannot delete: no rule ID found. Delete it directly in the Cloudflare dashboard.', false); return; }
         if(!confirm('Delete rule for "' + from + '"?')) return;
         this.disabled = true;
         this.textContent = '…';
@@ -660,7 +662,7 @@ function loadRules(){
           if(res.success){ loadRules(); toast('✓ Rule deleted'); }
           else {
             delBtn.disabled = false; delBtn.textContent = 'Delete';
-            toast('Delete failed: ' + (res.data ? res.data.message : 'error') + ' — try deleting in the Cloudflare dashboard.', false);
+            toast('Delete failed: ' + (res.data ? res.data.message : 'error') + '. Try deleting in the Cloudflare dashboard.', false);
           }
         });
       });
@@ -689,10 +691,10 @@ function openModal(){
   var sel = qs('#wpwaf-er-to-select');
   var verified = allAddresses.filter(function(a){ return a.verified; });
   if(verified.length){
-    sel.innerHTML = '<option value="">— Select verified destination —</option>'
+    sel.innerHTML = '<option value="">Select verified destination</option>'
       + verified.map(function(a){ return '<option value="' + escHtml(a.email) + '">' + escHtml(a.email) + '</option>'; }).join('');
   } else {
-    sel.innerHTML = '<option value="">No verified addresses — see Destination Addresses tab</option>';
+    sel.innerHTML = '<option value="">No verified addresses. See the Destination Addresses tab</option>';
     setTimeout(function(){
       closeModal();
       document.querySelectorAll('.wpwaf-er-tab').forEach(function(t){ t.classList.remove('active'); });
@@ -746,7 +748,7 @@ function loadAddresses(){
       return '<div class="wpwaf-er-addr-row">'
         + '<span class="wpwaf-er-addr-email">' + escHtml(a.email) + '</span>'
         + '<span class="wpwaf-er-addr-badge ' + (a.verified ? 'verified' : 'pending') + '">'
-        + (a.verified ? '✓ Verified' : '⏳ Pending — check your inbox') + '</span>'
+        + (a.verified ? '✓ Verified' : '⏳ Pending, check your inbox') + '</span>'
         + '</div>';
     }).join('');
   });

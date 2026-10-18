@@ -4,7 +4,7 @@ declare( strict_types=1 );
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Zone Status Manager — caches per-zone data and manages sync cron.
+ * Zone Status Manager - caches per-zone data and manages sync cron.
  */
 class WPWAF_Zone_Status {
 

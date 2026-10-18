@@ -17,6 +17,29 @@ if ( ! function_exists( 'cfwaf_fmt_bytes' ) ) {
 		return $b . ' B';
 	}
 }
+if ( ! function_exists( 'cfwaf_sparkline' ) ) {
+	/** Small inline SVG of daily requests for a zone card (no axis; the card's numbers carry the values). */
+	function cfwaf_sparkline( array $series ): string {
+		$vals = array_map( static fn( $r ) => (int) ( $r['requests'] ?? 0 ), $series );
+		$n    = count( $vals );
+		if ( $n < 2 || max( $vals ) <= 0 ) {
+			return '';
+		}
+		$w = 240; $h = 36; $gap = 2;
+		$bw  = ( $w - $gap * ( $n - 1 ) ) / $n;
+		$max = max( $vals );
+		$out = '';
+		foreach ( $vals as $i => $v ) {
+			$bh   = max( 1, round( $v / $max * $h, 1 ) );
+			$x    = round( $i * ( $bw + $gap ), 1 );
+			$last = $i === $n - 1;
+			$out .= '<rect x="' . $x . '" y="' . ( $h - $bh ) . '" width="' . round( $bw, 1 ) . '" height="' . $bh . '" rx="1.5" fill="' . ( $last ? '#2a78d6' : '#b7d3f6' ) . '"/>';
+		}
+		$first = (string) ( $series[0]['date'] ?? '' );
+		$lastd = (string) ( $series[ $n - 1 ]['date'] ?? '' );
+		return '<svg class="cfwaf-zs-spark" viewBox="0 0 ' . $w . ' ' . $h . '" preserveAspectRatio="none" role="img" aria-label="' . esc_attr( 'Daily requests ' . $first . ' to ' . $lastd ) . '">' . $out . '</svg>';
+	}
+}
 if ( ! function_exists( 'cfwaf_fmt_num' ) ) {
 	function cfwaf_fmt_num( int $n ): string {
 		if ( $n >= 1000000 ) return round( $n / 1000000, 1 ) . 'M';
@@ -71,8 +94,12 @@ if ( ! function_exists( 'cfwaf_fmt_num' ) ) {
 .cfwaf-zs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
 
 /* Zone card */
-.cfwaf-zs-card{background:#fff;border:1px solid var(--zs-border);border-radius:10px;overflow:hidden;transition:box-shadow .15s;}
-.cfwaf-zs-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.07);}
+.cfwaf-zs-card{background:#fff;border:1px solid var(--zs-border);border-radius:10px;overflow:hidden;transition:box-shadow .15s,border-color .15s;}
+a.cfwaf-zs-card{display:block;text-decoration:none;color:inherit;}
+.cfwaf-zs-card:hover,a.cfwaf-zs-card:focus-visible{box-shadow:0 4px 14px rgba(0,0,0,.08);border-color:var(--zs-orange);outline:none;}
+.cfwaf-zs-spark-wrap{padding:10px 14px 0;}
+.cfwaf-zs-spark{display:block;width:100%;height:36px;}
+.cfwaf-zs-details{font-size:11px;font-weight:700;color:var(--zs-orange);white-space:nowrap;}
 .cfwaf-zs-card-header{padding:12px 14px 10px;border-bottom:1px solid var(--zs-border);display:flex;align-items:center;gap:8px;}
 .cfwaf-zs-card-header h3{margin:0;font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--zs-dark);}
 .cfwaf-zs-plan-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;white-space:nowrap;flex-shrink:0;}
@@ -93,7 +120,7 @@ if ( ! function_exists( 'cfwaf_fmt_num' ) ) {
 .cfwaf-zs-stat.threats.zero .cfwaf-zs-stat-value{color:var(--zs-muted);}
 
 /* Footer */
-.cfwaf-zs-card-footer{padding:7px 14px;background:var(--zs-bg);border-top:1px solid var(--zs-border);display:flex;align-items:center;justify-content:flex-end;}
+.cfwaf-zs-card-footer{padding:7px 14px;background:var(--zs-bg);border-top:1px solid var(--zs-border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .cfwaf-zs-sync-info{font-size:11px;color:var(--zs-muted);}
 
 /* States */
@@ -107,7 +134,10 @@ if ( ! function_exists( 'cfwaf_fmt_num' ) ) {
 
 <div class="cfwaf-zs-wrap">
 	<div class="cfwaf-zs-header">
-		<h1><span class="dashicons dashicons-chart-area"></span> Zone Status</h1>
+		<div>
+			<h1><span class="dashicons dashicons-chart-area"></span> Zone Status</h1>
+			<div style="font-size:12px;color:var(--zs-muted);margin-top:3px;">Requests, bandwidth, cache rate and threats for the zones you monitor. Click a zone for full analytics.</div>
+		</div>
 	</div>
 
 	<?php if ( ! $has_creds ) : ?>
@@ -161,7 +191,7 @@ if ( ! function_exists( 'cfwaf_fmt_num' ) ) {
 	<div class="cfwaf-zs-zone-picker">
 		<div class="cfwaf-zs-zone-picker-header" id="cfwaf-zs-zone-picker-toggle">
 			<h3>🌐 Zones to Sync <span class="cfwaf-zs-zone-count" id="cfwaf-zs-zone-count-label">
-				<?php echo empty( $allowed_zones ) ? '' : '— ' . count( $allowed_zones ) . ' selected'; ?>
+				<?php echo empty( $allowed_zones ) ? '' : '· ' . count( $allowed_zones ) . ' selected'; ?>
 			</span></h3>
 			<span class="cfwaf-zs-picker-chevron" id="cfwaf-zs-picker-chevron">▼ Configure</span>
 		</div>
@@ -206,7 +236,7 @@ if ( ! function_exists( 'cfwaf_fmt_num' ) ) {
 				: ( str_contains( $plan_raw, 'business' ) ? 'business'
 				: ( str_contains( $plan_raw, 'enterprise' ) ? 'enterprise' : '' ) );
 		?>
-		<div class="cfwaf-zs-card">
+		<a class="cfwaf-zs-card" href="<?php echo esc_url( admin_url( 'admin.php?page=wpwafmanager-zone-status&zone=' . rawurlencode( (string) $zone_id ) ) ); ?>" aria-label="<?php echo esc_attr( 'View detailed analytics for ' . ( $zone['name'] ?? $zone_id ) ); ?>">
 			<div class="cfwaf-zs-card-header">
 				<h3 title="<?php echo esc_attr( $zone['name'] ?? $zone_id ); ?>"><?php echo esc_html( $zone['name'] ?? $zone_id ); ?></h3>
 				<span class="cfwaf-zs-plan-badge <?php echo $plan_class; ?>"><?php echo esc_html( $zone['plan'] ?? 'Free' ); ?></span>
@@ -219,7 +249,9 @@ if ( ! function_exists( 'cfwaf_fmt_num' ) ) {
 			$cr         = (float)( $analytics['cache_rate'] ?? 0 );
 			$cr_zero    = $cr == 0 ? ' zero' : '';
 			$thr_zero   = $threats_n == 0 ? ' zero' : '';
+			$spark      = cfwaf_sparkline( is_array( $analytics['series'] ?? null ) ? $analytics['series'] : [] );
 			?>
+			<?php if ( $spark !== '' ) : ?><div class="cfwaf-zs-spark-wrap"><?php echo $spark; // built from integers and escaped attributes ?></div><?php endif; ?>
 			<!-- Row 1: Requests, Bandwidth, Cache Hit Rate -->
 			<div class="cfwaf-zs-stats">
 				<div class="cfwaf-zs-stat">
@@ -252,8 +284,9 @@ if ( ! function_exists( 'cfwaf_fmt_num' ) ) {
 			</div>
 			<div class="cfwaf-zs-card-footer">
 				<span class="cfwaf-zs-sync-info">Synced <?php echo $synced_at ? human_time_diff( $synced_at ) . ' ago' : 'never'; ?></span>
+				<span class="cfwaf-zs-details">View details →</span>
 			</div>
-		</div>
+		</a>
 		<?php endforeach; ?>
 		</div>
 	<?php endif; ?>
@@ -346,9 +379,9 @@ function updateZoneCountLabel(){
 	const el = document.getElementById('cfwaf-zs-zone-count-label');
 	if (!el) return;
 	if (selectedZones.size === 0) {
-		el.textContent = allZones.length ? '— All ' + allZones.length + ' zones' : '';
+		el.textContent = allZones.length ? '· All ' + allZones.length + ' zones' : '';
 	} else {
-		el.textContent = '— ' + selectedZones.size + ' of ' + (allZones.length || '?') + ' selected';
+		el.textContent = '· ' + selectedZones.size + ' of ' + (allZones.length || '?') + ' selected';
 	}
 }
 
@@ -379,7 +412,7 @@ document.getElementById('cfwaf-zs-save-zones')?.addEventListener('click', functi
 	const fd = saveZonesPayload({enabled:enabled?'1':'0',sync_interval:interval,days_analytics:days});
 	fetch(AJAX_URL,{method:'POST',body:fd}).then(r=>r.json()).then(res=>{
 		self.disabled=false; self.textContent='Save Zone Selection';
-		if (res.success){ toast('✓ Zone selection saved — Sync Now to apply'); updateZoneCountLabel(); }
+		if (res.success){ toast('✓ Zone selection saved. Click Sync Now to apply'); updateZoneCountLabel(); }
 		else toast('Failed: '+(res.data?.message||'error'),false);
 	}).catch(()=>{self.disabled=false; self.textContent='Save Zone Selection';});
 });
@@ -411,7 +444,7 @@ document.getElementById('cfwaf-zs-sync-now')?.addEventListener('click', function
 	ajax('wpwaf_zone_status_sync',{},(res)=>{
 		self.disabled=false;
 		self.innerHTML='<span class="dashicons dashicons-update" style="font-size:14px;width:14px;height:14px;margin-top:1px;"></span> Sync Now';
-		if(res.success){ toast('✓ Sync complete — refreshing…'); setTimeout(()=>location.reload(),1000); }
+		if(res.success){ toast('✓ Sync complete, refreshing…'); setTimeout(()=>location.reload(),1000); }
 		else toast('Sync failed: '+(res.data?.message||'error'),false);
 	});
 });

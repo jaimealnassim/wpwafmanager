@@ -82,6 +82,13 @@ $ajax_url = admin_url( 'admin-ajax.php' );
 .cfwaf-zc-setting-hint{font-size:10px;color:var(--zc-muted);margin-top:1px;}
 .cfwaf-zc-setting-control select{padding:4px 8px;border:1px solid var(--zc-border);border-radius:5px;font-size:12px;color:var(--zc-dark);background:#fff;cursor:pointer;}
 .cfwaf-zc-setting-control select:focus{outline:none;border-color:var(--zc-orange);}
+.cfwaf-zc-setting-note{font-size:11px;color:var(--zc-muted);background:var(--zc-bg);border:1px solid var(--zc-border);border-radius:6px;padding:7px 9px;line-height:1.45;}
+.cfwaf-zc-setting-group{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--zc-muted);margin:6px 0 0;}
+.cfwaf-zc-purge-more{display:none;flex-direction:column;gap:6px;margin-top:8px;}
+.cfwaf-zc-purge-more.open{display:flex;}
+.cfwaf-zc-purge-type{padding:5px 8px;border:1px solid var(--zc-border);border-radius:6px;font-size:12px;background:#fff;color:var(--zc-dark);max-width:100%;}
+.cfwaf-zc-purge-hint{font-size:10px;color:var(--zc-muted);line-height:1.45;}
+.cfwaf-zc-purge-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
 .cfwaf-zc-loading-settings{font-size:12px;color:var(--zc-muted);padding:8px 0;display:flex;align-items:center;gap:6px;}
 
 /* Dev mode row */
@@ -113,7 +120,7 @@ $ajax_url = admin_url( 'admin-ajax.php' );
   <div class="cfwaf-zc-header">
     <div>
       <h1><span class="dashicons dashicons-controls-play"></span> Zone Controls</h1>
-      <div class="cfwaf-zc-header-sub">Cache purge, Under Attack mode, and zone settings across all domains</div>
+      <div class="cfwaf-zc-header-sub">Cache purge, Under Attack mode, tiered cache, security headers and zone settings across all domains</div>
     </div>
   </div>
 
@@ -127,7 +134,7 @@ $ajax_url = admin_url( 'admin-ajax.php' );
   <div class="cfwaf-zc-attack-bar">
     <div class="cfwaf-zc-attack-bar-text">
       <strong>⚡ Under Attack Mode</strong>
-      <span>Enable JS challenge for ALL zones instantly — use during active DDoS attacks</span>
+      <span>Enable JS challenge for ALL zones instantly. Use during active DDoS attacks</span>
     </div>
     <button class="cfwaf-zc-attack-all-btn" id="cfwaf-zc-attack-all-on">⚡ Enable on All Zones</button>
   </div>
@@ -153,7 +160,17 @@ const AJAX_URL = <?php echo wp_json_encode( $ajax_url ); ?>;
 
 let allZones = [];
 
+// Placeholder and hint for each purge type. Cloudflare takes up to 100 items per purge.
+const PURGE_HELP = {
+  urls:     ['One full URL per line&#10;https://example.com/blog/post/', 'Full URLs, one per line. Up to 100 per purge.'],
+  hosts:    ['One hostname per line&#10;www.example.com', 'Purges every cached file on each hostname. Up to 100 per purge.'],
+  prefixes: ['One prefix per line, no https://&#10;www.example.com/blog/', 'Purges everything under each path. Up to 100 per purge.'],
+  tags:     ['One cache tag per line&#10;product-123', 'Purges content whose Cache-Tag header matches. Up to 100 per purge.'],
+};
+const PURGE_DONE = { urls:'URLs', hosts:'hostnames', prefixes:'prefixes', tags:'cache tags' };
+
 function qs(s,ctx){ return (ctx||document).querySelector(s); }
+function esc(v){ return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function toast(msg, ok=true){
   const el = document.createElement('div');
   el.className = 'cfwaf-zc-toast ' + (ok?'ok':'err');
@@ -172,7 +189,7 @@ function ajax(action, data, cb){
 // ── Load zones ────────────────────────────────────────────────────────────────
 ajax('wpwaf_list_zones', {}, (res) => {
   const grid = qs('#cfwaf-zc-grid');
-  if (!res.success){ grid.innerHTML = '<div class="cfwaf-zc-loading">Failed to load zones: ' + (res.data?.message||'error') + '</div>'; return; }
+  if (!res.success){ grid.innerHTML = '<div class="cfwaf-zc-loading">Failed to load zones: ' + esc(res.data?.message||'error') + '</div>'; return; }
   allZones = res.data.zones || [];
   renderGrid(allZones);
 });
@@ -194,10 +211,11 @@ function renderGrid(zones){
 }
 
 function cardHTML(z){
+  z = Object.assign({}, z, { id: esc(z.id) });
   return `<div class="cfwaf-zc-card" data-zone="${z.id}">
     <div class="cfwaf-zc-card-header">
-      <h3 title="${z.name}">${z.name}</h3>
-      <span class="cfwaf-zc-plan">${z.plan}</span>
+      <h3 title="${esc(z.name)}">${esc(z.name)}</h3>
+      <span class="cfwaf-zc-plan">${esc(z.plan)}</span>
     </div>
     <!-- Under Attack -->
     <div class="cfwaf-zc-attack-row safe" id="zc-attack-row-${z.id}">
@@ -223,11 +241,20 @@ function cardHTML(z){
         <div class="cfwaf-zc-section-label">Cache Purge</div>
         <div class="cfwaf-zc-purge-row">
           <button class="cfwaf-zc-btn cfwaf-zc-btn-purge cfwaf-zc-purge-all" data-zone="${z.id}">🗑 Purge Everything</button>
-          <button class="cfwaf-zc-btn cfwaf-zc-btn-ghost cfwaf-zc-purge-urls-toggle" data-zone="${z.id}">By URL</button>
+          <button class="cfwaf-zc-btn cfwaf-zc-btn-ghost cfwaf-zc-purge-urls-toggle" data-zone="${z.id}" aria-expanded="false">More options</button>
         </div>
-        <div class="cfwaf-zc-url-row" id="zc-url-row-${z.id}" style="display:none;">
-          <textarea id="zc-url-input-${z.id}" class="cfwaf-zc-url-input" placeholder="One URL per line&#10;https://example.com/page" rows="3" style="width:100%;font-size:11px;padding:6px;border:1px solid #e2e6ea;border-radius:6px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>
-          <button class="cfwaf-zc-btn cfwaf-zc-btn-orange cfwaf-zc-purge-url-btn" data-zone="${z.id}" style="align-self:flex-end;flex-shrink:0;">Purge</button>
+        <div class="cfwaf-zc-purge-more" id="zc-url-row-${z.id}">
+          <select class="cfwaf-zc-purge-type" id="zc-purge-type-${z.id}" aria-label="Purge by">
+            <option value="urls">By URL</option>
+            <option value="hosts">By hostname</option>
+            <option value="prefixes">By prefix</option>
+            <option value="tags">By cache tag</option>
+          </select>
+          <textarea id="zc-url-input-${z.id}" class="cfwaf-zc-url-input" placeholder="${PURGE_HELP.urls[0]}" rows="3" style="width:100%;font-size:11px;padding:6px;border:1px solid #e2e6ea;border-radius:6px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>
+          <div class="cfwaf-zc-purge-actions">
+            <span class="cfwaf-zc-purge-hint" id="zc-purge-hint-${z.id}">${PURGE_HELP.urls[1]}</span>
+            <button class="cfwaf-zc-btn cfwaf-zc-btn-orange cfwaf-zc-purge-url-btn" data-zone="${z.id}">Purge</button>
+          </div>
         </div>
       </div>
       <!-- Zone Settings -->
@@ -271,7 +298,7 @@ function initCard(zoneId, zoneName){
     this.disabled = true;
     ajax('wpwaf_zone_setting_update', {zone_id:zoneId, key:'development_mode', value: on ? 'on' : 'off'}, (res) => {
       this.disabled = false;
-      if (res.success) toast((on ? '🔧 Dev mode on' : '✓ Dev mode off') + ' — ' + zoneName);
+      if (res.success) toast((on ? '🔧 Dev mode on' : '✓ Dev mode off') + ': ' + zoneName);
       else { this.checked = !on; toast('Failed: ' + (res.data?.message||'error'), false); }
     });
   });
@@ -283,27 +310,36 @@ function initCard(zoneId, zoneName){
     const btn = this;
     ajax('wpwaf_purge_cache', {zone_id:zoneId, mode:'all'}, (res) => {
       btn.disabled = false; btn.textContent = '🗑 Purge Everything';
-      res.success ? toast('✓ Cache purged — ' + zoneName) : toast('Failed: ' + (res.data?.message||'error'), false);
+      res.success ? toast('✓ Cache purged: ' + zoneName) : toast('Failed: ' + (res.data?.message||'error'), false);
     });
   });
 
   // Show/hide URL purge
   qs('.cfwaf-zc-purge-urls-toggle', card)?.addEventListener('click', function(){
-    const row = qs('#zc-url-row-' + zoneId);
-    const vis = row.style.display !== 'none';
-    row.style.display = vis ? 'none' : '';
-    this.textContent = vis ? 'By URL' : 'Cancel';
+    const open = qs('#zc-url-row-' + zoneId).classList.toggle('open');
+    this.textContent = open ? 'Cancel' : 'More options';
+    this.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 
-  // Purge by URL
+  // Purge type picker updates the placeholder and hint.
+  qs('#zc-purge-type-' + zoneId, card)?.addEventListener('change', function(){
+    const help = PURGE_HELP[this.value] || PURGE_HELP.urls;
+    const ta = qs('#zc-url-input-' + zoneId);
+    if (ta) ta.placeholder = help[0].replace(/&#10;/g, '\n');
+    const hint = qs('#zc-purge-hint-' + zoneId);
+    if (hint) hint.textContent = help[1];
+  });
+
+  // Purge by URL, hostname, prefix or cache tag
   qs('.cfwaf-zc-purge-url-btn', card)?.addEventListener('click', function(){
-    const urls = qs('#zc-url-input-' + zoneId)?.value || '';
-    if (!urls.trim()){ toast('Enter at least one URL', false); return; }
+    const items = qs('#zc-url-input-' + zoneId)?.value || '';
+    const mode  = qs('#zc-purge-type-' + zoneId)?.value || 'urls';
+    if (!items.trim()){ toast('Enter at least one item, one per line', false); return; }
     this.disabled = true; this.textContent = '…';
     const btn = this;
-    ajax('wpwaf_purge_cache', {zone_id:zoneId, mode:'urls', urls}, (res) => {
+    ajax('wpwaf_purge_cache', {zone_id:zoneId, mode, items}, (res) => {
       btn.disabled = false; btn.textContent = 'Purge';
-      res.success ? toast('✓ URLs purged — ' + zoneName) : toast('Failed: ' + (res.data?.message||'error'), false);
+      res.success ? toast('✓ ' + (res.data?.count || '') + ' ' + (PURGE_DONE[mode] || 'items') + ' purged: ' + zoneName) : toast('Failed: ' + (res.data?.message||'error'), false);
     });
   });
 
@@ -322,7 +358,7 @@ function updateAttackUI(zoneId, on){
   const label = qs('#zc-attack-label-' + zoneId);
   const toggle = qs(`[data-zone="${zoneId}"].cfwaf-zc-attack-toggle`);
   if (row)    row.classList.toggle('safe', !on);
-  if (label)  label.querySelector('.cfwaf-zc-attack-sub').textContent = on ? 'ON — All visitors challenged' : 'Off';
+  if (label)  label.querySelector('.cfwaf-zc-attack-sub').textContent = on ? 'ON: all visitors challenged' : 'Off';
   if (toggle) toggle.checked = on;
 }
 
@@ -331,8 +367,10 @@ function loadSettings(zoneId, body){
   body.innerHTML = '<div class="cfwaf-zc-loading-settings"><span class="cfwaf-zc-spinner"></span> Loading…</div>';
   ajax('wpwaf_zone_settings_load', {zone_id:zoneId}, (res) => {
     body.dataset.loaded = '1';
-    if (!res.success){ body.innerHTML = '<div style="font-size:12px;color:#dc2626;">Failed: ' + (res.data?.message||'error') + '</div>'; return; }
-    const s = res.data.settings;
+    if (!res.success){ body.innerHTML = '<div style="font-size:12px;color:#dc2626;">Failed: ' + esc(res.data?.message||'error') + '</div>'; return; }
+    const s = res.data.settings || {};
+    s.__tiered  = res.data.tiered;   // 'on' | 'off' | null when it could not be read
+    s.__managed = res.data.managed;  // { transform_id: {enabled, has_conflict} } | null
 
     // Sync attack/devmode toggles from actual settings
     const secLevel = s['security_level'] || 'medium';
@@ -361,7 +399,6 @@ function settingsHTML(zoneId, s){
     `<label class="cfwaf-zc-switch ${cls}"><input type="checkbox" class="cfwaf-zc-setting-toggle" data-zone="${zoneId}" data-key="${key}" ${current==='on'?'checked':''}><span class="cfwaf-zc-switch-slider"></span></label>`;
 
   const ssl = s['ssl'] || 'off';
-  const secLevel = s['security_level'] || 'medium';
   const cacheLevel = s['cache_level'] || 'aggressive';
   const bct = String(s['browser_cache_ttl'] || 14400);
   const alwaysHttps = s['always_use_https'] || 'off';
@@ -374,10 +411,8 @@ function settingsHTML(zoneId, s){
       sel('ssl', [['off','Off'],['flexible','Flexible'],['full','Full'],['strict','Full (Strict)']], ssl)),
     row('↗ Always Use HTTPS', 'Redirect all HTTP to HTTPS',
       tog('always_use_https', alwaysHttps, 'green')),
-    row('⚡ Security Level', 'Challenge threshold for suspicious visitors',
-      sel('security_level', [['essentially_off','Essentially Off'],['low','Low'],['medium','Medium'],['high','High']], secLevel === 'under_attack' ? 'high' : secLevel)),
-    row('🗄 Cache Level', 'How aggressively to cache static content',
-      sel('cache_level', [['bypass','Bypass'],['basic','Basic'],['simplified','Simplified'],['aggressive','Aggressive'],['cache_everything','Cache Everything']], cacheLevel)),
+    row('🗄 Cache Level', 'How query strings affect caching of static files',
+      sel('cache_level', [['aggressive','Standard'],['simplified','Ignore query string'],['basic','No query string']], cacheLevel)),
     row('⏱ Browser Cache TTL', 'How long browsers should cache resources',
       sel('browser_cache_ttl', [['1800','30 min'],['3600','1 hr'],['7200','2 hrs'],['14400','4 hrs'],['28800','8 hrs'],['57600','16 hrs'],['86400','1 day'],['604800','1 week'],['2592000','1 month']], bct)),
     row('🚀 Rocket Loader', 'Async JS loading to improve page speed',
@@ -386,7 +421,29 @@ function settingsHTML(zoneId, s){
       tog('hotlink_protection', hotlink, 'green')),
     row('✉ Email Obfuscation', 'Hide email addresses from scrapers',
       tog('email_obfuscation', emailObf, 'green')),
+    row('🌐 Smart Tiered Cache', 'Fewer requests to your server by caching through one upper-tier data center',
+      s.__tiered === null || s.__tiered === undefined
+        ? '<span class="cfwaf-zc-setting-hint">Unavailable</span>'
+        : `<label class="cfwaf-zc-switch green"><input type="checkbox" class="cfwaf-zc-tiered-toggle" data-zone="${zoneId}" ${s.__tiered==='on'?'checked':''}><span class="cfwaf-zc-switch-slider"></span></label>`),
+    '<div class="cfwaf-zc-setting-group">Security headers</div>',
+    managedRow(zoneId, s.__managed, 'add_security_headers', '🛡 Add security headers', 'Adds X-Content-Type-Options, X-Frame-Options, Referrer-Policy and more'),
+    managedRow(zoneId, s.__managed, 'remove_x-powered-by_header', '🙈 Remove X-Powered-By', 'Hides the PHP version your server reports'),
+    '<div class="cfwaf-zc-setting-note"><strong>Security Level:</strong> Cloudflare retired the Low, Medium and High levels in 2025 and now uses this setting only for Under Attack mode. Use the Under Attack switch at the top of this card.</div>',
   ].join('');
+}
+
+// Managed Transform row. Cloudflare will not enable a transform that conflicts with one already on.
+function managedRow(zoneId, managed, id, label, hint){
+  const row = (ctrl, h) => `<div class="cfwaf-zc-setting-row">
+      <div><div class="cfwaf-zc-setting-name">${label}</div><div class="cfwaf-zc-setting-hint">${h}</div></div>
+      <div class="cfwaf-zc-setting-control">${ctrl}</div>
+    </div>`;
+  if (!managed) return row('<span class="cfwaf-zc-setting-hint">Unavailable</span>', 'Needs the Zone → Managed Headers → Edit token permission');
+  const t = managed[id];
+  if (!t) return row('<span class="cfwaf-zc-setting-hint">Unavailable</span>', 'Not offered for this zone');
+  const blocked = t.has_conflict && !t.enabled;
+  return row(`<label class="cfwaf-zc-switch green"><input type="checkbox" class="cfwaf-zc-managed-toggle" data-zone="${zoneId}" data-transform="${id}" ${t.enabled?'checked':''} ${blocked?'disabled':''}><span class="cfwaf-zc-switch-slider"></span></label>`,
+    blocked ? 'Turn off the conflicting Managed Transform in Cloudflare first' : hint);
 }
 
 function wireSettings(zoneId, body){
@@ -409,6 +466,29 @@ function wireSettings(zoneId, body){
       ajax('wpwaf_zone_setting_update', {zone_id:zoneId, key, value}, (res) => {
         this.disabled = false;
         res.success ? toast('✓ ' + key.replace(/_/g,' ') + ' ' + value) : (this.checked=!this.checked, toast('Failed: '+(res.data?.message||'error'),false));
+      });
+    });
+  });
+  // Smart Tiered Cache
+  body.querySelectorAll('.cfwaf-zc-tiered-toggle').forEach(tog => {
+    tog.addEventListener('change', function(){
+      const on = this.checked;
+      this.disabled = true;
+      ajax('wpwaf_zone_tiered_cache', {zone_id:zoneId, value: on ? '1' : '0'}, (res) => {
+        this.disabled = false;
+        res.success ? toast('✓ Smart Tiered Cache ' + (on ? 'on' : 'off')) : (this.checked=!on, toast('Failed: '+(res.data?.message||'error'),false));
+      });
+    });
+  });
+  // Managed Transforms
+  body.querySelectorAll('.cfwaf-zc-managed-toggle').forEach(tog => {
+    tog.addEventListener('change', function(){
+      const on = this.checked;
+      this.disabled = true;
+      ajax('wpwaf_zone_managed_header', {zone_id:zoneId, transform:this.dataset.transform, value: on ? '1' : '0'}, (res) => {
+        this.disabled = false;
+        res.success ? toast('✓ ' + (this.dataset.transform === 'add_security_headers' ? 'Security headers' : 'X-Powered-By removal') + ' ' + (on ? 'on' : 'off'))
+                    : (this.checked=!on, toast('Failed: '+(res.data?.message||'error'),false));
       });
     });
   });

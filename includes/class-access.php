@@ -4,10 +4,10 @@ declare( strict_types = 1 );
 defined( 'ABSPATH' ) || exit;
 
 /**
- * WPWAF_Access — User-level access control.
+ * WPWAF_Access - User-level access control.
  *
  * When no allowlist is configured (empty array), all users who pass the
- * minimum-role check can access the plugin — backward compatible default.
+ * minimum-role check can access the plugin - backward compatible default.
  *
  * When an allowlist is saved, ONLY those specific user IDs can access the
  * plugin, regardless of role. Super Admins on multisite always have access
@@ -70,7 +70,7 @@ class WPWAF_Access {
 			return 'You cannot remove your own access. Your account must remain in the list.';
 		}
 
-		// Empty list = "all admins" — store as empty array.
+		// Empty list = "all admins" - store as empty array.
 		update_option( self::OPTION, $user_ids, false );
 		return '';
 	}

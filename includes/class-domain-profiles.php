@@ -2,7 +2,7 @@
 declare( strict_types = 1 );
 
 /**
- * WPWAF_Domain_Profiles — Named zone selection profiles.
+ * WPWAF_Domain_Profiles - Named zone selection profiles.
  *
  * Stores named lists of zone IDs in wp_options under 'wpwaf_domain_profiles'.
  * The 'default' profile starts empty (no zones selected).
@@ -68,7 +68,7 @@ class WPWAF_Domain_Profiles {
 		update_option( self::OPTION, $profiles, false );
 	}
 
-	/** Return safe data for JS — id, name, zone_ids (no sensitive data). */
+	/** Return safe data for JS - id, name, zone_ids (no sensitive data). */
 	public static function for_js(): array {
 		return array_values( array_map( fn( $p ) => [
 			'id'       => $p['id'],

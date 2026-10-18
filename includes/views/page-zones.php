@@ -1,5 +1,13 @@
 <?php defined( 'ABSPATH' ) || exit; ?>
 <style>
+:root{--zn-orange:#FF6A00;--zn-border:#e2e6ea;--zn-dark:#1a1a2e;--zn-muted:#6b7280;}
+.cfwaf-zn-wrap{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:1400px;padding:24px 20px;color:var(--zn-dark);}
+.cfwaf-zn-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.cfwaf-zn-header h1{font-size:22px;font-weight:700;margin:0;padding:0;display:flex;align-items:center;gap:8px;color:var(--zn-dark);line-height:1.3;}
+.cfwaf-zn-header h1 .dashicons{color:var(--zn-orange);font-size:24px;width:24px;height:24px;}
+.cfwaf-zn-header-sub{font-size:12px;color:var(--zn-muted);margin-top:3px;}
+.cfwaf-zn-notice{background:#fff8f5;border:1px solid #fcd9c0;border-radius:8px;padding:16px 20px;color:#92400e;font-size:13px;line-height:1.6;}
+.cfwaf-zn-notice--error{background:#fef2f2;border-color:#fca5a5;color:#7f1d1d;}
 .cfwaf-zones-header  { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px; }
 .cfwaf-zones-meta    { display:flex;align-items:center;gap:12px;flex-wrap:wrap; }
 .cfwaf-zones-count   { font-size:12px;font-weight:600;color:#6b7280;background:#f3f4f6;border-radius:20px;padding:3px 10px; }
@@ -11,16 +19,16 @@
 .cfwaf-zones-table td { padding:11px 16px;font-size:13px;color:#374151;border-bottom:1px solid #f1f3f5;vertical-align:middle; }
 .cfwaf-zones-table tbody tr:last-child td { border-bottom:none; }
 .cfwaf-zones-table tbody tr:hover td { background:#fafafa; }
-.cfwaf-zone-name-cell { font-weight:600;color:#111;font-size:13px; }
+.cfwaf-zone-name-cell { font-weight:600;color:#111;font-size:13px;overflow-wrap:anywhere; }
 .cfwaf-zone-plan-pill { display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600; }
 .cfwaf-zone-plan-free { background:#f3f4f6;color:#6b7280; }
 .cfwaf-zone-plan-pro  { background:#fef3c7;color:#92400e; }
 .cfwaf-zone-plan-biz  { background:#dbeafe;color:#1e40af; }
 .cfwaf-zone-plan-ent  { background:#f3e8ff;color:#6b21a8; }
 /* Flare */
-.cfwaf-flare-add-btn  { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;border:1px dashed #d1d5db;background:transparent;color:#9ca3af;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s; }
+.cfwaf-flare-add-btn  { display:inline-flex;align-items:center;gap:4px;white-space:nowrap;padding:3px 10px;border-radius:20px;border:1px dashed #d1d5db;background:transparent;color:#9ca3af;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s; }
 .cfwaf-flare-add-btn:hover { border-color:#FF6A00;color:#FF6A00; }
-.cfwaf-zones-flare-pill { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;border:1px solid;font-size:11px;font-weight:700;cursor:pointer;transition:opacity .12s; }
+.cfwaf-zones-flare-pill { display:inline-flex;align-items:center;gap:5px;white-space:nowrap;padding:3px 10px;border-radius:20px;border:1px solid;font-size:11px;font-weight:700;cursor:pointer;transition:opacity .12s; }
 .cfwaf-zones-flare-pill:hover { opacity:.85; }
 .cfwaf-flare-remove-x { opacity:.6;font-size:14px;line-height:1;cursor:pointer;padding:0 2px; }
 .cfwaf-flare-remove-x:hover { opacity:1; }
@@ -37,22 +45,30 @@
 .cfwaf-zones-empty { text-align:center;padding:40px;color:#9ca3af;font-size:13px; }
 .cfwaf-btn-sm { display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;transition:background .15s,border-color .15s;text-decoration:none; }
 .cfwaf-btn-sm:hover { background:#f3f4f6;border-color:#9ca3af; }
+
+@media (max-width:782px){
+  .cfwaf-zones-header{align-items:stretch;}
+  .cfwaf-zones-meta{flex:1 1 100%;}
+  .cfwaf-zones-search{flex:1;min-width:0;width:100%;}
+  .cfwaf-zones-table th,.cfwaf-zones-table td{padding:10px 12px;}
+  .cfwaf-flare-picker{left:auto;right:0;min-width:0;width:min(300px,calc(100vw - 24px));}
+}
+@media (max-width:480px){
+  .cfwaf-zones-table th:nth-child(2),.cfwaf-zones-table td:nth-child(2){padding-left:4px;padding-right:4px;}
+  .cfwaf-zones-header .cfwaf-btn-sm{width:100%;justify-content:center;}
+}
 </style>
 
-<div class="cfwaf-wrap">
-<div class="cfwaf-page-header">
-	<div class="cfwaf-header-inner">
-		<div class="cfwaf-header-title">
-			<h1>Zones</h1>
-			<p class="cfwaf-header-sub">Label your zones with flares so you can identify sites at a glance in the Deploy panel.</p>
+<div class="cfwaf-zn-wrap">
+	<div class="cfwaf-zn-header">
+		<div>
+			<h1><span class="dashicons dashicons-tag"></span> Zones</h1>
+			<div class="cfwaf-zn-header-sub">Label your zones with flares so you can identify sites at a glance in the Deploy panel.</div>
 		</div>
 	</div>
-</div>
-
-<div style="max-width:960px;margin:0 auto;padding:20px;">
 
 <?php if ( ! $has_creds ) : ?>
-	<div class="cfwaf-zone-load-error">
+	<div class="cfwaf-zn-notice">
 		<strong>No Cloudflare account connected.</strong><br>
 		Add a Cloudflare account on the main <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpwafmanager' ) ); ?>">WAF Rules</a> page first.
 	</div>
@@ -67,10 +83,10 @@
 	</div>
 
 	<div id="cfwaf-zones-loading" style="padding:60px;text-align:center;color:#9ca3af;">
-		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" style="animation:spin 1s linear infinite;display:inline-block;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" style="animation:wpwaf-zn-spin 1s linear infinite;display:inline-block;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
 		<p style="margin-top:10px;font-size:13px;">Loading zones&hellip;</p>
 	</div>
-	<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+	<style>@keyframes wpwaf-zn-spin{to{transform:rotate(360deg)}}</style>
 
 	<div id="cfwaf-zones-error" style="display:none;"></div>
 
@@ -89,7 +105,6 @@
 	</div>
 
 <?php endif; ?>
-</div>
 </div>
 
 <script>
@@ -118,7 +133,7 @@
 	}
 
 	function planLabel(plan) {
-		if (!plan) return '—';
+		if (!plan) return '-';
 		if (plan.toLowerCase().includes('free'))       return 'Free';
 		if (plan.toLowerCase().includes('pro'))        return 'Pro';
 		if (plan.toLowerCase().includes('business'))   return 'Business';
@@ -282,7 +297,7 @@
 				if (errEl) {
 					errEl.style.display = '';
 					const msg = (res.data && res.data.message) || 'Unknown error';
-					errEl.innerHTML = '<div class="cfwaf-zone-load-error"><strong>\u2717 Could not load zones.</strong><br>' + esc(msg) + '</div>';
+					errEl.innerHTML = '<div class="cfwaf-zn-notice cfwaf-zn-notice--error"><strong>\u2717 Could not load zones.</strong><br>' + esc(msg) + '</div>';
 				}
 				return;
 			}

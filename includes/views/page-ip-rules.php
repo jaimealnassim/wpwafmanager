@@ -80,6 +80,7 @@ $active_id = WPWAF_Accounts::active_id();
 .cfwaf-ip-field input:focus,.cfwaf-ip-field select:focus,.cfwaf-ip-field textarea:focus{outline:none;border-color:var(--ip-orange);box-shadow:0 0 0 2px rgba(255,106,0,.12);}
 .cfwaf-ip-field-hint{font-size:11px;color:var(--ip-muted);margin-top:2px;}
 .cfwaf-ip-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.cfwaf-ip-country-note{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;color:#92400e;font-size:12px;line-height:1.5;}
 .cfwaf-ip-modal-error{background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:10px 14px;color:#b91c1c;font-size:13px;}
 
 /* Mode selector */
@@ -114,7 +115,7 @@ $active_id = WPWAF_Accounts::active_id();
 	<div class="cfwaf-ip-header">
 		<div>
 			<h1><span class="dashicons dashicons-shield-alt"></span> IP Access Rules</h1>
-			<div class="cfwaf-ip-header-sub">Account-level rules — apply instantly across <strong>all zones</strong> in your Cloudflare account</div>
+			<div class="cfwaf-ip-header-sub">Account-level rules that apply instantly across <strong>all zones</strong> in your Cloudflare account</div>
 		</div>
 		<button class="cfwaf-ip-btn cfwaf-ip-btn-primary" id="cfwaf-ip-add-btn" disabled>
 			<span class="dashicons dashicons-plus-alt2" style="font-size:14px;width:14px;height:14px;"></span> Add Rule
@@ -143,12 +144,12 @@ $active_id = WPWAF_Accounts::active_id();
 	<div class="cfwaf-ip-notice cfwaf-ip-perm-notice" id="cfwaf-ip-perm-notice" style="display:none;">
 		<span class="dashicons dashicons-lock" style="flex-shrink:0;font-size:20px;width:20px;height:20px;margin-top:1px;color:#1e40af;"></span>
 		<div>
-			<strong>Missing permission: Account → Firewall Services → Edit</strong><br>
+			<strong>Missing permission: Account → Account Firewall Access Rules → Edit</strong><br>
 			This account's API Token doesn't have access to account-level IP rules.
 			<ul style="margin:8px 0 0;padding-left:18px;font-size:12px;">
 				<li>Go to <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener">Cloudflare → My Profile → API Tokens</a></li>
-				<li>Edit your token and add <strong>Account → Firewall Services → Edit</strong></li>
-				<li>Or use <strong>Email + Global API Key</strong> — it has full access automatically</li>
+				<li>Edit your token and add <strong>Account → Account Firewall Access Rules → Edit</strong></li>
+				<li>Or use <strong>Email + Global API Key</strong>, which has full access automatically</li>
 			</ul>
 		</div>
 	</div>
@@ -160,7 +161,7 @@ $active_id = WPWAF_Accounts::active_id();
 
 	<div class="cfwaf-ip-notice cfwaf-ip-notice-warn">
 		<span class="dashicons dashicons-warning" style="flex-shrink:0;margin-top:1px;"></span>
-		<div><strong>Account-wide:</strong> These rules apply to <em>all zones</em> in your Cloudflare account — including zones not managed by this plugin. Changes take effect immediately.</div>
+		<div><strong>Account-wide:</strong> These rules apply to <em>all zones</em> in your Cloudflare account, including zones not managed by this plugin. Changes take effect immediately.</div>
 	</div>
 
 	<div id="cfwaf-ip-error" class="cfwaf-ip-error" style="display:none;"></div>
@@ -249,6 +250,9 @@ $active_id = WPWAF_Accounts::active_id();
 					<input type="text" id="cfwaf-ip-note" placeholder="e.g. Office IP, Client server, Bad actor…" maxlength="200">
 				</div>
 
+				<div id="cfwaf-ip-country-note" class="cfwaf-ip-country-note" style="display:none;">
+					<strong>Blocking a country needs a Cloudflare Enterprise plan.</strong> On Free, Pro and Business accounts Cloudflare rejects this rule. Choose Managed Challenge instead, or use Rule 4 on the WAF Rules screen to challenge visitors from outside the countries you serve.
+				</div>
 				<div id="cfwaf-ip-modal-error" style="display:none;" class="cfwaf-ip-modal-error"></div>
 			</div>
 			<div class="cfwaf-ip-modal-footer">
@@ -302,7 +306,7 @@ const accountSel = qs('#cfwaf-ip-account-select');
 if (accountSel) {
 	accountSel.addEventListener('change', function(){
 		pluginAccountId = this.value;
-		accountId = ''; // reset Cloudflare account ID — will re-fetch
+		accountId = ''; // reset Cloudflare account ID - will re-fetch
 		qs('#cfwaf-ip-add-btn').disabled = true;
 		hideNotices();
 		bootForAccount();
@@ -380,7 +384,7 @@ const MODE_LABELS = {
 const TARGET_LABELS = { ip:'IP', ip_range:'CIDR', country:'Country', asn:'ASN' };
 
 function fmtDate(ts){
-	if (!ts) return '—';
+	if (!ts) return '-';
 	return new Date(ts).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'});
 }
 
@@ -399,7 +403,7 @@ function renderTable(){
 
 	if (!rows.length){
 		qs('#cfwaf-ip-tbody').innerHTML = '<tr><td colspan="6" class="cfwaf-ip-empty">' +
-			(allRules.length ? 'No rules match your filter.' : 'No IP rules yet — click Add Rule to get started.') +
+			(allRules.length ? 'No rules match your filter.' : 'No IP rules yet. Click Add Rule to get started.') +
 			'</td></tr>';
 		return;
 	}
@@ -411,15 +415,15 @@ function renderTable(){
 		const note   = r.notes || '';
 		const added  = fmtDate(r.created_on);
 		return `<tr>
-			<td><span class="cfwaf-ip-target">${TARGET_LABELS[target]||target}</span></td>
+			<td><span class="cfwaf-ip-target">${escHtml(TARGET_LABELS[target]||target)}</span></td>
 			<td><span class="cfwaf-ip-value">${escHtml(value)}</span></td>
-			<td><span class="cfwaf-ip-mode ${m.cls}">${m.icon} ${m.label}</span></td>
+			<td><span class="cfwaf-ip-mode ${escHtml(m.cls)}">${m.icon} ${escHtml(m.label)}</span></td>
 			<td class="cfwaf-ip-note">${escHtml(note)}</td>
-			<td style="font-size:11px;color:var(--ip-muted);white-space:nowrap;">${added}</td>
+			<td style="font-size:11px;color:var(--ip-muted);white-space:nowrap;">${escHtml(added)}</td>
 			<td>
 				<div style="display:flex;gap:4px;">
-					<button class="cfwaf-ip-btn cfwaf-ip-btn-edit cfwaf-ip-edit-btn" data-id="${r.id}">Edit</button>
-					<button class="cfwaf-ip-btn cfwaf-ip-btn-danger cfwaf-ip-del-btn" data-id="${r.id}" data-value="${escHtml(value)}">✕</button>
+					<button class="cfwaf-ip-btn cfwaf-ip-btn-edit cfwaf-ip-edit-btn" data-id="${escHtml(r.id)}">Edit</button>
+					<button class="cfwaf-ip-btn cfwaf-ip-btn-danger cfwaf-ip-del-btn" data-id="${escHtml(r.id)}" data-value="${escHtml(value)}">✕</button>
 				</div>
 			</td>
 		</tr>`;
@@ -471,6 +475,7 @@ function openModal(rule=null){
 		updateValueHint();
 	}
 
+	updateCountryNote();
 	qs('#cfwaf-ip-modal').style.display = 'flex';
 	if (!rule) qs('#cfwaf-ip-value').focus();
 }
@@ -490,7 +495,15 @@ function updateValueHint(){
 	}[target] || '';
 }
 
-qs('#cfwaf-ip-target')?.addEventListener('change', updateValueHint);
+// Cloudflare only allows Block by country on Enterprise plans.
+function updateCountryNote(){
+	const target = qs('#cfwaf-ip-target').value;
+	const mode   = document.querySelector('input[name="cfwaf-ip-mode"]:checked')?.value || '';
+	qs('#cfwaf-ip-country-note').style.display = (target === 'country' && mode === 'block') ? '' : 'none';
+}
+
+qs('#cfwaf-ip-target')?.addEventListener('change', () => { updateValueHint(); updateCountryNote(); });
+document.querySelectorAll('input[name="cfwaf-ip-mode"]').forEach(r => r.addEventListener('change', updateCountryNote));
 qs('#cfwaf-ip-add-btn')?.addEventListener('click', () => openModal());
 qs('#cfwaf-ip-modal-close')?.addEventListener('click', closeModal);
 qs('#cfwaf-ip-modal-cancel')?.addEventListener('click', closeModal);

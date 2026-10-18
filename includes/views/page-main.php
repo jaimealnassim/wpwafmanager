@@ -88,7 +88,7 @@
 						<input type="hidden" id="cfwaf-editing-account-id" value="">
 
 						<div class="cfwaf-notice cfwaf-notice--info" style="margin-bottom:16px;padding:10px 14px;background:#eef6ff;border-left:3px solid #3B8BD4;border-radius:4px;font-size:12px;line-height:1.6;color:#1e3a5f;">
-							<strong>Tip:</strong> You can also connect accounts via <code>wp-config.php</code> constants — no database storage, supports multiple accounts with labels. <a href="https://www.wpwafmanager.com/docs/main/general/connecting-to-cloudflare/" target="_blank" rel="noopener" style="color:#3B8BD4;text-decoration:underline;">See docs for details.</a>
+							<strong>Tip:</strong> You can also connect accounts via <code>wp-config.php</code> constants. No database storage, supports multiple accounts with labels. <a href="https://www.wpwafmanager.com/docs/main/general/connecting-to-cloudflare/" target="_blank" rel="noopener" style="color:#3B8BD4;text-decoration:underline;">See docs for details.</a>
 						</div>
 
 						<!-- Label row -->
@@ -185,7 +185,7 @@
 					<div class="cfwaf-step-num">3</div>
 					<div class="cfwaf-step-content">
 						<h3>Monitor &amp; Adjust</h3>
-						<p>After deploying, monitor your Cloudflare Security Events log at <strong>Security &rarr; Analytics &rarr; Events</strong>. Watch closely for false positives &mdash; legitimate traffic being blocked or challenged. If a service you need is being blocked, enable it in Rule 1 and redeploy. These rules work well for most sites with default settings, but every site is different. Use the <strong>View Zone Rules</strong> tab above to inspect what&rsquo;s live on any zone at any time.</p>
+						<p>After deploying, monitor your Cloudflare Security Events log at <strong>Security &rarr; Analytics &rarr; Events</strong>. Watch closely for false positives &mdash; legitimate traffic being blocked or challenged. If a service you need is being blocked, enable it in Rule 1 and redeploy. These rules work well for most sites with default settings, but every site is different. Use the <strong>Zone Rules</strong> tab below to inspect what&rsquo;s live on any zone at any time.</p>
 					</div>
 				</div>
 
@@ -214,7 +214,7 @@
 				</div>
 			</div>
 			<div class="cfwaf-profile-notes-wrap">
-				<textarea id="cfwaf-profile-notes" class="cfwaf-profile-notes" rows="2" placeholder="Profile notes — describe what this profile is for, which IPs or services it allows, etc."></textarea>
+				<textarea id="cfwaf-profile-notes" class="cfwaf-profile-notes" rows="2" placeholder="Profile notes: describe what this profile is for, which IPs or services it allows, etc."></textarea>
 				<span class="cfwaf-profile-notes-hint">Notes are saved with the profile when you hit Save.</span>
 			</div>
 
@@ -242,7 +242,7 @@
 							<?php
 							$cats = [
 								'Accessibility'              => 'Accessible Web Bot',
-								'Academic Research'          => 'Library of Congress, TurnItInBot, Biblioth&egrave;que nationale de France',
+								'Academic Research'          => 'Library of Congress, TurnItInBot, Bibliothèque nationale de France',
 								'Advertising & Marketing'    => 'Google Adsbot',
 								'Aggregator'                 => 'Pinterest, Indeed Jobsbot',
 								'AI Assistant'               => 'Perplexity-User, DuckAssistBot',
@@ -382,7 +382,7 @@
 						</div>
 						<div class="cfwaf-notice-api-body">
 							<span class="cfwaf-notice-api-title">Skip action is configured automatically via API.</span>
-							<p>When this rule is deployed, the plugin sets the action to Skip and configures it to bypass: All remaining custom rules, All rate limiting rules, All managed rules, All Super Bot Fight Mode Rules, Zone Lockdown, User Agent Blocking, Browser Integrity Check, Hotlink Protection, and Security Level — no manual Cloudflare dashboard setup required.</p>
+							<p>When this rule is deployed, the plugin sets the action to Skip and configures it to bypass: All remaining custom rules, All rate limiting rules, All managed rules, All Super Bot Fight Mode Rules, Zone Lockdown, User Agent Blocking, Browser Integrity Check, Hotlink Protection, and Security Level. No manual Cloudflare dashboard setup required.</p>
 						</div>
 					</div>
 
@@ -563,7 +563,7 @@
 				</div>
 			</div>
 
-			<!-- Country Picker Panel — outside accordion so it's always accessible -->
+			<!-- Country Picker Panel - outside accordion so it's always accessible -->
 			<div class="cfwaf-country-panel" id="cfwaf-country-panel" style="display:none">
 
 				<div class="cfwaf-deploy-panel-header">
@@ -1210,17 +1210,7 @@ window.cfWAF = <?php
 		'defaults'          => WPWAF_Rule_Builder::default_settings(),
 		'has_creds'         => $has_creds,
 		'expires_at'        => (int) ( $active['expires_at'] ?? 0 ),
-		'accounts'          => array_map( function( $acc ) {
-			return [
-				'id'            => $acc['id']          ?? '',
-				'label'         => $acc['label']        ?? '',
-				'auth_method'   => $acc['auth_method']  ?? 'token',
-				'has_api_token' => ! empty( $acc['api_token'] ),
-				'has_api_key'   => ! empty( $acc['api_key'] ),
-				'expires_at'    => (int) ( $acc['expires_at'] ?? 0 ),
-				'readonly'      => (bool) ( $acc['readonly']  ?? false ),
-			];
-		}, WPWAF_Accounts::all() ),
+		'accounts'          => WPWAF_Accounts::for_js(),
 		'active_id'         => WPWAF_Accounts::active_id(),
 		'profiles'                 => WPWAF_Profiles::for_js(),
 		'active_profile_id'        => WPWAF_Profiles::active_id(),

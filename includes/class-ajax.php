@@ -56,6 +56,8 @@ class WPWAF_Ajax {
 		add_action( 'wp_ajax_wpwaf_purge_cache',          [ $self, 'purge_cache' ] );
 		add_action( 'wp_ajax_wpwaf_zone_settings_load',   [ $self, 'zone_settings_load' ] );
 		add_action( 'wp_ajax_wpwaf_zone_setting_update',  [ $self, 'zone_setting_update' ] );
+		add_action( 'wp_ajax_wpwaf_zone_tiered_cache',    [ $self, 'zone_tiered_cache' ] );
+		add_action( 'wp_ajax_wpwaf_zone_managed_header',  [ $self, 'zone_managed_header' ] );
 
 		// Security events
 		add_action( 'wp_ajax_wpwaf_security_events',      [ $self, 'security_events' ] );
@@ -89,6 +91,17 @@ class WPWAF_Ajax {
 			wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
 			wp_die();
 		}
+	}
+
+	/**
+	 * A Cloudflare object ID (zone, account, DNS record, rule) from $_POST.
+	 * Cloudflare IDs are 32 hex characters; anything else returns '' so the
+	 * handler's "is required" check rejects it and no user input can reshape
+	 * the API path.
+	 */
+	private function cf_id( string $key ): string {
+		$id = strtolower( trim( (string) wp_unslash( $_POST[ $key ] ?? '' ) ) );
+		return preg_match( '/^[a-f0-9]{32}$/', $id ) ? $id : '';
 	}
 
 	/** Die immediately without any output if the check fails. */
@@ -175,7 +188,7 @@ class WPWAF_Ajax {
 			'message'    => $result['message'],
 			'account_id' => $id,
 			'expires_at' => $expires_at,
-			'accounts'   => WPWAF_Accounts::all(),
+			'accounts'   => WPWAF_Accounts::for_js(),
 			'active_id'  => WPWAF_Accounts::active_id(),
 		] );
 		wp_die();
@@ -203,7 +216,7 @@ class WPWAF_Ajax {
 			wp_die();
 		}
 		WPWAF_Accounts::switch_to( $id );
-		wp_send_json_success( [ 'active_id' => $id, 'accounts' => WPWAF_Accounts::all() ] );
+		wp_send_json_success( [ 'active_id' => $id, 'accounts' => WPWAF_Accounts::for_js() ] );
 		wp_die();
 	}
 
@@ -216,7 +229,7 @@ class WPWAF_Ajax {
 		}
 		WPWAF_Accounts::delete( $id );
 		wp_send_json_success( [
-			'accounts'  => WPWAF_Accounts::all(),
+			'accounts'  => WPWAF_Accounts::for_js(),
 			'active_id' => WPWAF_Accounts::active_id(),
 		] );
 		wp_die();
@@ -231,7 +244,7 @@ class WPWAF_Ajax {
 
 		$zone_ids = [];
 		if ( isset( $_POST['zone_ids'] ) && is_array( $_POST['zone_ids'] ) ) {
-			$zone_ids = array_filter( array_map( 'sanitize_text_field', $_POST['zone_ids'] ) );
+			$zone_ids = array_values( array_filter( array_map( 'sanitize_text_field', wp_unslash( $_POST['zone_ids'] ) ), static fn( $z ) => (bool) preg_match( '/^[a-f0-9]{32}$/', (string) $z ) ) );
 		}
 		if ( empty( $zone_ids ) ) {
 			wp_send_json_error( [ 'message' => 'No zones selected.' ] );
@@ -249,7 +262,7 @@ class WPWAF_Ajax {
 		$rules    = WPWAF_Rule_Builder::build_rules( $settings );
 
 		if ( empty( $rules ) ) {
-			wp_send_json_error( [ 'message' => 'No rules to deploy — all rules are disabled.' ] );
+			wp_send_json_error( [ 'message' => 'No rules to deploy. All rules are disabled.' ] );
 			wp_die();
 		}
 
@@ -272,7 +285,7 @@ class WPWAF_Ajax {
 	public function list_zone_rules(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) {
 			wp_send_json_error( [ 'message' => 'No zone ID provided.' ] );
 			wp_die();
@@ -290,7 +303,7 @@ class WPWAF_Ajax {
 			wp_send_json_error( [ 'message' => 'Invalid settings payload.' ] );
 			wp_die();
 		}
-		// Sanitize before persisting — never store arbitrary JSON from POST.
+		// Sanitize before persisting - never store arbitrary JSON from POST.
 		$settings = WPWAF_Rule_Builder::sanitize_settings( $settings );
 		update_option( 'wpwaf_rule_settings', $settings, false );
 
@@ -465,7 +478,7 @@ class WPWAF_Ajax {
 	public function dns_list(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id is required.' ] );
 			wp_die();
@@ -478,7 +491,7 @@ class WPWAF_Ajax {
 	public function dns_create(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id is required.' ] );
 			wp_die();
@@ -497,8 +510,8 @@ class WPWAF_Ajax {
 	public function dns_update(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id   = sanitize_text_field( $_POST['zone_id']   ?? '' );
-		$record_id = sanitize_text_field( $_POST['record_id'] ?? '' );
+		$zone_id   = $this->cf_id( 'zone_id' );
+		$record_id = $this->cf_id( 'record_id' );
 		if ( empty( $zone_id ) || empty( $record_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id and record_id are required.' ] );
 			wp_die();
@@ -517,8 +530,8 @@ class WPWAF_Ajax {
 	public function dns_delete(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id   = sanitize_text_field( $_POST['zone_id']   ?? '' );
-		$record_id = sanitize_text_field( $_POST['record_id'] ?? '' );
+		$zone_id   = $this->cf_id( 'zone_id' );
+		$record_id = $this->cf_id( 'record_id' );
 		if ( empty( $zone_id ) || empty( $record_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id and record_id are required.' ] );
 			wp_die();
@@ -531,8 +544,8 @@ class WPWAF_Ajax {
 	public function dns_toggle_proxy(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id   = sanitize_text_field( $_POST['zone_id']   ?? '' );
-		$record_id = sanitize_text_field( $_POST['record_id'] ?? '' );
+		$zone_id   = $this->cf_id( 'zone_id' );
+		$record_id = $this->cf_id( 'record_id' );
 		$proxied   = filter_var( $_POST['proxied'] ?? false, FILTER_VALIDATE_BOOLEAN );
 		if ( empty( $zone_id ) || empty( $record_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id and record_id are required.' ] );
@@ -642,7 +655,7 @@ class WPWAF_Ajax {
 	public function ip_rules_list(): void {
 		$this->check();
 		$this->require_active_account();
-		$account_id        = sanitize_text_field( $_POST['account_id']        ?? '' );
+		$account_id        = $this->cf_id( 'account_id' );
 		$plugin_account_id = sanitize_text_field( $_POST['plugin_account_id'] ?? '' );
 		if ( empty( $account_id ) ) {
 			wp_send_json_error( [ 'message' => 'account_id is required.' ] );
@@ -660,7 +673,7 @@ class WPWAF_Ajax {
 	public function ip_rules_create(): void {
 		$this->check();
 		$this->require_active_account();
-		$account_id = sanitize_text_field( $_POST['account_id'] ?? '' );
+		$account_id = $this->cf_id( 'account_id' );
 		$mode       = sanitize_text_field( $_POST['mode']       ?? '' );
 		$target     = sanitize_text_field( $_POST['target']     ?? 'ip' );
 		$value      = sanitize_text_field( $_POST['value']      ?? '' );
@@ -698,8 +711,8 @@ class WPWAF_Ajax {
 	public function ip_rules_update(): void {
 		$this->check();
 		$this->require_active_account();
-		$account_id = sanitize_text_field( $_POST['account_id'] ?? '' );
-		$rule_id    = sanitize_text_field( $_POST['rule_id']    ?? '' );
+		$account_id = $this->cf_id( 'account_id' );
+		$rule_id    = $this->cf_id( 'rule_id' );
 		$note       = sanitize_text_field( $_POST['note']       ?? '' );
 		$mode       = sanitize_text_field( $_POST['mode']       ?? '' );
 
@@ -724,8 +737,8 @@ class WPWAF_Ajax {
 	public function ip_rules_delete(): void {
 		$this->check();
 		$this->require_active_account();
-		$account_id = sanitize_text_field( $_POST['account_id'] ?? '' );
-		$rule_id    = sanitize_text_field( $_POST['rule_id']    ?? '' );
+		$account_id = $this->cf_id( 'account_id' );
+		$rule_id    = $this->cf_id( 'rule_id' );
 		if ( empty( $account_id ) || empty( $rule_id ) ) {
 			wp_send_json_error( [ 'message' => 'account_id and rule_id are required.' ] );
 			wp_die();
@@ -742,42 +755,104 @@ class WPWAF_Ajax {
 	public function purge_cache(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
-		$mode    = sanitize_text_field( $_POST['mode']    ?? 'all' );
+		$zone_id = $this->cf_id( 'zone_id' );
+		$mode    = sanitize_key( $_POST['mode'] ?? 'all' );
 
 		if ( empty( $zone_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id is required.' ] );
 			wp_die();
 		}
 
-		if ( $mode === 'urls' ) {
-			$raw_urls = wp_unslash( $_POST['urls'] ?? '' );
-			$urls = array_values( array_filter(
-				array_map( 'esc_url_raw', explode( "\n", $raw_urls ) )
-			) );
-			if ( empty( $urls ) ) {
-				wp_send_json_error( [ 'message' => 'No valid URLs provided.' ] );
+		// One item per line. Cloudflare accepts up to 100 items per purge request.
+		$lines = array_values( array_filter( array_map( 'trim',
+			explode( "\n", str_replace( "\r", '', (string) wp_unslash( $_POST['urls'] ?? $_POST['items'] ?? '' ) ) )
+		), 'strlen' ) );
+
+		switch ( $mode ) {
+			case 'urls':
+				// Full URLs. A line without a scheme is treated as https, since
+				// purging the http:// copy would leave the https:// page cached.
+				$items = [];
+				foreach ( $lines as $line ) {
+					if ( ! preg_match( '#^https?://#i', $line ) ) {
+						$line = 'https://' . ltrim( $line, '/' );
+					}
+					$url = esc_url_raw( $line, [ 'http', 'https' ] );
+					if ( $url !== '' ) {
+						$items[] = $url;
+					}
+				}
+				$field = 'files';
+				break;
+			case 'hosts':
+				// Hostnames only, such as www.example.com.
+				$items = [];
+				foreach ( $lines as $line ) {
+					$host = strtolower( (string) preg_replace( '#^[a-z]+://#i', '', $line ) );
+					$host = rtrim( explode( '/', $host )[0], '.' );
+					if ( preg_match( '/^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/', $host ) ) {
+						$items[] = $host;
+					}
+				}
+				$field = 'hosts';
+				break;
+			case 'prefixes':
+				// A hostname followed by a path, such as www.example.com/blog/ (no scheme).
+				$items = [];
+				foreach ( $lines as $line ) {
+					$prefix = (string) preg_replace( '#^[a-z]+://#i', '', $line );
+					if ( preg_match( '#^[a-z0-9.-]+\.[a-z0-9-]{2,63}/\S*$#i', $prefix ) ) {
+						$items[] = $prefix;
+					}
+				}
+				$field = 'prefixes';
+				break;
+			case 'tags':
+				$items = array_values( array_filter( array_map( 'sanitize_text_field', $lines ) ) );
+				$field = 'tags';
+				break;
+			case 'all':
+				$items = [ true ];
+				$field = 'purge_everything';
+				break;
+			default:
+				wp_send_json_error( [ 'message' => 'Unknown purge type.' ] );
+				wp_die();
+				return;
+		}
+
+		if ( $field !== 'purge_everything' ) {
+			$items = array_values( array_unique( $items ) );
+			if ( empty( $items ) ) {
+				wp_send_json_error( [ 'message' => 'Nothing valid to purge. Check the format and enter one item per line.' ] );
 				wp_die();
 			}
-			$data = [ 'files' => $urls ];
+			if ( count( $items ) > 100 ) {
+				wp_send_json_error( [ 'message' => 'Cloudflare accepts up to 100 items per purge. Split the list and purge in batches.' ] );
+				wp_die();
+			}
+			$data = [ $field => $items ];
 		} else {
 			$data = [ 'purge_everything' => true ];
 		}
 
 		$result = WPWAF_Accounts::api()->purge_cache( $zone_id, $data );
-		$result['success'] ? wp_send_json_success( [] ) : wp_send_json_error( $result );
+		$result['success'] ? wp_send_json_success( [ 'count' => $field === 'purge_everything' ? 0 : count( $items ) ] ) : wp_send_json_error( $result );
 		wp_die();
 	}
 
 	public function zone_settings_load(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id is required.' ] );
 			wp_die();
 		}
-		$result = WPWAF_Accounts::api()->get_all_zone_settings( $zone_id );
+		$result = WPWAF_Accounts::api()->get_zone_controls( $zone_id, [
+			'security_level', 'development_mode', 'ssl', 'always_use_https', 'cache_level',
+			'browser_cache_ttl', 'rocket_loader', 'hotlink_protection', 'email_obfuscation',
+		] );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -785,7 +860,7 @@ class WPWAF_Ajax {
 	public function zone_setting_update(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		$key     = sanitize_key( $_POST['key']     ?? '' );
 		$value   = sanitize_text_field( wp_unslash( $_POST['value'] ?? '' ) );
 
@@ -793,15 +868,67 @@ class WPWAF_Ajax {
 		$allowed_keys = [
 			'security_level', 'development_mode', 'ssl', 'always_use_https',
 			'cache_level', 'browser_cache_ttl', 'rocket_loader', 'always_online',
-			'hotlink_protection', 'email_obfuscation', 'server_side_exclude',
-			'browser_check', 'challenge_ttl',
+			'hotlink_protection', 'email_obfuscation', 'browser_check', 'challenge_ttl',
 		];
 		if ( ! in_array( $key, $allowed_keys, true ) ) {
 			wp_send_json_error( [ 'message' => "Setting '{$key}' cannot be updated." ] );
 			wp_die();
 		}
 
-		$result = WPWAF_Accounts::api()->update_zone_setting_direct( $zone_id, $key, $value );
+		// Values Cloudflare accepts for the settings the screen edits.
+		$allowed_values = [
+			'security_level'     => [ 'under_attack', 'medium' ],
+			'development_mode'   => [ 'on', 'off' ],
+			'ssl'                => [ 'off', 'flexible', 'full', 'strict' ],
+			'always_use_https'   => [ 'on', 'off' ],
+			'cache_level'        => [ 'aggressive', 'basic', 'simplified' ],
+			'rocket_loader'      => [ 'on', 'off' ],
+			'always_online'      => [ 'on', 'off' ],
+			'hotlink_protection' => [ 'on', 'off' ],
+			'email_obfuscation'  => [ 'on', 'off' ],
+			'browser_check'      => [ 'on', 'off' ],
+		];
+		if ( isset( $allowed_values[ $key ] ) && ! in_array( $value, $allowed_values[ $key ], true ) ) {
+			wp_send_json_error( [ 'message' => "Value '{$value}' is not valid for {$key}." ] );
+			wp_die();
+		}
+		$typed = in_array( $key, [ 'browser_cache_ttl', 'challenge_ttl' ], true ) ? (int) $value : $value;
+
+		$result = WPWAF_Accounts::api()->update_zone_setting_direct( $zone_id, $key, $typed );
+		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
+		wp_die();
+	}
+
+	/** Smart Tiered Cache on or off for a zone. */
+	public function zone_tiered_cache(): void {
+		$this->check();
+		$this->require_active_account();
+		$zone_id = $this->cf_id( 'zone_id' );
+		if ( empty( $zone_id ) ) {
+			wp_send_json_error( [ 'message' => 'zone_id is required.' ] );
+			wp_die();
+		}
+		$on     = filter_var( $_POST['value'] ?? false, FILTER_VALIDATE_BOOLEAN );
+		$result = WPWAF_Accounts::api()->set_smart_tiered_cache( $zone_id, $on );
+		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
+		wp_die();
+	}
+
+	/** Managed Transforms: add security headers / remove X-Powered-By. */
+	public function zone_managed_header(): void {
+		$this->check();
+		$this->require_active_account();
+		$zone_id      = $this->cf_id( 'zone_id' );
+		$transform_id = sanitize_text_field( $_POST['transform'] ?? '' );
+		if ( empty( $zone_id ) || ! in_array( $transform_id, [ 'add_security_headers', 'remove_x-powered-by_header' ], true ) ) {
+			wp_send_json_error( [ 'message' => 'zone_id and a supported transform are required.' ] );
+			wp_die();
+		}
+		$enabled = filter_var( $_POST['value'] ?? false, FILTER_VALIDATE_BOOLEAN );
+		$result  = WPWAF_Accounts::api()->set_managed_response_header( $zone_id, $transform_id, $enabled );
+		if ( ! $result['success'] && $this->is_permission_error( $result['message'] ?? '' ) ) {
+			$result['message'] = 'Your API token needs Zone → Managed Headers → Edit for security headers. (' . $result['message'] . ')';
+		}
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -811,7 +938,7 @@ class WPWAF_Ajax {
 	public function security_events(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id']       ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		$limit   = min( 500, max( 10, (int) ( $_POST['limit']   ?? 100 ) ) );
 		$action  = sanitize_text_field( $_POST['action_filter'] ?? '' );
 		$hours   = min( 720, max( 1, (int) ( $_POST['hours']    ?? 24 ) ) );
@@ -874,10 +1001,10 @@ class WPWAF_Ajax {
 	public function email_addresses_list(): void {
 		$this->check();
 		$this->require_active_account();
-		$account_id = sanitize_text_field( $_POST['account_id'] ?? '' );
-		$zone_id    = sanitize_text_field( $_POST['zone_id']    ?? '' );
+		$account_id = $this->cf_id( 'account_id' );
+		$zone_id    = $this->cf_id( 'zone_id' );
 		if ( empty( $account_id ) && ! empty( $zone_id ) ) {
-			// Resolve from a specific zone — only requires Zone → Zone → Read.
+			// Resolve from a specific zone - only requires Zone → Zone → Read.
 			$account_id = WPWAF_Accounts::api()->get_account_id_from_zone( $zone_id );
 		}
 		if ( empty( $account_id ) ) {
@@ -899,7 +1026,7 @@ class WPWAF_Ajax {
 		if ( empty( $email ) ) {
 			wp_send_json_error( [ 'message' => 'Valid email address required.' ] ); wp_die();
 		}
-		$account_id = sanitize_text_field( $_POST['account_id'] ?? '' );
+		$account_id = $this->cf_id( 'account_id' );
 		if ( empty( $account_id ) ) {
 			$account_id = WPWAF_Accounts::api()->get_account_id();
 		}
@@ -914,7 +1041,7 @@ class WPWAF_Ajax {
 	public function catch_all_get(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) { wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die(); }
 		$result = WPWAF_Accounts::api()->get_catch_all_rule( $zone_id );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
@@ -924,7 +1051,7 @@ class WPWAF_Ajax {
 	public function catch_all_update(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id  = sanitize_text_field( $_POST['zone_id']  ?? '' );
+		$zone_id  = $this->cf_id( 'zone_id' );
 		$action   = sanitize_text_field( $_POST['action_type'] ?? 'drop' );
 		$dest     = sanitize_email( $_POST['destination'] ?? '' );
 		$enabled  = filter_var( $_POST['enabled'] ?? true, FILTER_VALIDATE_BOOLEAN );
@@ -945,7 +1072,7 @@ class WPWAF_Ajax {
 	public function email_routing_get(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) { wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die(); }
 		$routing = WPWAF_Accounts::api()->get_email_routing( $zone_id );
 		$routing['success'] ? wp_send_json_success( $routing ) : wp_send_json_error( $routing );
@@ -955,7 +1082,7 @@ class WPWAF_Ajax {
 	public function email_routing_toggle(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		$enable  = filter_var( $_POST['enable'] ?? false, FILTER_VALIDATE_BOOLEAN );
 		if ( empty( $zone_id ) ) { wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die(); }
 		$api    = WPWAF_Accounts::api();
@@ -967,7 +1094,7 @@ class WPWAF_Ajax {
 	public function email_rules_list(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) { wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die(); }
 		$result = WPWAF_Accounts::api()->list_email_rules( $zone_id );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
@@ -977,7 +1104,7 @@ class WPWAF_Ajax {
 	public function email_rule_create(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id     = sanitize_text_field( $_POST['zone_id']     ?? '' );
+		$zone_id     = $this->cf_id( 'zone_id' );
 		$from        = sanitize_email(      $_POST['from']        ?? '' );
 		$to          = sanitize_email(      $_POST['to']          ?? '' );
 		$name        = sanitize_text_field( $_POST['name']        ?? '' );
@@ -1003,14 +1130,14 @@ class WPWAF_Ajax {
 	public function email_rule_update(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
-		$rule_id = sanitize_text_field( $_POST['rule_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
+		$rule_id = $this->cf_id( 'rule_id' );
 		$enabled = filter_var( $_POST['enabled'] ?? true, FILTER_VALIDATE_BOOLEAN );
 		$raw     = json_decode( wp_unslash( $_POST['rule'] ?? '{}' ), true ) ?: [];
 		if ( empty( $zone_id ) || empty( $rule_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id and rule_id required.' ] ); wp_die();
 		}
-		// Only pass known, safe fields to the API — never forward arbitrary keys from POST.
+		// Only pass known, safe fields to the API - never forward arbitrary keys from POST.
 		$data = [ 'enabled' => $enabled ];
 		if ( ! empty( $raw['name'] ) ) {
 			$data['name'] = sanitize_text_field( $raw['name'] );
@@ -1039,8 +1166,8 @@ class WPWAF_Ajax {
 	public function email_rule_delete(): void {
 		$this->check();
 		$this->require_active_account();
-		$zone_id = sanitize_text_field( $_POST['zone_id'] ?? '' );
-		$rule_id = sanitize_text_field( $_POST['rule_id'] ?? '' );
+		$zone_id = $this->cf_id( 'zone_id' );
+		$rule_id = $this->cf_id( 'rule_id' );
 		if ( empty( $zone_id ) || empty( $rule_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id and rule_id required.' ] ); wp_die();
 		}

@@ -96,7 +96,7 @@ $ajax_url = admin_url( 'admin-ajax.php' );
 <div class="cfwaf-se-wrap">
   <div class="cfwaf-se-header">
     <h1><span class="dashicons dashicons-warning"></span> Security Events</h1>
-    <div class="cfwaf-se-header-sub">Live read from Cloudflare — no data is saved or synced. Select a zone and click Load Events.</div>
+    <div class="cfwaf-se-header-sub">Live read from Cloudflare. No data is saved or synced. Select a zone and click Load Events.</div>
   </div>
 
   <?php if ( ! $has_creds ) : ?>
@@ -108,7 +108,7 @@ $ajax_url = admin_url( 'admin-ajax.php' );
   <!-- Controls -->
   <div class="cfwaf-se-controls">
     <select id="cfwaf-se-zone" class="cfwaf-se-select cfwaf-se-zone-select">
-      <option value="">— Select a zone —</option>
+      <option value="">Select a zone</option>
     </select>
     <select id="cfwaf-se-hours" class="cfwaf-se-select">
       <option value="1">Last 1 hour</option>
@@ -138,7 +138,7 @@ $ajax_url = admin_url( 'admin-ajax.php' );
       Free zones do not have access to firewall event logs via the API.
       <ul>
         <li>Upgrade this zone to Pro at <a href="https://dash.cloudflare.com" target="_blank" rel="noopener">dash.cloudflare.com</a> → Your zone → Overview → Upgrade</li>
-        <li>Or view events manually in Cloudflare Dashboard → Security → Events</li>
+        <li>Or view events manually in Cloudflare Dashboard → Security → Analytics → Events</li>
       </ul>
     </div>
   </div>
@@ -318,7 +318,7 @@ const SOURCE_MAP   = {firewallRules:'WAF Rules',firewallCustomRules:'Custom Rule
   securityLevel:'Security Level',hot:'Hotlink',rateLimit:'Rate Limit',waf:'WAF'};
 
 function fmtTime(iso){
-  if (!iso) return '—';
+  if (!iso) return '-';
   const d = new Date(iso);
   return d.toLocaleDateString()+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
@@ -345,20 +345,20 @@ function renderTable(filterAction){
   };
 
   tbody.innerHTML = rows.map(e => {
-    const src  = SOURCE_MAP[e.source] || escHtml(e.source || '—');
+    const src  = SOURCE_MAP[e.source] || escHtml(e.source || '-');
     const rule = e.ruleId && e.ruleId !== '0' ? `<br><span class="cfwaf-se-ray" style="margin-top:3px;display:block;">${escHtml(e.ruleId.slice(0,16))}…</span>` : '';
     return `<tr>
       <td class="cfwaf-se-time">${fmtTime(e.datetime)}</td>
       <td><span class="cfwaf-se-action ${e.action}">${ACTION_ICONS[e.action]||''} ${escHtml(e.action)}</span></td>
       <td>
-        <div class="cfwaf-se-ip">${escHtml(e.clientIP||'—')}</div>
+        <div class="cfwaf-se-ip">${escHtml(e.clientIP||'-')}</div>
         <div class="cfwaf-se-country">${escHtml(e.clientCountryName||'')} ${e.clientAsn?'AS'+escHtml(String(e.clientAsn)):''}</div>
       </td>
-      <td style="font-size:11px;font-weight:600;">${escHtml(e.clientRequestHTTPMethodName||'—')}</td>
+      <td style="font-size:11px;font-weight:600;">${escHtml(e.clientRequestHTTPMethodName||'-')}</td>
       <td><div class="cfwaf-se-path" title="${path(e)}">${path(e)}</div></td>
       <td><span class="cfwaf-se-source">${src}</span>${rule}</td>
-      <td><div class="cfwaf-se-ua" title="${escHtml(e.userAgent||'')}">${escHtml(e.userAgent||'—')}</div></td>
-      <td class="cfwaf-se-ray">${escHtml(e.rayName||'—')}</td>
+      <td><div class="cfwaf-se-ua" title="${escHtml(e.userAgent||'')}">${escHtml(e.userAgent||'-')}</div></td>
+      <td class="cfwaf-se-ray">${escHtml(e.rayName||'-')}</td>
     </tr>`;
   }).join('');
 }

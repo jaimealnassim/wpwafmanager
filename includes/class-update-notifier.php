@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
  * Checks GitHub daily for a newer release.json and shows a dashboard-only
  * admin notice to free users when an update is available.
  *
- * - Pro users (active SureCart license) see nothing — SureCart handles their updates.
+ * - Pro users (active SureCart license) see nothing - SureCart handles their updates.
  * - Notice is dismissible; the dismiss is stored for 24 hours so it comes back daily.
  * - Version check result is cached in a transient for 24 hours.
  */
@@ -43,7 +43,7 @@ class WPWAF_Update_Notifier {
 		// Admins only.
 		if ( ! current_user_can( 'manage_options' ) ) return;
 
-		// Pro users — SureCart handles their updates.
+		// Pro users - SureCart handles their updates.
 		if ( self::is_pro_active() ) return;
 
 		// Already dismissed today.
@@ -70,7 +70,7 @@ class WPWAF_Update_Notifier {
 
 	/**
 	 * Returns true if a SureCart activation ID is stored locally.
-	 * No API call — just checks the saved option.
+	 * No API call - just checks the saved option.
 	 */
 	private static function is_pro_active(): bool {
 		$opts = get_option( 'WP WAF Manager_license_options', [] );
@@ -100,7 +100,7 @@ class WPWAF_Update_Notifier {
 			}
 		}
 
-		// Cache for 24 hours — even on failure (empty string) to avoid hammering GitHub.
+		// Cache for 24 hours - even on failure (empty string) to avoid hammering GitHub.
 		set_transient( self::TRANSIENT_CHECK, $version, DAY_IN_SECONDS );
 
 		return $version ?: null;

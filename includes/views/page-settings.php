@@ -81,6 +81,10 @@ $s        = $settings; // passed from render_settings_page()
 .wpwaf-st-user-tag{font-size:10px;font-weight:700;color:var(--st-orange);background:#fff3ec;border:1px solid #ffe0cc;border-radius:4px;padding:2px 6px;white-space:nowrap;margin-left:auto;}
 
 
+.wpwaf-st-hide-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;}
+.wpwaf-st-hide-opt{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--st-border);border-radius:7px;font-size:12px;font-weight:600;color:var(--st-dark);cursor:pointer;}
+.wpwaf-st-hide-opt:has(input:checked){border-color:var(--st-orange);background:#fff8f5;}
+.wpwaf-st-hide-opt input{accent-color:var(--st-orange);margin:0;width:15px;height:15px;flex-shrink:0;}
 @media(max-width:660px){
   .wpwaf-st-row{grid-template-columns:1fr;}
   .wpwaf-st-select,.wpwaf-st-input{max-width:100%;}
@@ -90,7 +94,7 @@ $s        = $settings; // passed from render_settings_page()
 <div class="wpwaf-st-wrap">
   <div class="wpwaf-st-header">
     <h1><span class="dashicons dashicons-admin-settings"></span> Settings</h1>
-    <div class="wpwaf-st-header-sub">Global plugin preferences — applies across all pages</div>
+    <div class="wpwaf-st-header-sub">Global plugin preferences that apply across all pages</div>
   </div>
 
   <!-- ── Admin Bar ──────────────────────────────────────────────────────────── -->
@@ -126,10 +130,10 @@ $s        = $settings; // passed from render_settings_page()
         </div>
         <div class="wpwaf-st-control">
           <?php if ( ! $has_creds ) : ?>
-          <div class="wpwaf-st-zone-loading">No account connected — add credentials first</div>
+          <div class="wpwaf-st-zone-loading">No account connected. Add credentials first</div>
           <?php else : ?>
           <select id="st-admin-bar-zone" class="wpwaf-st-select">
-            <option value="">— Open Zone Controls page —</option>
+            <option value="">Open Zone Controls page</option>
             <option value="__loading__" disabled>Loading zones…</option>
           </select>
           <?php endif; ?>
@@ -345,7 +349,7 @@ $s        = $settings; // passed from render_settings_page()
             <button type="button" id="wpwaf-save-access-users" class="wpwaf-st-btn-save" style="font-size:13px;padding:8px 18px;">Save Access Settings</button>
             <span id="wpwaf-access-msg" class="wpwaf-st-save-msg"></span>
           </div>
-          <p style="margin:10px 0 0;font-size:11px;color:var(--st-muted);">Saving with all users checked is the same as no restriction — all administrators have access.</p>
+          <p style="margin:10px 0 0;font-size:11px;color:var(--st-muted);">Saving with all users checked is the same as no restriction. All administrators have access.</p>
         </div>
       </div>
 
@@ -410,6 +414,32 @@ $s        = $settings; // passed from render_settings_page()
             <span class="wpwaf-st-switch-label" id="st-hide-email-routing-lbl">
               <?php echo $s['hide_email_routing'] ? 'Hidden' : 'Visible'; ?>
             </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wpwaf-st-row">
+        <div>
+          <div class="wpwaf-st-label">Hide other screens</div>
+          <div class="wpwaf-st-hint">Checked screens are removed from the menu. Nothing else changes.</div>
+        </div>
+        <div class="wpwaf-st-control">
+          <div class="wpwaf-st-hide-grid">
+            <?php
+            $wpwaf_hideable = [
+              'hide_reports'      => 'Clients &amp; Reports',
+              'hide_bots'         => 'Bot Control',
+              'hide_ssl_insights' => 'SSL &amp; Insights',
+              'hide_alerts'       => 'Alerts &amp; Health',
+              'hide_turnstile'    => 'Turnstile',
+              'hide_page_rules'   => 'Page Rules',
+            ];
+            foreach ( $wpwaf_hideable as $wpwaf_key => $wpwaf_label ) : ?>
+            <label class="wpwaf-st-hide-opt">
+              <input type="checkbox" class="wpwaf-st-hide-screen" data-key="<?php echo esc_attr( $wpwaf_key ); ?>" <?php checked( ! empty( $s[ $wpwaf_key ] ) ); ?>>
+              <?php echo $wpwaf_label; // static, already escaped ?>
+            </label>
+            <?php endforeach; ?>
           </div>
         </div>
       </div>
@@ -481,7 +511,7 @@ qs('#wpwaf-st-test-conn')?.addEventListener('click', function(){
     btn.disabled = false; btn.textContent = 'Test Connection';
     if (r.success) {
       res.style.color = '#059669';
-      res.textContent = '✓ Connected — ' + r.data.account + ' · ' + r.data.zone_count + ' zone' + (r.data.zone_count !== 1 ? 's' : '');
+      res.textContent = '✓ Connected: ' + r.data.account + ' · ' + r.data.zone_count + ' zone' + (r.data.zone_count !== 1 ? 's' : '');
     } else {
       res.style.color = '#dc2626';
       res.textContent = '✗ ' + (r.data?.message || 'Connection failed');
@@ -495,7 +525,7 @@ if (HAS_CREDS) {
     const sel = qs('#st-admin-bar-zone');
     if (!sel) return;
     // Remove the loading placeholder
-    sel.innerHTML = '<option value="">— Open Zone Controls page —</option>';
+    sel.innerHTML = '<option value="">Open Zone Controls page</option>';
     if (res.success && res.data.zones?.length) {
       res.data.zones.forEach(z => {
         const opt = document.createElement('option');
@@ -549,6 +579,7 @@ qs('#wpwaf-st-save')?.addEventListener('click', function(){
     dashboard_widget:     qs('#st-dashboard-widget')?.checked     ? '1' : '0',
     hide_email_routing:   qs('#st-hide-email-routing')?.checked   ? '1' : '0',
   };
+  document.querySelectorAll('.wpwaf-st-hide-screen').forEach(cb => { settings[cb.dataset.key] = cb.checked ? '1' : '0'; });
 
   btn.disabled     = true;
   btn.textContent  = 'Saving…';

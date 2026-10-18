@@ -10,14 +10,14 @@
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-// Load just enough to read the setting — no full plugin bootstrap needed.
+// Load just enough to read the setting - no full plugin bootstrap needed.
 $settings = get_option( 'wpwaf_plugin_settings', [] );
 $keep     = isset( $settings['keep_data_on_uninstall'] )
     ? (bool) $settings['keep_data_on_uninstall']
     : true; // default: keep data, fail-safe
 
 if ( $keep ) {
-    // User chose to keep data — do nothing.
+    // User chose to keep data - do nothing.
     return;
 }
 
@@ -35,6 +35,22 @@ $options_to_delete = [
     'wpwaf_zone_status_settings',
     'wpwaf_zone_status_cache',
 
+    // Rule profiles, domain profiles, zone flares and user access
+    'wpwaf_profiles',
+    'wpwaf_active_profile',
+    'wpwaf_domain_profiles',
+    'wpwaf_active_domain_profile',
+    'wpwaf_zone_flares',
+    'wpwaf_allowed_user_ids',
+
+    // SSL & Insights scan results
+    'wpwaf_si_scan_cache',
+
+    // Client Reports
+    'wpwaf_report_branding',
+    'wpwaf_clients',
+    'wpwaf_report_log',
+
     // Plugin-wide settings (must be last so the keep flag is gone)
     'wpwaf_plugin_settings',
 
@@ -51,6 +67,7 @@ foreach ( $options_to_delete as $option ) {
 }
 
 // Remove the WP-Cron scheduled event.
+wp_clear_scheduled_hook( 'wpwaf_reports_cron' );
 $ts = wp_next_scheduled( 'wpwaf_zone_status_sync' );
 if ( $ts ) {
     wp_unschedule_event( $ts, 'wpwaf_zone_status_sync' );

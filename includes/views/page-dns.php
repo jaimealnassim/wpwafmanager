@@ -108,8 +108,10 @@ $ajax_url     = admin_url( 'admin-ajax.php' );
 
 <div class="cfwaf-dns-wrap">
 	<div class="cfwaf-dns-header">
-		<h1><span class="dashicons dashicons-admin-site-alt3"></span> DNS Manager</h1>
-		<div style="font-size:12px;color:var(--dns-muted);">Manage DNS records across your Cloudflare zones</div>
+		<div>
+			<h1><span class="dashicons dashicons-admin-site-alt3"></span> DNS Manager</h1>
+			<div style="font-size:12px;color:var(--dns-muted);margin-top:3px;">Manage DNS records across your Cloudflare zones</div>
+		</div>
 	</div>
 
 	<?php if ( ! $has_creds ) : ?>
@@ -120,7 +122,7 @@ $ajax_url     = admin_url( 'admin-ajax.php' );
 
 	<div class="cfwaf-dns-controls">
 		<select id="cfwaf-dns-zone-select" class="cfwaf-dns-select">
-			<option value="">— Select a zone —</option>
+			<option value="">Select a zone</option>
 		</select>
 		<button class="cfwaf-dns-btn cfwaf-dns-btn-secondary" id="cfwaf-dns-refresh">
 			<span class="dashicons dashicons-update" style="font-size:14px;width:14px;height:14px;"></span> Refresh
@@ -398,11 +400,11 @@ function renderTable(){
 		const tc = `cfwaf-type-badge ${r.type}`;
 		const canProxy = PROXYABLE.includes(r.type);
 		const proxyHTML = canProxy
-			? `<button class="cfwaf-proxy-toggle" data-id="${r.id}" data-proxied="${r.proxied?'1':'0'}" title="${r.proxied?'Proxied — click to disable':'DNS only — click to enable proxy'}">
+			? `<button class="cfwaf-proxy-toggle" data-id="${r.id}" data-proxied="${r.proxied?'1':'0'}" title="${r.proxied?'Proxied: click to disable':'DNS only: click to enable proxy'}">
 				<span class="cfwaf-proxy-icon ${r.proxied?'proxied':'unproxied'}">☁</span>
 				<span class="cfwaf-proxy-label">${r.proxied?'Proxied':'DNS only'}</span>
 			   </button>`
-			: `<span class="cfwaf-proxy-label" style="color:#d1d5db">—</span>`;
+			: `<span class="cfwaf-proxy-label" style="color:#d1d5db">-</span>`;
 		const content = fmtContent(r);
 		const shortContent = content.length > 60 ? content.slice(0,60)+'…' : content;
 		return `<tr>

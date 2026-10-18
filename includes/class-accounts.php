@@ -29,7 +29,7 @@ defined( 'ABSPATH' ) || exit;
  *   define( 'WPWAF_API_EMAIL', 'you@example.com' );
  *   define( 'WPWAF_API_KEY',   'your-global-api-key' );
  *
- * When a constant account is active, it is read-only — it cannot be edited
+ * When a constant account is active, it is read-only - it cannot be edited
  * or deleted from the plugin UI.
  */
 class WPWAF_Accounts {
@@ -38,7 +38,7 @@ class WPWAF_Accounts {
 	private const OPTION_ACTIVE   = 'wpwaf_active_account';
 	private const CONST_ACCOUNT_PREFIX = 'const_account_';
 
-	/** Encryption prefix — distinguishes sodium ciphertext from legacy base64. */
+	/** Encryption prefix - distinguishes sodium ciphertext from legacy base64. */
 	private const ENC_PREFIX = 'enc2:';
 
 	/** In-request static cache to avoid repeated get_option calls. */
@@ -122,7 +122,7 @@ class WPWAF_Accounts {
 	// ── Read ──────────────────────────────────────────────────────────────────
 
 	/**
-	 * Return all accounts — constant account first (if defined), then DB accounts.
+	 * Return all accounts - constant account first (if defined), then DB accounts.
 	 * Credentials are decrypted.
 	 */
 	public static function all(): array {
@@ -248,6 +248,48 @@ class WPWAF_Accounts {
 			email:       $acc['email']        ?? '',
 			api_key:     $acc['api_key']      ?? '',
 		);
+	}
+
+	/**
+	 * Accounts in a shape that is safe to send to the browser: labels and
+	 * flags only, never the API token, Global API Key or email.
+	 */
+	public static function for_js(): array {
+		return array_map( static function ( array $acc ): array {
+			return [
+				'id'            => (string) ( $acc['id'] ?? '' ),
+				'label'         => (string) ( $acc['label'] ?? '' ),
+				'auth_method'   => (string) ( $acc['auth_method'] ?? 'token' ),
+				'has_api_token' => ! empty( $acc['api_token'] ),
+				'has_api_key'   => ! empty( $acc['api_key'] ),
+				'expires_at'    => (int) ( $acc['expires_at'] ?? 0 ),
+				'readonly'      => (bool) ( $acc['readonly'] ?? false ),
+			];
+		}, self::all() );
+	}
+
+	/**
+	 * API client for a specific plugin account (used by scheduled client
+	 * reports, which must keep using the account they were set up with).
+	 * Returns null if the account no longer exists or has expired.
+	 */
+	public static function api_for( string $id ): ?WPWAF_API {
+		foreach ( self::all() as $acc ) {
+			if ( ( $acc['id'] ?? '' ) !== $id ) {
+				continue;
+			}
+			$expires = (int) ( $acc['expires_at'] ?? 0 );
+			if ( empty( $acc['_constant'] ) && $expires > 0 && time() > $expires ) {
+				return null;
+			}
+			return new WPWAF_API(
+				auth_method: $acc['auth_method'] ?? 'token',
+				api_token:   $acc['api_token']   ?? '',
+				email:       $acc['email']        ?? '',
+				api_key:     $acc['api_key']      ?? '',
+			);
+		}
+		return null;
 	}
 
 	// ── Migration ─────────────────────────────────────────────────────────────

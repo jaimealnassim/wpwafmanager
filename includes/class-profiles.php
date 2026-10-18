@@ -2,7 +2,7 @@
 declare( strict_types = 1 );
 
 /**
- * WPWAF_Profiles — Named WAF rule setting profiles.
+ * WPWAF_Profiles - Named WAF rule setting profiles.
  *
  * Profiles are stored as an associative array in wp_options under
  * 'wpwaf_profiles'. Each entry holds { id, name, settings }.
@@ -105,7 +105,7 @@ class WPWAF_Profiles {
 	}
 
 	/**
-	 * Return a safe array for JS — settings are stripped out,
+	 * Return a safe array for JS - settings are stripped out,
 	 * only id, name, and notes are exposed to the frontend.
 	 */
 	public static function for_js(): array {

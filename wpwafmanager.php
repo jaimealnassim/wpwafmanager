@@ -2,10 +2,10 @@
 /**
  * Plugin Name:       WP WAF Manager
  * Plugin URI:        https://wpwafmanager.com
- * Description:       Visual Cloudflare WAF rule builder, DNS manager, and zone analytics dashboard. Deploy battle-tested security rules to any Cloudflare zone in one click — no API docs required.
- * Version:           1.0.23
+ * Description:       Manage Cloudflare from WordPress: WAF rules, DNS, bots, SSL, cache, alerts, Turnstile, Page Rules migration, IP rules and email routing across every client zone.
+ * Version:           1.0.24
  * Requires at least: 6.0
- * Tested up to:      6.7
+ * Tested up to:      7.1
  * Requires PHP:      8.0
  * Author:            WP WAF Manager
  * Author URI:        https://www.wpwafmanager.com
@@ -18,7 +18,7 @@ declare( strict_types=1 );
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WPWAF_VERSION', '1.0.23' );
+define( 'WPWAF_VERSION', '1.0.24' );
 define( 'WPWAF_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'WPWAF_URL',     plugin_dir_url( __FILE__ ) );
 
@@ -40,7 +40,7 @@ add_action( 'init', static function (): void {
 	] );
 } );
 
-// Core classes — order matters (API must load before consumers).
+// Core classes - order matters (API must load before consumers).
 require_once WPWAF_DIR . 'includes/class-settings.php';
 require_once WPWAF_DIR . 'includes/class-cloudflare-api.php';
 require_once WPWAF_DIR . 'includes/class-accounts.php';
@@ -49,6 +49,14 @@ require_once WPWAF_DIR . 'includes/class-profiles.php';
 require_once WPWAF_DIR . 'includes/class-domain-profiles.php';
 require_once WPWAF_DIR . 'includes/class-access.php';
 require_once WPWAF_DIR . 'includes/class-zone-flares.php';
+require_once WPWAF_DIR . 'includes/class-module.php';
+require_once WPWAF_DIR . 'includes/class-bots.php';
+require_once WPWAF_DIR . 'includes/class-ssl-insights.php';
+require_once WPWAF_DIR . 'includes/class-alerts.php';
+require_once WPWAF_DIR . 'includes/class-turnstile.php';
+require_once WPWAF_DIR . 'includes/class-page-rules.php';
+require_once WPWAF_DIR . 'includes/class-analytics.php';
+require_once WPWAF_DIR . 'includes/class-reports.php';
 
 // Bootstrap profiles on first run.
 add_action( 'plugins_loaded', [ 'WPWAF_Profiles', 'bootstrap' ], 5 );
@@ -82,14 +90,14 @@ add_action( 'admin_bar_menu', static function ( WP_Admin_Bar $bar ): void {
 		'title' => esc_html( $label ),
 		'href'  => $href,
 		'meta'  => [
-			'title'       => 'WP WAF Manager — Quick Cache Purge',
+			'title'       => 'WP WAF Manager: Quick Cache Purge',
 			'data-zone'   => esc_attr( $zone_id ),
 			'data-direct' => $zone_id && $purge_all ? '1' : '0',
 		],
 	] );
 }, 80 );
 
-// Enqueue admin-bar JS for direct AJAX purge — using wp_footer for clean output.
+// Enqueue admin-bar JS for direct AJAX purge - using wp_footer for clean output.
 add_action( 'admin_footer', static function (): void {
 	if ( ! WPWAF_Settings::get( 'admin_bar_enabled', true ) ) return;
 	$zone_id   = WPWAF_Settings::get( 'admin_bar_zone_id', '' );
@@ -169,6 +177,14 @@ add_action( 'plugins_loaded', static function (): void {
 	WPWAF_Ajax::init();
 	WPWAF_Zone_Status::init();
 	WPWAF_Update_Notifier::init();
+	WPWAF_Module::register_shared();
+	WPWAF_Bots::init();
+	WPWAF_SSL_Insights::init();
+	WPWAF_Alerts::init();
+	WPWAF_Turnstile::init();
+	WPWAF_Page_Rules::init();
+	WPWAF_Analytics::init();
+	WPWAF_Reports::init();
 } );
 
 register_activation_hook( __FILE__, static function (): void {
@@ -185,4 +201,6 @@ register_deactivation_hook( __FILE__, static function (): void {
 	if ( $ts ) {
 		wp_unschedule_event( $ts, 'wpwaf_zone_status_sync' );
 	}
+	// Client Reports check for due emails hourly; stop that while deactivated.
+	wp_clear_scheduled_hook( 'wpwaf_reports_cron' );
 } );

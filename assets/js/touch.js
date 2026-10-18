@@ -1,5 +1,5 @@
 /**
- * Cloudflare WAF Manager — Touch & Swipe Utilities
+ * Cloudflare WAF Manager - Touch & Swipe Utilities
  * Provides swipe detection and scroll-snap for tab bars.
  */
 (function () {
@@ -40,11 +40,11 @@
   /**
    * Make a set of tabs swipeable on a content container.
    * @param {Object} opts
-   *   tabs       — NodeList/Array of tab <button> elements.
-   *   panels     — NodeList/Array of content panel elements.
-   *   swipeEl    — Element to attach swipe listener to (usually the panel wrapper).
-   *   dotsEl     — Optional element to render indicator dots into.
-   *   onChange   — Optional callback(index) fired when tab changes.
+   *   tabs       - NodeList/Array of tab <button> elements.
+   *   panels     - NodeList/Array of content panel elements.
+   *   swipeEl    - Element to attach swipe listener to (usually the panel wrapper).
+   *   dotsEl     - Optional element to render indicator dots into.
+   *   onChange   - Optional callback(index) fired when tab changes.
    */
   function TabSwiper(opts) {
     var tabs    = Array.from(opts.tabs);
@@ -200,7 +200,7 @@
   function initZoneStatusSwipe() {
     var grid = document.getElementById('cfwaf-zs-cards');
     if (!grid) return;
-    // Cards stack vertically — no horizontal swipe needed
+    // Cards stack vertically - no horizontal swipe needed
     // Swipe on settings bar to quickly open/close zone picker
     var picker = document.getElementById('cfwaf-zs-zone-picker-toggle');
     if (picker) {

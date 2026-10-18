@@ -1,4 +1,4 @@
-/* Cloudflare WAF Manager v1.0.0 — Vanilla JS, no jQuery */
+/* Cloudflare WAF Manager v1.0.0 - Vanilla JS, no jQuery */
 'use strict';
 
 (function () {
@@ -866,7 +866,7 @@
 		if (qs('#cfwaf-account-label'))      qs('#cfwaf-account-label').value = acc.label || '';
 		if (qs('#cfwaf-editing-account-id')) qs('#cfwaf-editing-account-id').value = acc.id;
 
-		// Prefill expiry selects — pick closest option
+		// Prefill expiry selects - pick closest option
 		var expiresAt = acc.expires_at || 0;
 		var expiryVal = '0'; // forever
 		if (expiresAt > 0) {
@@ -1001,7 +1001,7 @@
 			syncSettings();
 		});
 
-		// Region quick-picks — additive, multiple can be active at once
+		// Region quick-picks - additive, multiple can be active at once
 		delegate(document, 'click', '.cfwaf-region-btn', function(e, btn) {
 			var region = btn.dataset.region;
 			var codes  = REGIONS[region] || [];
@@ -1145,7 +1145,7 @@
 
 })();
 
-// Injected after boot — Export / Import settings as JSON
+// Injected after boot - Export / Import settings as JSON
 
 (function () {
 
@@ -1302,7 +1302,7 @@
 							if (res.success) {
 								toast('\u2713 Settings imported and saved!');
 							} else {
-								toast('\u2713 Settings imported (save failed — try Save Settings manually)');
+								toast('\u2713 Settings imported (save failed, try Save Settings manually)');
 							}
 						})
 						.catch(function() {

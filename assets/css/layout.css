@@ -1,0 +1,107 @@
+/**
+ * WP WAF Manager - Shared page frame
+ *
+ * Gives every plugin screen the same width, gutters and left edge so moving
+ * between pages feels like one app, on laptops, large monitors and phones.
+ *
+ * Selectors are scoped to body.wpwaf-admin (added on plugin pages only) so
+ * they outrank the inline <style> block each page prints in its body.
+ */
+
+body.wpwaf-admin {
+	--wpwaf-gutter: 20px;          /* space between the WP content edge and our content */
+	--wpwaf-wp-pad: 20px;          /* WordPress #wpcontent left padding at this width   */
+	--wpwaf-max: 1400px;           /* data screens: tables, grids, dashboards           */
+	--wpwaf-max-narrow: 960px;     /* form and reading screens                          */
+}
+
+/* ── Page wrappers ───────────────────────────────────────────────────────── */
+body.wpwaf-admin .cfwaf-dns-wrap,
+body.wpwaf-admin .cfwaf-zs-wrap,
+body.wpwaf-admin .cfwaf-ip-wrap,
+body.wpwaf-admin .cfwaf-zc-wrap,
+body.wpwaf-admin .cfwaf-se-wrap,
+body.wpwaf-admin .wpwaf-er-wrap,
+body.wpwaf-admin .cfwaf-zn-wrap,
+body.wpwaf-admin .wpwaf-rp-wrap,
+body.wpwaf-admin .wpwaf-bt-wrap,
+body.wpwaf-admin .wpwaf-si-wrap,
+body.wpwaf-admin .wpwaf-al-wrap,
+body.wpwaf-admin .wpwaf-ts-wrap,
+body.wpwaf-admin .wpwaf-pr-wrap,
+body.wpwaf-admin .wpwaf-st-wrap,
+body.wpwaf-admin .wpwaf-about-wrap {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: var(--wpwaf-max);
+	margin: 0;
+	padding: 24px var(--wpwaf-gutter) 48px;
+}
+body.wpwaf-admin .wpwaf-st-wrap,
+body.wpwaf-admin .wpwaf-about-wrap {
+	max-width: var(--wpwaf-max-narrow);
+}
+
+/* ── WAF Rules (main) page ───────────────────────────────────────────────
+   The black banner runs edge to edge across the content area; the content
+   inside it and the page body below share the same left edge and max width
+   as every other screen. */
+body.wpwaf-admin .cfwaf-wrap { max-width: none; }
+body.wpwaf-admin .cfwaf-header {
+	margin: 0 0 0 calc(var(--wpwaf-wp-pad) * -1);
+	padding: 0 var(--wpwaf-gutter) 0 calc(var(--wpwaf-wp-pad) + var(--wpwaf-gutter));
+}
+body.wpwaf-admin .cfwaf-header-inner {
+	max-width: calc(var(--wpwaf-max) - var(--wpwaf-gutter) * 2);
+	gap: 16px;
+}
+body.wpwaf-admin .cfwaf-body {
+	box-sizing: border-box;
+	max-width: var(--wpwaf-max);
+	padding: 24px var(--wpwaf-gutter) 60px;
+}
+
+/* ── Form controls never push past their container ───────────────────────── */
+body.wpwaf-admin #wpbody-content select { max-width: 100%; }
+body.wpwaf-admin .cfwaf-ip-account-select,
+body.wpwaf-admin .wpwaf-er-account-select,
+body.wpwaf-admin .cfwaf-se-zone-select,
+body.wpwaf-admin .cfwaf-dns-select { min-width: 0; }
+
+/* Long domains, IPv6 addresses and paths wrap instead of stretching cards. */
+body.wpwaf-admin .cfwaf-zone-name,
+body.wpwaf-admin .cfwaf-zn-domain { overflow-wrap: anywhere; }
+
+/* ── Tablet and below (WordPress collapses its own layout at 782px) ─────── */
+@media screen and (max-width: 782px) {
+	body.wpwaf-admin {
+		--wpwaf-wp-pad: 10px;
+		--wpwaf-gutter: 12px;
+	}
+	/* WordPress already supplies 10px on the left, so the left side needs only
+	   2px more to match the 12px gutter on the right. */
+	body.wpwaf-admin .cfwaf-dns-wrap,
+	body.wpwaf-admin .cfwaf-zs-wrap,
+	body.wpwaf-admin .cfwaf-ip-wrap,
+	body.wpwaf-admin .cfwaf-zc-wrap,
+	body.wpwaf-admin .cfwaf-se-wrap,
+	body.wpwaf-admin .wpwaf-er-wrap,
+	body.wpwaf-admin .cfwaf-zn-wrap,
+	body.wpwaf-admin .wpwaf-rp-wrap,
+	body.wpwaf-admin .wpwaf-bt-wrap,
+	body.wpwaf-admin .wpwaf-si-wrap,
+	body.wpwaf-admin .wpwaf-al-wrap,
+	body.wpwaf-admin .wpwaf-ts-wrap,
+	body.wpwaf-admin .wpwaf-pr-wrap,
+	body.wpwaf-admin .wpwaf-st-wrap,
+	body.wpwaf-admin .wpwaf-about-wrap,
+	body.wpwaf-admin .cfwaf-body {
+		padding: 16px 12px 40px 2px;
+	}
+	body.wpwaf-admin .cfwaf-header {
+		padding: 0 12px 0 calc(var(--wpwaf-wp-pad) + 2px);
+	}
+	/* Profile bar: the dropdown takes the full row, actions share the next. */
+	body.wpwaf-admin .cfwaf-profile-bar__left { width: 100%; }
+	body.wpwaf-admin .cfwaf-profile-bar__select { flex: 1 1 160px; min-width: 0; }
+}

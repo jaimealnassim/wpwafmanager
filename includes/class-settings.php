@@ -35,6 +35,12 @@ class WPWAF_Settings {
 			'hide_security_events'  => false,
 			'dashboard_widget'      => true,
 			'hide_email_routing'    => false,
+			'hide_reports'          => false,
+			'hide_bots'             => false,
+			'hide_ssl_insights'     => false,
+			'hide_alerts'           => false,
+			'hide_turnstile'        => false,
+			'hide_page_rules'       => false,
 			'keep_data_on_uninstall' => true,
 		];
 	}
@@ -84,6 +90,12 @@ class WPWAF_Settings {
 			'hide_security_events'  => (bool) ( $raw['hide_security_events']  ?? false ),
 			'dashboard_widget'      => (bool) ( $raw['dashboard_widget']      ?? true ),
 			'hide_email_routing'    => (bool) ( $raw['hide_email_routing']    ?? false ),
+			'hide_reports'          => (bool) ( $raw['hide_reports']          ?? false ),
+			'hide_bots'             => (bool) ( $raw['hide_bots']             ?? false ),
+			'hide_ssl_insights'     => (bool) ( $raw['hide_ssl_insights']     ?? false ),
+			'hide_alerts'           => (bool) ( $raw['hide_alerts']           ?? false ),
+			'hide_turnstile'        => (bool) ( $raw['hide_turnstile']        ?? false ),
+			'hide_page_rules'       => (bool) ( $raw['hide_page_rules']       ?? false ),
 			'keep_data_on_uninstall' => (bool) ( $raw['keep_data_on_uninstall'] ?? true ),
 		];
 		update_option( self::OPTION, $s, false );

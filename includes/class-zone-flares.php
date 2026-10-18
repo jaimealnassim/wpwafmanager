@@ -4,7 +4,7 @@ declare( strict_types = 1 );
 defined( 'ABSPATH' ) || exit;
 
 /**
- * WPWAF_Zone_Flares — Per-zone metadata labels ("flares").
+ * WPWAF_Zone_Flares - Per-zone metadata labels ("flares").
  *
  * Flares are stored as an associative array in wp_options keyed by zone ID.
  * Each entry: { flare_id: string, custom_label: string }
@@ -13,7 +13,7 @@ class WPWAF_Zone_Flares {
 
 	private const OPTION = 'wpwaf_zone_flares';
 
-	/** Preset flare definitions — id, label, color. */
+	/** Preset flare definitions - id, label, color. */
 	public static function presets(): array {
 		return [
 			[ 'id' => 'woo',         'label' => 'WooCommerce',           'color' => '#7f54b3' ],
