@@ -3,7 +3,7 @@
  * Plugin Name:       WP WAF Manager
  * Plugin URI:        https://wpwafmanager.com
  * Description:       Manage Cloudflare from WordPress: WAF rules, DNS, bots, SSL, cache, alerts, Turnstile, Page Rules migration, IP rules and email routing across every client zone.
- * Version:           1.0.24
+ * Version:           1.0.24.1
  * Requires at least: 6.0
  * Tested up to:      7.1
  * Requires PHP:      8.0
@@ -18,9 +18,36 @@ declare( strict_types=1 );
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WPWAF_VERSION', '1.0.24' );
+// ── Second copy guard ─────────────────────────────────────────────────────────
+// If another copy of the plugin (a different folder) is already running, stop
+// here before anything is defined twice, and tell the admin which copy to remove.
+if ( defined( 'WPWAF_VERSION' ) ) {
+	$wpwaf_dup_this    = basename( __DIR__ );
+	$wpwaf_dup_running = defined( 'WPWAF_DIR' ) ? basename( untrailingslashit( (string) WPWAF_DIR ) ) : '';
+	$wpwaf_dup_version = (string) WPWAF_VERSION;
+	add_action( 'admin_notices', static function () use ( $wpwaf_dup_this, $wpwaf_dup_running, $wpwaf_dup_version ): void {
+		if ( ! current_user_can( 'activate_plugins' ) ) return;
+		printf(
+			'<div class="notice notice-error"><p><strong>WP WAF Manager:</strong> %s</p></div>',
+			esc_html( sprintf(
+				'Two copies of the plugin are active. Version %1$s is running from the "%2$s" folder, so the copy in the "%3$s" folder was not loaded. Deactivate and delete the copy you do not use. Your settings are stored in the database and are kept.',
+				$wpwaf_dup_version,
+				$wpwaf_dup_running,
+				$wpwaf_dup_this
+			) )
+		);
+	} );
+	unset( $wpwaf_dup_this, $wpwaf_dup_running, $wpwaf_dup_version );
+	return;
+}
+
+define( 'WPWAF_VERSION', '1.0.24.1' );
 define( 'WPWAF_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'WPWAF_URL',     plugin_dir_url( __FILE__ ) );
+
+// Safe updates and deletions (folder pinning, shared settings protection).
+require_once WPWAF_DIR . 'includes/class-upgrade-safety.php';
+WPWAF_Upgrade_Safety::init( __FILE__ );
 
 // ── SureCart Licensing & Auto-Updates ─────────────────────────────────────────
 // Initialised on the init hook per the SDK documentation.

@@ -21,6 +21,19 @@ if ( $keep ) {
     return;
 }
 
+// Every copy of the plugin shares the same settings. If another copy is still
+// installed (for example a duplicate folder left by an update), deleting this
+// copy must not remove data the other copy is using.
+if ( ! function_exists( 'get_plugins' ) ) {
+    require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+foreach ( get_plugins() as $wpwaf_file => $wpwaf_data ) {
+    if ( dirname( $wpwaf_file ) === dirname( WP_UNINSTALL_PLUGIN ) ) continue;
+    if ( ( $wpwaf_data['Name'] ?? '' ) !== 'WP WAF Manager' ) continue;
+    if ( ! file_exists( WP_PLUGIN_DIR . '/' . $wpwaf_file ) ) continue;
+    return;
+}
+
 // ── Delete all plugin data ────────────────────────────────────────────────────
 
 $options_to_delete = [
