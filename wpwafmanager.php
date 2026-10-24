@@ -3,7 +3,7 @@
  * Plugin Name:       WP WAF Manager
  * Plugin URI:        https://wpwafmanager.com
  * Description:       Manage Cloudflare from WordPress: WAF rules, DNS, bots, SSL, cache, alerts, Turnstile, Page Rules migration, IP rules and email routing across every client zone.
- * Version:           1.0.24.1
+ * Version:           1.0.25
  * Requires at least: 6.0
  * Tested up to:      7.1
  * Requires PHP:      8.0
@@ -41,7 +41,7 @@ if ( defined( 'WPWAF_VERSION' ) ) {
 	return;
 }
 
-define( 'WPWAF_VERSION', '1.0.24.1' );
+define( 'WPWAF_VERSION', '1.0.25' );
 define( 'WPWAF_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'WPWAF_URL',     plugin_dir_url( __FILE__ ) );
 
@@ -71,6 +71,7 @@ add_action( 'init', static function (): void {
 require_once WPWAF_DIR . 'includes/class-settings.php';
 require_once WPWAF_DIR . 'includes/class-cloudflare-api.php';
 require_once WPWAF_DIR . 'includes/class-accounts.php';
+require_once WPWAF_DIR . 'includes/class-service-ips.php';
 require_once WPWAF_DIR . 'includes/class-rule-builder.php';
 require_once WPWAF_DIR . 'includes/class-profiles.php';
 require_once WPWAF_DIR . 'includes/class-domain-profiles.php';
@@ -124,8 +125,11 @@ add_action( 'admin_bar_menu', static function ( WP_Admin_Bar $bar ): void {
 	] );
 }, 80 );
 
-// Enqueue admin-bar JS for direct AJAX purge - using wp_footer for clean output.
-add_action( 'admin_footer', static function (): void {
+// Admin-bar JS for direct AJAX purge, printed on admin pages and on the front
+// end wherever the admin bar shows.
+$wpwaf_admin_bar_purge_js = static function (): void {
+	if ( ! is_admin_bar_showing() ) return;
+	if ( ! WPWAF_Access::current_user_can() ) return;
 	if ( ! WPWAF_Settings::get( 'admin_bar_enabled', true ) ) return;
 	$zone_id   = WPWAF_Settings::get( 'admin_bar_zone_id', '' );
 	$purge_all = WPWAF_Settings::get( 'admin_bar_purge_all', true );
@@ -150,7 +154,7 @@ add_action( 'admin_footer', static function (): void {
 		btn.setAttribute('href','#');
 		btn.addEventListener('click',function(e){
 			e.preventDefault();
-			btn.textContent='Purging…';
+			btn.textContent='Purging\u2026';
 			var fd=new FormData();
 			fd.append('action','wpwaf_purge_cache');
 			fd.append('nonce',d.nonce);
@@ -161,12 +165,18 @@ add_action( 'admin_footer', static function (): void {
 				.then(function(r){
 					btn.textContent=r.success?'Cache Purged':'Failed';
 					setTimeout(function(){btn.textContent=d.label;},3000);
+				})
+				.catch(function(){
+					btn.textContent='Failed';
+					setTimeout(function(){btn.textContent=d.label;},3000);
 				});
 		});
 	})();
 	</script>
 	<?php
-} );
+};
+add_action( 'admin_footer', $wpwaf_admin_bar_purge_js );
+add_action( 'wp_footer', $wpwaf_admin_bar_purge_js );
 
 
 add_action( 'admin_notices', static function (): void {
@@ -200,6 +210,11 @@ add_action( 'plugins_loaded', static function (): void {
 	}
 
 	WPWAF_Accounts::migrate_legacy(); // one-time migration, exits early if not needed
+	// Move saved rule settings and profiles to the October 2026 ruleset once.
+	if ( get_option( 'wpwaf_rules_version' ) !== WPWAF_Service_IPs::RULES_DATE ) {
+		WPWAF_Rule_Builder::migrate_stored();
+	}
+
 	WPWAF_Admin::init();
 	WPWAF_Ajax::init();
 	WPWAF_Zone_Status::init();

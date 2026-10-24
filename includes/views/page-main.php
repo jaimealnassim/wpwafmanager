@@ -22,7 +22,7 @@
 				</div>
 			</a>
 			<div class="cfwaf-header-meta">
-				<div class="cfwaf-header-meta-updated">Rules last updated: July 2, 2026 &mdash; <a href="https://wafrules.com" target="_blank" rel="noopener">wafrules.com</a></div>
+				<div class="cfwaf-header-meta-updated">Rules last updated: October 21, 2026, from <a href="https://wafrules.com" target="_blank" rel="noopener">wafrules.com</a></div>
 				<a href="https://github.com/jaimealnassim/wpwafmanager" target="_blank" rel="noopener" class="cfwaf-header-github" title="View on GitHub" style="justify-content:flex-end;">
 					<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
 					<span>GitHub</span>
@@ -177,7 +177,7 @@
 					<div class="cfwaf-step-content">
 						<h3>Deploy to Your Sites</h3>
 						<p>Once configured, scroll to the bottom and click <strong>Deploy Rules to Your Sites</strong>. All your Cloudflare zones will load automatically. Pick one site, a handful, or all of them at once &mdash; then click <strong>Deploy</strong>. The plugin pushes all five rules directly to Cloudflare via API in the correct order. No copy-pasting expressions into the Cloudflare dashboard required.</p>
-						<p class="cfwaf-hint"><strong>Why order matters:</strong> Rule 1 (Allow Good Bots) must be first because it uses the Skip action to whitelist legitimate bots before any blocking rules run. Block rules come before Challenge rules because a blocked request stops evaluation immediately &mdash; no further rules are checked.</p>
+						<p class="cfwaf-hint"><strong>Why order matters:</strong> Rule 1 (Allow Good Bots) must be first because it uses the Skip action to whitelist legitimate bots before any blocking rules run. Block rules come before Challenge rules because a blocked request stops evaluation immediately, so no further rules are checked.</p>
 					</div>
 				</div>
 
@@ -218,6 +218,16 @@
 				<span class="cfwaf-profile-notes-hint">Notes are saved with the profile when you hit Save.</span>
 			</div>
 
+			<?php
+			$moved_agents = get_option( 'wpwaf_rules_moved_agents', [] );
+			if ( is_array( $moved_agents ) && $moved_agents ) : ?>
+			<div class="cfwaf-notice cfwaf-notice-info cfwaf-rules-moved" id="cfwaf-rules-moved">
+				<p><strong>WAF rules updated to the October 21, 2026 ruleset.</strong> Rule 1 no longer allows services by user agent, because a user agent is easy to fake. Services Cloudflare verifies are covered by &ldquo;Allow every Cloudflare verified bot&rdquo;, and services with a published IP list now have their own switch.</p>
+				<p>So nothing stops working, these user agents were moved to <strong>Custom User Agents to Allow</strong> in your saved profiles: <?php echo implode( ', ', array_map( static fn( $ua ) => '<code>' . esc_html( (string) $ua ) . '</code>', $moved_agents ) ); ?>. Remove any you don&rsquo;t need, and add those services&rsquo; server IPs under <strong>Your server IPs</strong> instead where you can. Deploy again to apply the new rules.</p>
+				<button type="button" class="cfwaf-btn cfwaf-btn-sm" id="cfwaf-rules-moved-dismiss">Got it</button>
+			</div>
+			<?php endif; ?>
+
 			<!-- RULE 1 -->
 			<div class="cfwaf-rule-card">
 				<div class="cfwaf-rule-header">
@@ -225,7 +235,7 @@
 						<span class="cfwaf-rule-num cfwaf-num-skip">1</span>
 						<div>
 							<h3>Allow Good Bots</h3>
-							<p>Grants unrestricted access to verified bots and whitelisted services. <strong>Skip</strong> action &mdash; must be Rule #1.</p>
+							<p>Lets Cloudflare verified bots and services with a published IP list skip the later custom rules, rate limiting, Super Bot Fight Mode and legacy security products. Managed rules still run. <strong>Skip</strong> action, always Rule #1.</p>
 						</div>
 					</div>
 					<div class="cfwaf-rule-controls">
@@ -236,9 +246,13 @@
 				<div class="cfwaf-rule-body">
 
 					<div class="cfwaf-section">
-						<h4>Cloudflare Verified Bot Categories</h4>
-						<p class="cfwaf-hint">Allow all bots in these Cloudflare-verified categories.</p>
-						<div class="cfwaf-cat-grid">
+						<h4>Cloudflare Verified Bots</h4>
+						<label class="cfwaf-check-label cfwaf-check-strong">
+							<input type="checkbox" data-setting="rule1.include_client_bot" id="cfwaf-include-client-bot">
+							<span><strong>Allow every Cloudflare verified bot</strong> <span class="cfwaf-recommended">Recommended</span><span class="cfwaf-check-desc">Adds <code>(cf.client.bot)</code>, which matches every bot Cloudflare has verified. Turn this off to allow only the categories you pick below.</span></span>
+						</label>
+						<p class="cfwaf-hint" id="cfwaf-cat-hint">The categories below are only used when &ldquo;Allow every Cloudflare verified bot&rdquo; is off.</p>
+						<div class="cfwaf-cat-grid" id="cfwaf-cat-grid">
 							<?php
 							$cats = [
 								'Accessibility'              => 'Accessible Web Bot',
@@ -251,10 +265,10 @@
 								'Archiver'                   => 'Internet Archive, CommonCrawl',
 								'Feed Fetcher'               => 'RSS or Podcast feed updaters',
 								'Monitoring & Analytics'     => 'Uptime Monitors, GT Metrix, Pingdom',
-								'Page Preview'               => 'Facebook, Slack, Twitter, Discord link preview tools',
+								'Page Preview'               => 'Facebook, Slack, Twitter, or Discord link preview tools',
 								'Search Engine Crawler'      => 'Googlebot, Bingbot, Yandexbot, Baidubot',
 								'Search Engine Optimization' => 'Google Lighthouse, AddThis, Ahrefs, Moz, SEMrush',
-								'Security'                   => 'Vulnerability Scanners, SSL DCV Check Tools',
+								'Security'                   => 'Vulnerability Scanners, SSL Domain Control Validation (DCV) Check Tools',
 								'Social Media Marketing'     => 'Brandwatch',
 								'Webhooks'                   => 'Payment processors, WordPress Integration tools',
 							];
@@ -268,112 +282,105 @@
 							</label>
 							<?php endforeach; ?>
 						</div>
-					</div>
 
-					<div class="cfwaf-section">
-						<h4>WordPress Backup Services</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_backupbuddy"> BackupBuddy</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_blogvault"> BlogVault <span class="cfwaf-tag">CF: Monitoring</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_updraftplus"> UpdraftPlus</label>
+						<div class="cfwaf-covered" id="cfwaf-covered">
+							<p class="cfwaf-covered-title">Covered by Cloudflare verified bots</p>
+							<p class="cfwaf-hint">These services are verified by Cloudflare, so they need no switch of their own. Each line shows whether your current choice covers them.</p>
+							<?php
+							$covered = [
+								'Monitoring & Analytics'     => 'GTmetrix, Pingdom, StatusCake, UptimeRobot, Usercentrics, BlogVault',
+								'Search Engine Optimization' => 'AddThis, Ahrefs, Ahrefs Site Audit, Babbar, Botify, Cxense, DataForSEO, Google AdWords Express, marketgoo, Moz rogerbot, Moz dotbot, Online Webceo, Prerender, SEO Audit Check, Semrush Site Audit, Siteimprove',
+								'Search Engine Crawler'      => 'Google (Search, Images, Scholar, Videos), Microsoft (Bing), Apple, DuckDuckGo, Yahoo, Yandex, Baidu, Sogou, Naver, Seznam, Qwant, Mojeek, Majestic, SISTRIX, Cốc Cốc, Coveo, Alexa, Helpfeel, Marginalia, Mars Flag, ZoomInfo',
+								'Security'                   => 'SiteLock, Sucuri, VirusTotal, Wordfence',
+								'Page Preview'               => 'Facebook, LinkedIn, Twitter / X',
+								'Webhooks'                   => 'Jetpack, MainWP',
+							];
+							foreach ( $covered as $cat => $list ) : ?>
+							<div class="cfwaf-covered-row" data-cat="<?php echo esc_attr( $cat ); ?>">
+								<span class="cfwaf-covered-state"></span>
+								<span><strong><?php echo esc_html( $cat ); ?>:</strong> <?php echo esc_html( $list ); ?></span>
+							</div>
+							<?php endforeach; ?>
 						</div>
 					</div>
 
 					<div class="cfwaf-section">
-						<h4>Website Monitoring Services</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_betterstack"> BetterStack <span class="cfwaf-tag">CF: Monitoring</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_gtmetrix"> GTmetrix <span class="cfwaf-tag">CF: Monitoring</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_pingdom"> Pingdom <span class="cfwaf-tag">CF: Monitoring</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_statuscake"> StatusCake <span class="cfwaf-tag">CF: Monitoring</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_uptimerobot"> UptimeRobot <span class="cfwaf-tag">CF: Monitoring</span></label>
-				<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_usercentrics"> Usercentrics <span class="cfwaf-tag">UA: Usercentricsbot</span></label>
+						<h4>Services with a Published IP List</h4>
+						<p class="cfwaf-hint">Each switch adds the IP addresses the service publishes. Turn one on when the service is not a Cloudflare verified bot, or when another rule would challenge its network (for example AWS or Hetzner).</p>
+						<div class="cfwaf-service-list">
+							<?php
+							$svc_rows = [
+								'allow_betterstack' => [ 'Better Stack', 'Verified', 'Covered by verified bots already. Adds the optional IP list. Drop these IPs first if the expression gets too long.' ],
+								'allow_managewp'    => [ 'ManageWP', 'Verified', 'Verified for most traffic. Adds the published backup IPs so AWS traffic still passes the rules that challenge large providers.' ],
+								'allow_semrush'     => [ 'SEMrush', 'Verified', 'Covered by verified bots already. Adds the optional Site Audit range.' ],
+								'allow_ewww'        => [ 'EWWW Image Optimizer', '', 'Adds the published Easy IO / ExactDN origin IPs.' ],
+								'allow_easyio_cdn'  => [ 'Easy IO CDN', '', 'Adds the same Easy IO / ExactDN origin IPs as EWWW.' ],
+								'allow_imagify'     => [ 'Imagify', '', 'Adds Imagify\'s published optimization IPs.' ],
+								'allow_shortpixel'  => [ 'ShortPixel', '', 'Adds the published IPv4 list. ShortPixel runs on Hetzner, which Rule 3 blocks.' ],
+								'allow_patchstack'  => [ 'Patchstack', '', 'Adds Patchstack\'s published IPs. Patchstack says the list may change without notice.' ],
+								'allow_wpumbrella'  => [ 'WP Umbrella', '', 'Adds the published management, monitoring, broken-link and Lighthouse IPs. WP Umbrella traffic does not verify as a Cloudflare bot.' ],
+								'allow_gosweetspot' => [ 'GoSweetSpot', '', 'Adds the integration-service IPs used for webhooks and order fetches.' ],
+							];
+							foreach ( $svc_rows as $key => [ $label, $tag, $desc ] ) :
+								$svc  = WPWAF_Service_IPs::for_setting( $key );
+								$meta = $svc ? sprintf( '%d %s, updated %s', count( $svc['ips'] ), count( $svc['ips'] ) === 1 ? 'IP range' : 'IPs', $svc['updated'] ) : '';
+								?>
+							<label class="cfwaf-check-label cfwaf-service-row">
+								<input type="checkbox" data-setting="rule1.<?php echo esc_attr( $key ); ?>">
+								<span><strong><?php echo esc_html( $label ); ?></strong><?php if ( $tag ) : ?> <span class="cfwaf-tag"><?php echo esc_html( $tag ); ?></span><?php endif; ?>
+									<span class="cfwaf-check-desc"><?php echo esc_html( $desc ); ?></span>
+									<?php if ( $meta ) : ?><span class="cfwaf-check-meta"><?php echo esc_html( $meta ); ?></span><?php endif; ?>
+								</span>
+							</label>
+							<?php if ( $key === 'allow_wpumbrella' ) : ?>
+							<label class="cfwaf-check-label cfwaf-service-sub">
+								<input type="checkbox" data-setting="rule1.allow_wpumbrella_do_monitors" id="cfwaf-wpu-monitors">
+								<span>Include unlisted DigitalOcean monitors (interim)<span class="cfwaf-check-desc">Requests from DigitalOcean (AS14061) with user agent WPUmbrella+, GET or HEAD, no dot in the path and no query string.</span></span>
+							</label>
+							<?php endif; ?>
+							<?php endforeach; ?>
 						</div>
 					</div>
 
 					<div class="cfwaf-section">
-						<h4>Performance &amp; Image Optimization</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_cf_image"> Cloudflare Image Resizing</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_exactdn"> Easy IO / ExactDN</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_ewww"> EWWW Image Optimizer</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_flyingpress"> FlyingPress</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_imagify"> Imagify</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_shortpixel"> ShortPixel</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_tinypng"> TinyPNG</label>
+						<h4>Other Allowances</h4>
+						<div class="cfwaf-service-list">
+							<label class="cfwaf-check-label cfwaf-service-row">
+								<input type="checkbox" data-setting="rule1.allow_letsencrypt">
+								<span><strong>Allow Let&rsquo;s Encrypt verification</strong><span class="cfwaf-check-desc">Matches paths that start with <code>/.well-known/acme-challenge/</code>, so SSL renewals never fail. No user agent is needed.</span></span>
+							</label>
+							<label class="cfwaf-check-label cfwaf-service-row">
+								<input type="checkbox" data-setting="rule1.allow_apple_messages">
+								<span><strong>Apple Messages link previews</strong><span class="cfwaf-check-desc">GET requests whose user agent contains facebookexternalhit. iMessage fetches previews from the sender&rsquo;s device, so this can only match on user agent; a faked GET could match it.</span></span>
+							</label>
+							<label class="cfwaf-check-label cfwaf-service-row">
+								<input type="checkbox" data-setting="rule1.allow_flyingpress">
+								<span><strong>FlyingPress</strong><span class="cfwaf-check-desc">GET requests with the FlyingPress user agent. FlyingPress publishes no IPs, so a faked GET could match this.</span></span>
+							</label>
 						</div>
+						<p class="cfwaf-hint" style="margin-top:10px"><strong>Can&rsquo;t be allowlisted safely:</strong> Cloudflare Image Resizing, TinyPNG and UpdraftPlus publish no IP addresses. BackupBuddy and Screaming Frog run from your own server or office, so enter that address under Your server IPs.</p>
 					</div>
 
 					<div class="cfwaf-section">
-						<h4>SEO Crawlers</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_ahrefs"> Ahrefs <span class="cfwaf-tag">CF: SEO</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_ahrefs_audit"> Ahrefs Site Audit <span class="cfwaf-tag">CF: SEO</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_mj12"> Majestic (MJ12bot)</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_rogerbot"> Moz Rogerbot <span class="cfwaf-tag">CF: SEO</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_screamingfrog"> Screaming Frog</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_semrush"> SEMrush <span class="cfwaf-tag">CF: SEO</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_siteauditbot"> SiteAuditBot <span class="cfwaf-tag">CF: SEO</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_semrush_ocob"> SEMrush OCOB <span class="cfwaf-tag">CF: SEO</span></label>
-						</div>
-					</div>
-
-					<div class="cfwaf-section">
-						<h4>Security &amp; Malware Scanners</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_sitelock"> SiteLock <span class="cfwaf-tag">CF: Security</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_sucuri"> Sucuri <span class="cfwaf-tag">CF: Security</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_virustotal"> VirusTotal</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_wordfence"> Wordfence</label>
-						</div>
-					</div>
-
-					<div class="cfwaf-section">
-						<h4>Social Media Previews</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_facebook"> Facebook <span class="cfwaf-tag">CF: Page Preview</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_linkedin"> LinkedIn <span class="cfwaf-tag">CF: Page Preview</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_twitter"> Twitter / X <span class="cfwaf-tag">CF: Page Preview</span></label>
-						</div>
-					</div>
-
-					<div class="cfwaf-section">
-						<h4>WordPress Management</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_jetpack"> Jetpack <span class="cfwaf-tag">CF: Monitoring</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_mainwp"> MainWP <span class="cfwaf-tag">CF: Webhooks</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_managewp"> ManageWP <span class="cfwaf-tag">CF: Webhooks</span></label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_godaddy_uptime"> GoDaddy Uptime Monitor</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_wpumbrella"> WP Umbrella</label>
-						</div>
-					</div>
-
-					<div class="cfwaf-section">
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule1.allow_letsencrypt"> Allow Let&rsquo;s Encrypt Verification (ACME)</label>
-						</div>
-					</div>
-
-					<div class="cfwaf-section">
-						<h4>Allowlisted IP Addresses</h4>
-						<p class="cfwaf-hint">Enter IP addresses or CIDR ranges to always skip all WAF rules. One per line. Supports IPv4, IPv6, and CIDR notation (e.g. <code>1.2.3.4</code>, <code>10.0.0.0/8</code>, <code>2001:db8::/32</code>).</p>
-						<textarea id="cfwaf-allow-ips" class="cfwaf-ip-textarea" rows="4" placeholder="1.2.3.4&#10;192.168.0.0/24&#10;2001:db8::1" spellcheck="false" autocomplete="off"></textarea>
+						<h4>Your Server IPs</h4>
+						<p class="cfwaf-hint">This site&rsquo;s own servers (loopback, cron and cache-preload requests) and any other IP you trust. One IPv4, IPv6 or CIDR per line, for example <code>203.0.113.10</code>, <code>10.0.0.0/8</code> or <code>2001:db8::/32</code>. Invalid lines are dropped when you save.</p>
+						<textarea id="cfwaf-allow-ips" class="cfwaf-ip-textarea" rows="4" placeholder="203.0.113.10&#10;10.0.0.0/8&#10;2001:db8::1" spellcheck="false" autocomplete="off"></textarea>
 						<p class="cfwaf-hint cfwaf-hint-muted" id="cfwaf-allow-ips-count"></p>
 					</div>
 
 					<div class="cfwaf-section">
 						<h4>Custom User Agents to Allow</h4>
-						<p class="cfwaf-hint">Enter user agent strings to always skip all WAF rules. One per line. Uses a substring match &mdash; e.g. <code>SiteGuruCrawler</code> will match any user agent containing that string. To find blocked user agents, check <strong>Security &rarr; Analytics &rarr; Events</strong> in your Cloudflare dashboard.</p>
-						<textarea id="cfwaf-allow-uas" class="cfwaf-ip-textarea" rows="4" placeholder="SiteGuruCrawler&#10;Google-NotebookLM&#10;MyCustomBot" spellcheck="false" autocomplete="off"></textarea>
+						<p class="cfwaf-hint">One user agent per line; any user agent containing the text matches. A user agent is easy to fake, so prefer an IP under Your server IPs when the service publishes one. To find blocked user agents, check <strong>Security &rarr; Analytics &rarr; Events</strong> in Cloudflare.</p>
+						<textarea id="cfwaf-allow-uas" class="cfwaf-ip-textarea" rows="4" placeholder="SiteGuruCrawler&#10;MyCustomBot" spellcheck="false" autocomplete="off"></textarea>
 						<p class="cfwaf-hint cfwaf-hint-muted" id="cfwaf-allow-uas-count"></p>
 					</div>
 
 					<div class="cfwaf-section">
 						<h4>Custom Allow Expressions</h4>
-						<p class="cfwaf-hint">Add one Cloudflare expression per entry to always skip all WAF rules. Each expression is added to Rule 1 as an OR condition. Do not include the leading <code>or</code> &mdash; just the expression itself. Parentheses are added automatically.</p>
+						<p class="cfwaf-hint">Add one Cloudflare expression per entry. Each is added to Rule 1 as an OR condition. Leave out the leading <code>or</code>; parentheses are added automatically.</p>
 						<div id="cfwaf-expressions-list" class="cfwaf-expr-list"></div>
 						<button type="button" id="cfwaf-expr-add" class="cfwaf-btn cfwaf-btn-sm" style="margin-top:6px;">+ Add Expression</button>
-						<p class="cfwaf-warn-text" style="margin-top:8px;">&#9888; Expressions must be valid <a href="https://developers.cloudflare.com/ruleset-engine/rules-language/" target="_blank" rel="noopener">Cloudflare rules language</a> syntax. Invalid expressions will cause the deploy to fail for that zone.</p>
+						<p class="cfwaf-warn-text" style="margin-top:8px;">&#9888; Expressions must be valid <a href="https://developers.cloudflare.com/ruleset-engine/rules-language/" target="_blank" rel="noopener">Cloudflare rules language</a> syntax. An invalid expression makes the deploy fail for that zone.</p>
 					</div>
 
 					<div class="cfwaf-notice cfwaf-notice-api-skip">
@@ -382,7 +389,7 @@
 						</div>
 						<div class="cfwaf-notice-api-body">
 							<span class="cfwaf-notice-api-title">Skip action is configured automatically via API.</span>
-							<p>When this rule is deployed, the plugin sets the action to Skip and configures it to bypass: All remaining custom rules, All rate limiting rules, All managed rules, All Super Bot Fight Mode Rules, Zone Lockdown, User Agent Blocking, Browser Integrity Check, Hotlink Protection, and Security Level. No manual Cloudflare dashboard setup required.</p>
+							<p>When this rule is deployed, the plugin sets it to skip: all remaining custom rules, all rate limiting rules, all Super Bot Fight Mode rules, Zone Lockdown, User Agent Blocking, Browser Integrity Check, Hotlink Protection, Security Level and rate limiting rules (previous version). Managed rules are deliberately not skipped, so Cloudflare&rsquo;s emergency CVE patches still protect allowed traffic.</p>
 						</div>
 					</div>
 
@@ -395,8 +402,8 @@
 					<div class="cfwaf-rule-info">
 						<span class="cfwaf-rule-num cfwaf-num-block">2</span>
 						<div>
-							<h3>Block Aggressive Crawlers &amp; WP Paths</h3>
-							<p>Blocks persistent bots, exploit scanners, and sensitive WordPress paths.</p>
+							<h3>Block Aggressive Crawlers &amp; WordPress Paths</h3>
+							<p>Blocks persistent bots, exploit scanners, sensitive WordPress paths and exposed files.</p>
 						</div>
 					</div>
 					<div class="cfwaf-rule-controls">
@@ -408,7 +415,7 @@
 
 					<div class="cfwaf-section">
 						<h4>Aggressive Crawlers</h4>
-						<p class="cfwaf-hint">Yandex, Sogou, SEMrush, Ahrefs, and Baidu are Cloudflare verified bots &mdash; uncheck their category in Rule 1 first if you want to block them here.</p>
+						<p class="cfwaf-hint" id="cfwaf-crawler-hint">Yandex, Sogou and Baidu are verified search engine crawlers, and SEMrush and Ahrefs are verified SEO bots. While Rule 1 allows them, checking them here does not block them. To block one, turn off &ldquo;Allow every Cloudflare verified bot&rdquo; in Rule 1 and turn off its category there.</p>
 						<div class="cfwaf-checkbox-grid">
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_yandex"> Yandex</label>
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_sogou"> Sogou</label>
@@ -427,6 +434,7 @@
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_bot"> Generic &ldquo;bot&rdquo; in User-Agent</label>
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_spider"> Generic &ldquo;spider&rdquo; in User-Agent</label>
 						</div>
+						<p class="cfwaf-hint" style="margin-top:6px">The generic patterns never match Cloudflare verified bots.</p>
 					</div>
 
 					<div class="cfwaf-section">
@@ -449,18 +457,14 @@
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_wlwmanifest"> Block WLW Manifest</label>
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_readme"> Block readme.html</label>
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_license"> Block license.txt</label>
+							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_sensitive_paths"> Sensitive file exposure</label>
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_wpcron" id="cfwaf-block-wpcron"> Block wp-cron.php</label>
 						</div>
+						<p class="cfwaf-hint" style="margin-top:6px"><strong>Sensitive file exposure</strong> blocks probes for <code>.env</code>, <code>.git</code>, <code>composer.json</code>/<code>composer.lock</code>, <code>debug.log</code>, <code>phpunit</code> and <code>server-status</code>.</p>
 						<p class="cfwaf-check-warning" id="cfwaf-wpcron-warning" style="display:none;">Only enable wp-cron.php blocking if you are not using a real server cron that hits wp-cron.php via HTTP. Enabling this on sites that do will break scheduled tasks.</p>
 					</div>
 
-					<div class="cfwaf-section">
-						<h4>Attack Patterns</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_sqli_sleep"> Time-delay / Blind SQLi Primitives</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_path_traversal"> Encoded Path Traversal / LFI</label>
-						</div>
-					</div>
+					<p class="cfwaf-hint">Exploit URI patterns (path traversal, SQL injection, XSS) are in Rule 3.</p>
 
 				</div>
 			</div>
@@ -471,8 +475,8 @@
 					<div class="cfwaf-rule-info">
 						<span class="cfwaf-rule-num cfwaf-num-block">3</span>
 						<div>
-							<h3>Block or Challenge Web Hosts / TOR</h3>
-							<p>Blocks or challenges traffic from web hosting providers and TOR exit nodes.</p>
+							<h3>Block or Challenge Web Hosts / TOR &amp; Exploit URIs</h3>
+							<p>Blocks or challenges data center and TOR traffic, plus exploit URI patterns from any IP.</p>
 						</div>
 					</div>
 					<div class="cfwaf-rule-controls">
@@ -484,21 +488,25 @@
 
 					<div class="cfwaf-section">
 						<h4>Web Hosting Providers (ASN-based)</h4>
-						<div class="cfwaf-checkbox-grid">
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_do"> DigitalOcean</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_linode"> Linode (Akamai)</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_vultr"> Vultr</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_hetzner"> Hetzner</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_ovh"> OVH</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_contabo"> Contabo</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_scaleway"> Scaleway</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_dreamhost"> DreamHost</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_m247"> M247</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_leaseweb"> LeaseWeb</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_godaddy"> GoDaddy</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_alibaba"> Alibaba</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_hostroyale"> HostRoyale</label>
-							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_cloudvider"> Cloudvider</label>
+						<label class="cfwaf-check-label cfwaf-check-strong">
+							<input type="checkbox" data-setting="rule3.block_hosts" id="cfwaf-block-hosts">
+							<span><strong>Block Web Host ASNs</strong><span class="cfwaf-check-desc">Challenge or block traffic from scripts running on popular hosting providers. Verified bots and certificate checks are never matched.</span></span>
+						</label>
+						<div class="cfwaf-checkbox-grid" id="cfwaf-host-grid">
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_do"> DigitalOcean</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_linode"> Linode (Akamai)</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_vultr"> Vultr</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_hetzner"> Hetzner</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_ovh"> OVH</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_contabo"> Contabo</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_scaleway"> Scaleway</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_dreamhost"> DreamHost</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_m247"> M247</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_leaseweb"> LeaseWeb</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_godaddy"> GoDaddy</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_alibaba"> Alibaba</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_hostroyale"> HostRoyale</label>
+							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_cloudvider"> Cloudvider</label>
 						</div>
 					</div>
 
@@ -509,15 +517,29 @@
 					</div>
 
 					<div class="cfwaf-section">
+						<h4>Exploit URI Patterns (site-wide)</h4>
+						<p class="cfwaf-hint">These match any visitor IP, not only web hosts or TOR. They live in this rule to stay within Cloudflare&rsquo;s five custom rules on the Free plan.</p>
+						<div class="cfwaf-checkbox-grid">
+							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_lfi_traversal"> Path traversal / LFI</label>
+							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_legacy_paths"> Legacy / scanner exploit paths</label>
+							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_foreign_cms"> Non-WordPress CMS / admin probes</label>
+							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_time_delay_sqli"> Time-delay / blind SQLi primitives</label>
+							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_union_sqli"> Union / schema SQLi probes</label>
+							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule3.block_reflected_xss"> Reflected XSS probes</label>
+						</div>
+						<p class="cfwaf-hint" style="margin-top:6px">Path traversal blocks <code>../</code>, <code>etc/passwd</code>, encoded traversal and null bytes. Legacy paths cover Samba CGI, story.pl, Synology Webman and similar fingerprints. CMS probes cover SPIP, Symphony, Temenos, Sympa and generic CMS login queries. SQLi covers <code>pg_sleep</code>, <code>sleep(</code>, <code>benchmark(</code>, <code>waitfor delay</code>, <code>union select</code>, <code>information_schema</code> and similar. XSS covers script tags, <code>javascript:</code> URLs and event-handler payloads.</p>
+					</div>
+
+					<div class="cfwaf-section">
 						<h4>Action</h4>
 						<div class="cfwaf-radio-group">
 							<label class="cfwaf-radio-label">
 								<input type="radio" name="rule3_action" value="block" data-setting="rule3.action">
-								<span><strong>Block</strong> <span class="cfwaf-recommended">Recommended</span> &mdash; Immediately block all matching traffic.</span>
+								<span><strong>Block</strong> <span class="cfwaf-recommended">Recommended</span>: immediately block matching traffic. Best for exploit payloads.</span>
 							</label>
 							<label class="cfwaf-radio-label">
 								<input type="radio" name="rule3_action" value="managed_challenge" data-setting="rule3.action">
-								<span><strong>Managed Challenge</strong> &mdash; Challenge instead of blocking. Use if you need to allow legitimate proxy connections.</span>
+								<span><strong>Managed Challenge</strong>: challenge instead of blocking. Use if you need to allow legitimate proxy connections from web hosts or TOR users.</span>
 							</label>
 						</div>
 					</div>
@@ -718,11 +740,13 @@
 					<div class="cfwaf-zone-item" data-cc="NI"><input type="checkbox" class="cfwaf-country-check" value="NI"><div><div class="cfwaf-zone-name">Nicaragua</div><div class="cfwaf-zone-plan">NI</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="NE"><input type="checkbox" class="cfwaf-country-check" value="NE"><div><div class="cfwaf-zone-name">Niger</div><div class="cfwaf-zone-plan">NE</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="NG"><input type="checkbox" class="cfwaf-country-check" value="NG"><div><div class="cfwaf-zone-name">Nigeria</div><div class="cfwaf-zone-plan">NG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KP"><input type="checkbox" class="cfwaf-country-check" value="KP"><div><div class="cfwaf-zone-name">North Korea</div><div class="cfwaf-zone-plan">KP</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="MK"><input type="checkbox" class="cfwaf-country-check" value="MK"><div><div class="cfwaf-zone-name">North Macedonia</div><div class="cfwaf-zone-plan">MK</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="NO"><input type="checkbox" class="cfwaf-country-check" value="NO"><div><div class="cfwaf-zone-name">Norway</div><div class="cfwaf-zone-plan">NO</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="OM"><input type="checkbox" class="cfwaf-country-check" value="OM"><div><div class="cfwaf-zone-name">Oman</div><div class="cfwaf-zone-plan">OM</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="PK"><input type="checkbox" class="cfwaf-country-check" value="PK"><div><div class="cfwaf-zone-name">Pakistan</div><div class="cfwaf-zone-plan">PK</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="PW"><input type="checkbox" class="cfwaf-country-check" value="PW"><div><div class="cfwaf-zone-name">Palau</div><div class="cfwaf-zone-plan">PW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PS"><input type="checkbox" class="cfwaf-country-check" value="PS"><div><div class="cfwaf-zone-name">Palestine</div><div class="cfwaf-zone-plan">PS</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="PA"><input type="checkbox" class="cfwaf-country-check" value="PA"><div><div class="cfwaf-zone-name">Panama</div><div class="cfwaf-zone-plan">PA</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="PG"><input type="checkbox" class="cfwaf-country-check" value="PG"><div><div class="cfwaf-zone-name">Papua New Guinea</div><div class="cfwaf-zone-plan">PG</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="PY"><input type="checkbox" class="cfwaf-country-check" value="PY"><div><div class="cfwaf-zone-name">Paraguay</div><div class="cfwaf-zone-plan">PY</div></div></div>
@@ -751,6 +775,7 @@
 					<div class="cfwaf-zone-item" data-cc="SB"><input type="checkbox" class="cfwaf-country-check" value="SB"><div><div class="cfwaf-zone-name">Solomon Islands</div><div class="cfwaf-zone-plan">SB</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="SO"><input type="checkbox" class="cfwaf-country-check" value="SO"><div><div class="cfwaf-zone-name">Somalia</div><div class="cfwaf-zone-plan">SO</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="ZA"><input type="checkbox" class="cfwaf-country-check" value="ZA"><div><div class="cfwaf-zone-name">South Africa</div><div class="cfwaf-zone-plan">ZA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KR"><input type="checkbox" class="cfwaf-country-check" value="KR"><div><div class="cfwaf-zone-name">South Korea</div><div class="cfwaf-zone-plan">KR</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="SS"><input type="checkbox" class="cfwaf-country-check" value="SS"><div><div class="cfwaf-zone-name">South Sudan</div><div class="cfwaf-zone-plan">SS</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="ES"><input type="checkbox" class="cfwaf-country-check" value="ES"><div><div class="cfwaf-zone-name">Spain</div><div class="cfwaf-zone-plan">ES</div></div></div>
 					<div class="cfwaf-zone-item" data-cc="LK"><input type="checkbox" class="cfwaf-country-check" value="LK"><div><div class="cfwaf-zone-name">Sri Lanka</div><div class="cfwaf-zone-plan">LK</div></div></div>
@@ -888,9 +913,16 @@
 					</div>
 					<div class="cfwaf-zones-grid" id="cfwaf-zones-grid"></div>
 					<div class="cfwaf-deploy-rules-summary" id="cfwaf-deploy-summary"></div>
+					<div class="cfwaf-deploy-mode">
+						<p class="cfwaf-hint">The five rules are placed first in each zone&rsquo;s custom rules, so Rule 1 runs before anything else. Custom rules you created in Cloudflare are kept after them. Earlier copies of these rules are replaced.</p>
+						<label class="cfwaf-check-label">
+							<input type="checkbox" id="cfwaf-replace-all">
+							<span><strong>Replace all custom rules in the zone</strong><span class="cfwaf-check-desc">Deletes the zone&rsquo;s other custom rules. Use it when a Free zone has no room: the Free plan allows five custom rules in total.</span></span>
+						</label>
+					</div>
 					<div id="cfwaf-deploy-results"></div>
 					<div class="cfwaf-deploy-footer">
-						<p class="cfwaf-deploy-save-reminder">&#9888; Remember to save any changes before deploying.</p>
+						<p class="cfwaf-deploy-save-reminder">&#9888; The deploy uses the settings on this screen, saved or not.</p>
 						<button class="cfwaf-btn cfwaf-btn-deploy cfwaf-btn-large" id="cfwaf-confirm-deploy" disabled>
 							<span class="dashicons dashicons-upload"></span> Deploy to Selected Zones
 						</button>
@@ -926,27 +958,27 @@
 					<div class="cfwaf-detail-grid">
 						<div class="cfwaf-detail-col">
 							<h4><span class="dashicons dashicons-flag"></span> Purpose</h4>
-							<p>This rule ensures that legitimate bots &mdash; such as search engine crawlers and monitoring services &mdash; can access your site without restrictions or challenges by using Cloudflare&rsquo;s Skip action. It must be Rule #1 so verified bots are whitelisted before any blocking or challenge rules run.</p>
+							<p>This rule lets Cloudflare verified bots, services with a published IP list, Let&rsquo;s Encrypt checks, this site&rsquo;s own servers and Apple Messages link previews pass the later custom rules. It must be Rule #1 so this traffic is let through before any blocking or challenge rule runs.</p>
 
 							<h4><span class="dashicons dashicons-yes-alt"></span> Key Benefits</h4>
 							<ul>
-								<li>Ensures your site is properly indexed by search engines (Google, Bing, etc.)</li>
-								<li>Allows monitoring tools to verify your site&rsquo;s uptime and performance</li>
-								<li>Prevents disruptions to services that rely on API access</li>
-								<li>Improves SEO by ensuring search engines can crawl your content efficiently</li>
-								<li>Enables social media platforms to generate preview cards when your site is shared</li>
+								<li>Keeps search engines and other verified bots from being challenged</li>
+								<li>Allows monitoring and backup services that publish an IP list</li>
+								<li>Leaves managed rules in place, including Cloudflare&rsquo;s emergency CVE patches</li>
+								<li>Gives cron and cache-preload traffic from your own servers a place to be entered per site</li>
 							</ul>
 						</div>
 						<div class="cfwaf-detail-col">
 							<h4><span class="dashicons dashicons-warning"></span> Important Considerations</h4>
 							<ul>
-								<li>The Skip action is automatically configured via API when you deploy &mdash; no manual Cloudflare dashboard setup needed</li>
-								<li>Be selective about which bot categories you allow if you have bandwidth or performance concerns</li>
-								<li>If a bot you need is being blocked by other rules, enable it here to ensure it has unrestricted access</li>
+								<li>The Skip action is configured automatically when you deploy</li>
+								<li>Managed rules are intentionally not skipped</li>
+								<li>Services are matched by IP address, not user agent, because a user agent is easy to fake. FlyingPress and Apple Messages previews are the only user agent matches, and only for GET requests</li>
+								<li>The expression must stay under 4,096 characters. The Expressions tab shows the count</li>
 							</ul>
 
 							<h4><span class="dashicons dashicons-lightbulb"></span> Recommendation</h4>
-							<p>Select only the Cloudflare verified bot categories you know you need. Always enable logging for proper testing and auditing.</p>
+							<p>Leave &ldquo;Allow every Cloudflare verified bot&rdquo; on. Turn on a service IP list when that service is not verified, or when another rule would challenge its network. Put this site&rsquo;s server addresses in Your server IPs.</p>
 						</div>
 					</div>
 				</div>
@@ -958,7 +990,7 @@
 					<div class="cfwaf-detail-title">
 						<span class="cfwaf-rule-num cfwaf-num-block">2</span>
 						<div>
-							<strong>Block Aggressive Crawlers &amp; WP Paths</strong>
+							<strong>Block Aggressive Crawlers &amp; WordPress Paths</strong>
 							<span class="cfwaf-action-badge cfwaf-badge-block">BLOCK</span>
 						</div>
 					</div>
@@ -977,20 +1009,21 @@
 								<li>Blocks common penetration testing tools (Nikto, SQLMap, Masscan, Nmap)</li>
 								<li>Protects sensitive WordPress paths (xmlrpc, wp-config, wp-json, install.php)</li>
 								<li>Hides WordPress version info by blocking readme.html and license.txt</li>
+								<li>Blocks probes for exposed files (.env, .git, composer files, debug.log, phpunit, server-status)</li>
 								<li>Prevents XML-RPC amplification attacks and brute force attempts</li>
 							</ul>
 						</div>
 						<div class="cfwaf-detail-col">
 							<h4><span class="dashicons dashicons-warning"></span> Important Considerations</h4>
 							<ul>
-								<li>If you use SEO tools like Ahrefs or SEMrush, allow them in Rule #1 before blocking here</li>
+								<li>Verified bots such as Ahrefs, SEMrush, Yandex, Sogou and Baidu are skipped by Rule 1 before this rule runs. To block one, turn off &ldquo;Allow every Cloudflare verified bot&rdquo; and its category in Rule 1</li>
 								<li>If you use the WordPress REST API (wp-json), don&rsquo;t enable that path protection</li>
 								<li>Some WordPress plugins or mobile apps may require XML-RPC access</li>
 								<li>Monitor your Event logs after implementing &mdash; some legitimate bots may be caught</li>
 							</ul>
 
 							<h4><span class="dashicons dashicons-lightbulb"></span> Recommendation</h4>
-							<p>Start with blocking generic unverified crawlers and bots first. For WordPress paths, enable xmlrpc and wlwmanifest blocking by default, and only enable wp-json blocking if you don&rsquo;t use the REST API.</p>
+							<p>Start with blocking generic unverified crawlers and bots first. For WordPress paths, enable xmlrpc and wlwmanifest blocking by default, and only enable wp-json blocking if you don&rsquo;t use the REST API. Exploit URI patterns are configured in Rule 3.</p>
 						</div>
 					</div>
 				</div>
@@ -1002,7 +1035,7 @@
 					<div class="cfwaf-detail-title">
 						<span class="cfwaf-rule-num cfwaf-num-block">3</span>
 						<div>
-							<strong>Block or Challenge Web Hosts / TOR</strong>
+							<strong>Block or Challenge Web Hosts / TOR &amp; Exploit URIs</strong>
 							<span class="cfwaf-action-badge cfwaf-badge-block">BLOCK</span>
 						</div>
 					</div>
@@ -1012,12 +1045,13 @@
 					<div class="cfwaf-detail-grid">
 						<div class="cfwaf-detail-col">
 							<h4><span class="dashicons dashicons-flag"></span> Purpose</h4>
-							<p>This rule manages traffic from common web hosting providers and TOR exit nodes, which are frequently sources of automated attacks and malicious scripts. You can choose to block them entirely or use Managed Challenge to allow legitimate visitors through.</p>
+							<p>This rule manages traffic from common web hosting providers and TOR exit nodes, which are frequent sources of automated attacks, and blocks exploit-style URI and query patterns from any source.</p>
 
 							<h4><span class="dashicons dashicons-yes-alt"></span> Key Benefits</h4>
 							<ul>
 								<li>Blocks or challenges automated attacks from web hosting providers where malicious scripts often run</li>
 								<li>Prevents TOR-based attacks while optionally allowing legitimate TOR users</li>
+								<li>Blocks path traversal, SQL injection, legacy CGI paths, other CMSs&rsquo; login probes and XSS patterns site-wide</li>
 								<li>Reduces fraudulent transactions and spam registrations</li>
 								<li>Helps prevent credential stuffing attacks</li>
 								<li>Flexible: Block for maximum security or Managed Challenge for legitimate proxy users</li>
@@ -1028,12 +1062,12 @@
 							<ul>
 								<li>Some legitimate visitors may use TOR for privacy reasons</li>
 								<li>Corporate traffic sometimes routes through cloud providers or proxies</li>
-								<li>External services you use may be hosted on blocked ASNs &mdash; allowlist them in Rule #1</li>
+								<li>External services you use may be hosted on blocked ASNs. Allowlist them in Rule #1 with their published IPs</li>
 								<li>Monitor WAF events after deployment to check for false positives</li>
 							</ul>
 
 							<h4><span class="dashicons dashicons-lightbulb"></span> Recommendation</h4>
-							<p>Start with Block action for maximum security. If you see false positives or need to allow legitimate proxy connections, switch to Managed Challenge &mdash; it still blocks automated attacks while letting real humans through after a quick challenge.</p>
+							<p>Start with the Block action for maximum security. If you see false positives or need to allow legitimate proxy connections, switch to Managed Challenge: it still stops automated attacks while letting real people through after a quick challenge.</p>
 						</div>
 					</div>
 				</div>
@@ -1193,8 +1227,7 @@
 <script>
 /* Inline cfWAF data */
 window.cfWAF = <?php
-	$saved_settings = WPWAF_Profiles::active_settings();
-	if ( empty( $saved_settings ) ) $saved_settings = WPWAF_Rule_Builder::default_settings();
+	$saved_settings = WPWAF_Rule_Builder::sanitize_settings( WPWAF_Profiles::active_settings() );
 	$active     = WPWAF_Accounts::active();
 	$has_creds  = false;
 	if ( $active ) {
@@ -1218,6 +1251,9 @@ window.cfWAF = <?php
 		'active_domain_profile_id' => WPWAF_Domain_Profiles::active_id(),
 		'flares'                   => WPWAF_Zone_Flares::for_js(),
 		'flare_presets'            => WPWAF_Zone_Flares::presets(),
+		'expression_limit'         => WPWAF_Rule_Builder::EXPRESSION_LIMIT,
+		'version'                  => WPWAF_VERSION,
+		'rules_date'               => WPWAF_Service_IPs::RULES_DATE,
 	] );
 ?>;
 <?php echo file_get_contents( WPWAF_DIR . 'assets/js/admin.js' ); ?>

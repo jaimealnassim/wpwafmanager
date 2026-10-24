@@ -73,8 +73,10 @@ class WPWAF_Update_Notifier {
 	 * No API call - just checks the saved option.
 	 */
 	private static function is_pro_active(): bool {
-		$opts = get_option( 'WP WAF Manager_license_options', [] );
-		return ! empty( $opts['sc_activation_id'] );
+		// The SureCart SDK names this option after the client name, lower-cased
+		// with spaces removed: "WP WAF Manager" becomes wpwafmanager_license_options.
+		$opts = get_option( 'wpwafmanager_license_options', [] );
+		return is_array( $opts ) && ! empty( $opts['sc_activation_id'] );
 	}
 
 	/**

@@ -150,6 +150,8 @@
 		updateCountryPanel();
 		updateRule3Badge();
 		updateVpnState();
+		updateRule1State();
+		updateHostState();
 	}
 
 	// ── UI state helpers ───────────────────────────────────────────────────────
@@ -167,6 +169,35 @@
 		const v = getVal(settings, 'rule3.action') || 'block';
 		badge.textContent = (v === 'block') ? 'BLOCK' : 'CHALLENGE';
 		badge.className   = 'cfwaf-action-badge ' + (v === 'block' ? 'cfwaf-badge-block' : 'cfwaf-badge-challenge');
+	}
+
+	// Rule 1: categories only count while "Allow every verified bot" is off.
+	function updateRule1State() {
+		const all  = Boolean(getVal(settings, 'rule1.include_client_bot'));
+		const cats = getVal(settings, 'rule1.verified_categories') || [];
+		qsa('.cfwaf-cat-check').forEach(function (el) {
+			el.disabled = all;
+			const card = el.closest('.cfwaf-cat-card');
+			if (card) card.classList.toggle('is-disabled', all);
+		});
+		const hint = qs('#cfwaf-cat-hint');
+		if (hint) hint.style.display = all ? '' : 'none';
+		qsa('.cfwaf-covered-row').forEach(function (row) {
+			const on    = all || cats.indexOf(row.dataset.cat) !== -1;
+			const state = row.querySelector('.cfwaf-covered-state');
+			row.classList.toggle('is-covered', on);
+			if (state) state.textContent = on ? '\u2713 Covered' : 'Not covered';
+		});
+		const wpu = qs('#cfwaf-wpu-monitors');
+		if (wpu) wpu.disabled = !getVal(settings, 'rule1.allow_wpumbrella');
+	}
+
+	// Rule 3: the host list only counts while "Block Web Host ASNs" is on.
+	function updateHostState() {
+		const on = Boolean(getVal(settings, 'rule3.block_hosts'));
+		qsa('.cfwaf-host-check').forEach(function (el) { el.disabled = !on; });
+		const grid = qs('#cfwaf-host-grid');
+		if (grid) grid.classList.toggle('is-disabled', !on);
 	}
 
 	function updateVpnState() {
@@ -218,12 +249,15 @@
 			if (key === 'rule4.challenge_country') updateCountryPanel();
 			if (key === 'rule3.action')            updateRule3Badge();
 			if (key === 'rule5.challenge_all_vpn') updateVpnState();
+			if (key.indexOf('rule1.') === 0)       updateRule1State();
+			if (key === 'rule3.block_hosts')       updateHostState();
 			if (key === 'rule2.block_wpcron') {
 				const warn = qs('#cfwaf-wpcron-warning');
 				if (warn) warn.style.display = el.checked ? '' : 'none';
 			}
 		} else if (el.matches('.cfwaf-cat-check')) {
 			syncFromUI();
+			updateRule1State();
 		} else if (el.matches('.cfwaf-zone-check')) {
 			const item = el.closest('.cfwaf-zone-item');
 			if (item) item.classList.toggle('selected', el.checked);
@@ -392,13 +426,12 @@
 		const el = qs('#cfwaf-deploy-summary');
 		if (!el) return;
 		const rule3Action = getVal(settings, 'rule3.action') === 'block' ? 'Block' : 'Challenge';
-		const rule3Label  = 'Web Hosts & TOR';
 		const rules = [
-			{ key: 'rule1', label: 'Allow Good Bots',                                                      action: 'Skip' },
-			{ key: 'rule2', label: 'Block Aggressive Crawlers & WP Paths',                                  action: 'Block' },
-			{ key: 'rule3', label: rule3Label,                                                               action: rule3Action },
-			{ key: 'rule4', label: 'Challenge Large Providers / Country',                                    action: 'Challenge' },
-			{ key: 'rule5', label: 'Challenge VPN & wp-login',                                               action: 'Challenge' },
+			{ key: 'rule1', label: 'Allow Good Bots',                                   action: 'Skip' },
+			{ key: 'rule2', label: 'Block Aggressive Crawlers & WordPress Paths',       action: 'Block' },
+			{ key: 'rule3', label: 'Block or Challenge Web Hosts / TOR & Exploit URIs', action: rule3Action },
+			{ key: 'rule4', label: 'Challenge Large Providers / Country',               action: 'Challenge' },
+			{ key: 'rule5', label: 'Challenge VPN Connections & wp-login',              action: 'Challenge' },
 		];
 		const enabled = rules.filter(function (r) { return getVal(settings, r.key + '.enabled'); });
 		el.innerHTML = enabled.length
@@ -563,14 +596,22 @@
 	on(qs('#cfwaf-confirm-deploy'), 'click', function () {
 		const ids = qsa('.cfwaf-zone-check:checked').map(function (cb) { return cb.value; });
 		if (!ids.length) return;
+		const replaceAll = qs('#cfwaf-replace-all') && qs('#cfwaf-replace-all').checked;
+		if (replaceAll && !window.confirm('Replace all custom rules in ' + ids.length + ' zone(s)? Custom rules you created in Cloudflare will be deleted and only the plugin\'s rules will remain.')) return;
 		const btn = qs('#cfwaf-confirm-deploy');
 		btn.innerHTML = '<span class="dashicons dashicons-update"></span> Deploying\u2026';
 		btn.disabled  = true;
-		ajax('wpwaf_deploy_rules', { zone_ids: ids, settings: JSON.stringify(settings) }, function (res) {
+		ajax('wpwaf_deploy_rules', { zone_ids: ids, settings: JSON.stringify(settings), replace_all: replaceAll ? '1' : '0' }, function (res) {
 			btn.disabled = false;
 			updateDeployBtn();
 			const resultsEl = qs('#cfwaf-deploy-results');
 			if (!resultsEl) return;
+			if (!res.success) {
+				const msg = (res.data && res.data.message) ? res.data.message : 'Deploy failed.';
+				resultsEl.innerHTML = '<div class="cfwaf-result-item fail">\u2717 ' + escHtml(msg) + '</div>';
+				toast('\u2717 ' + msg, 'error');
+				return;
+			}
 			const results = (res.data && res.data.results) ? res.data.results : {};
 			let html = '';
 			Object.keys(results).forEach(function (zid) {
@@ -579,15 +620,15 @@
 				const name = escHtml(zone ? zone.name : zid);
 				const cls  = r.success ? 'ok' : 'fail';
 				const icon = r.success ? '\u2713' : '\u2717';
-				const detail = r.success ? 'Rules deployed successfully' : escHtml(r.message || 'Unknown error');
-				html += '<div class="cfwaf-result-item ' + cls + '">' + icon + ' <strong>' + name + '</strong> \u2014 ' + detail + '</div>';
+				const detail = escHtml(r.message || (r.success ? 'Rules deployed successfully' : 'Unknown error'));
+				html += '<div class="cfwaf-result-item ' + cls + '">' + icon + ' <strong>' + name + '</strong>: ' + detail + '</div>';
 			});
 			resultsEl.innerHTML = html;
 			const sc = (res.data && res.data.success_count) || 0;
 			const rc = (res.data && res.data.rule_count)    || 0;
 			const fc = (res.data && res.data.fail_count)    || 0;
 			if (sc > 0) toast('\u2713 Deployed ' + rc + ' rules to ' + sc + ' zone(s)!');
-			if (fc > 0) toast('\u2717 ' + fc + ' zone(s) failed \u2014 see results below.', 'error');
+			if (fc > 0) toast('\u2717 ' + fc + ' zone(s) failed. See the results below.', 'error');
 		});
 	});
 
@@ -617,7 +658,7 @@
 		const profiles = WAF.profiles || [];
 		const active   = profiles.find(function (p) { return p.id === activeProfileId; });
 		const name     = active ? active.name : 'Default';
-		btn.innerHTML  = '<span class="dashicons dashicons-saved"></span> Save \u2014 ' + name;
+		btn.innerHTML  = '<span class="dashicons dashicons-saved"></span> Save: ' + name;
 	}
 
 	on(qs('#cfwaf-profile-select'), 'change', function () {
@@ -711,6 +752,20 @@
 	// ── Expression preview ─────────────────────────────────────────────────────
 	on(qs('#cfwaf-refresh-preview'), 'click', refreshPreview);
 
+	// Character count against Cloudflare's 4,096-character limit per expression.
+	function exprLength(rule) {
+		const limit = WAF.expression_limit || 4096;
+		const len   = (rule.expression || '').length;
+		const cls   = len >= limit ? 'is-over' : (len >= 3500 ? 'is-near' : '');
+		let html = '<p class="cfwaf-expr-length ' + cls + '">' + len.toLocaleString('en-US') + ' / ' + limit.toLocaleString('en-US') + ' characters</p>';
+		if (len >= limit) {
+			html += '<p class="cfwaf-expr-length is-over">' + (rule.action === 'skip'
+				? 'Too long to deploy. Turn off service IP lists in this order: Better Stack (verified anyway), then ManageWP, then ShortPixel. Or move IPs from Your server IPs to IP Access Rules.'
+				: 'Too long to deploy. Turn off some options in this rule.') + '</p>';
+		}
+		return html;
+	}
+
 	function refreshPreview() {
 		syncFromUI();
 		const con = qs('#cfwaf-expressions-container');
@@ -730,7 +785,8 @@
 					'<h4>' + escHtml(rule.description) + ' <span class="cfwaf-action-badge ' + cls + '">' + rule.action.toUpperCase() + '</span></h4>' +
 					'<button class="cfwaf-copy-btn" data-expr="' + escHtml(rule.expression) + '">Copy</button>' +
 					'</div>' +
-					'<div class="cfwaf-expr-body"><code>' + escHtml(rule.expression) + '</code></div>';
+					'<div class="cfwaf-expr-body"><code>' + escHtml(rule.expression) + '</code></div>' +
+					exprLength(rule);
 				con.appendChild(div);
 			});
 		});
@@ -1115,6 +1171,53 @@
 		}
 	});
 
+	// ── Export / import settings ──────────────────────────────────────────────
+	on(qs('#cfwaf-export-settings'), 'click', function () {
+		syncFromUI();
+		const payload = {
+			_meta: { plugin: 'WP WAF Manager', version: WAF.version || '', rules: WAF.rules_date || '', exported: new Date().toISOString() },
+			settings: settings,
+		};
+		const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+		const url  = URL.createObjectURL(blob);
+		const a    = document.createElement('a');
+		a.href     = url;
+		a.download = 'wpwaf-settings-' + new Date().toISOString().replace(/:/g, '-').replace(/\..*/, '') + '.json';
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		URL.revokeObjectURL(url);
+		toast('\u2713 Settings exported');
+	});
+
+	on(qs('#cfwaf-import-file'), 'change', function (e) {
+		const input = e.target;
+		const file  = input.files && input.files[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.onload = function (ev) {
+			// The server converts files from any version, ignores unknown keys and saves the result.
+			ajax('wpwaf_import_settings', { file: String(ev.target.result || ''), active_profile: activeProfileId }, function (res) {
+				input.value = '';
+				if (!res.success) {
+					toast('\u2717 Import failed: ' + ((res.data && res.data.message) || 'unknown error'), 'error');
+					return;
+				}
+				settings = res.data.settings;
+				syncToUI();
+				toast('\u2713 ' + res.data.message);
+			});
+		};
+		reader.onerror = function () { input.value = ''; toast('\u2717 Could not read that file.', 'error'); };
+		reader.readAsText(file);
+	});
+
+	on(qs('#cfwaf-rules-moved-dismiss'), 'click', function () {
+		const box = qs('#cfwaf-rules-moved');
+		if (box) box.remove();
+		ajax('wpwaf_dismiss_rules_notice', {}, function () {});
+	});
+
 	// ── Expose settings helpers for export/import IIFE ───────────────────────
 	window._cfwafGetSettings = function() { return settings; };
 	window._cfwafSetSettings = function(s) { settings = s; };
@@ -1142,181 +1245,5 @@
 	if (wpcronWarn && wpcronChk && wpcronChk.checked) wpcronWarn.style.display = '';
 
 	updateSaveLabel();
-
-})();
-
-// Injected after boot - Export / Import settings as JSON
-
-(function () {
-
-	// ── Known valid schema keys per rule ──────────────────────────────────────
-	var SCHEMA = {
-		rule1: {
-			enabled: 'boolean',
-			verified_categories: 'array',
-			allow_ips: 'array',
-			allow_user_agents: 'array',
-			custom_expressions: 'array',
-			allow_backupbuddy: 'boolean', allow_blogvault: 'boolean', allow_updraftplus: 'boolean',
-			allow_betterstack: 'boolean', allow_gtmetrix: 'boolean', allow_pingdom: 'boolean',
-			allow_statuscake: 'boolean', allow_uptimerobot: 'boolean', allow_cf_image: 'boolean',
-			allow_exactdn: 'boolean', allow_ewww: 'boolean', allow_flyingpress: 'boolean',
-			allow_imagify: 'boolean', allow_shortpixel: 'boolean', allow_tinypng: 'boolean',
-			allow_ahrefs: 'boolean', allow_ahrefs_audit: 'boolean', allow_mj12: 'boolean',
-			allow_rogerbot: 'boolean', allow_screamingfrog: 'boolean', allow_semrush: 'boolean',
-			allow_siteauditbot: 'boolean', allow_semrush_ocob: 'boolean', allow_sitelock: 'boolean',
-			allow_sucuri: 'boolean', allow_virustotal: 'boolean', allow_wordfence: 'boolean',
-			allow_facebook: 'boolean', allow_linkedin: 'boolean', allow_twitter: 'boolean',
-			allow_jetpack: 'boolean', allow_mainwp: 'boolean', allow_managewp: 'boolean',
-			allow_godaddy_uptime: 'boolean', allow_wpumbrella: 'boolean', allow_letsencrypt: 'boolean',
-		},
-		rule2: {
-			enabled: 'boolean',
-			block_yandex: 'boolean', block_sogou: 'boolean', block_semrush: 'boolean',
-			block_ahrefs: 'boolean', block_baidu: 'boolean', block_neevabot: 'boolean',
-			block_python: 'boolean', block_crawl: 'boolean', block_bot: 'boolean',
-			block_spider: 'boolean', block_nikto: 'boolean', block_sqlmap: 'boolean',
-			block_masscan: 'boolean', block_nmap: 'boolean', block_xmlrpc: 'boolean',
-			block_wpconfig: 'boolean', block_wpjson: 'boolean', block_wpinstall: 'boolean',
-			block_wlwmanifest: 'boolean', block_readme: 'boolean', block_license: 'boolean', block_wpcron: 'boolean',
-			block_sqli_sleep: 'boolean', block_path_traversal: 'boolean',
-		},
-		rule3: {
-			enabled: 'boolean', action: 'string',
-			block_do: 'boolean', block_linode: 'boolean', block_vultr: 'boolean',
-			block_hetzner: 'boolean', block_ovh: 'boolean', block_contabo: 'boolean',
-			block_scaleway: 'boolean', block_dreamhost: 'boolean', block_m247: 'boolean',
-			block_leaseweb: 'boolean', block_godaddy: 'boolean', block_alibaba: 'boolean',
-			block_hostroyale: 'boolean', block_cloudvider: 'boolean', block_tor: 'boolean',
-		},
-		rule4: {
-			enabled: 'boolean', challenge_aws: 'boolean', challenge_gcp: 'boolean',
-			challenge_azure: 'boolean', challenge_country: 'boolean', countries: 'array',
-		},
-		rule5: {
-			enabled: 'boolean', challenge_all_vpn: 'boolean',
-			challenge_nordvpn: 'boolean', challenge_expressvpn: 'boolean', challenge_purevpn: 'boolean',
-			challenge_surfshark: 'boolean', challenge_ipvanish: 'boolean', challenge_quadranet: 'boolean',
-			challenge_ovhfr: 'boolean', challenge_mullvad: 'boolean', challenge_privlayer: 'boolean',
-			challenge_wplogin: 'boolean',
-		},
-	};
-
-	function validateImport(data) {
-		var errors = [];
-		var rules = ['rule1','rule2','rule3','rule4','rule5'];
-		rules.forEach(function(rule) {
-			if (!data[rule]) return;
-			var allowed = SCHEMA[rule];
-			Object.keys(data[rule]).forEach(function(key) {
-				if (!(key in allowed)) {
-					errors.push(rule + ': unknown key "' + key + '"');
-					return;
-				}
-				var val = data[rule][key];
-				var expectedType = allowed[key];
-				if (expectedType === 'boolean' && typeof val !== 'boolean') {
-					errors.push(rule + '.' + key + ' must be boolean, got ' + typeof val);
-				} else if (expectedType === 'array' && !Array.isArray(val)) {
-					errors.push(rule + '.' + key + ' must be array, got ' + typeof val);
-				} else if (expectedType === 'string' && typeof val !== 'string') {
-					errors.push(rule + '.' + key + ' must be string, got ' + typeof val);
-				}
-			});
-		});
-		// Validate rule3.action values
-		if (data.rule3 && data.rule3.action && !['block','managed_challenge'].includes(data.rule3.action)) {
-			errors.push('rule3.action must be "block" or "managed_challenge"');
-		}
-		return errors;
-	}
-
-	// ── Export ────────────────────────────────────────────────────────────────
-	var exportBtn = document.getElementById('cfwaf-export-settings');
-	if (exportBtn) {
-		exportBtn.addEventListener('click', function() {
-			if (window._cfwafSyncFromUI) window._cfwafSyncFromUI();
-			var currentSettings = window._cfwafGetSettings ? window._cfwafGetSettings() : {};
-			var payload = {
-				_meta: {
-					plugin: 'Cloudflare WAF Manager',
-					version: '1.0.0',
-					exported: new Date().toISOString(),
-				},
-				settings: currentSettings,
-			};
-			var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-			var url = URL.createObjectURL(blob);
-			var a = document.createElement('a');
-			var ts = new Date().toISOString().replace(/:/g,'-').replace(/\..*/,'');
-			a.href = url;
-			a.download = 'cfwaf-settings-' + ts + '.json';
-			document.body.appendChild(a);
-			a.click();
-			a.remove();
-			URL.revokeObjectURL(url);
-			toast('\u2713 Settings exported!');
-		});
-	}
-
-	// ── Import ────────────────────────────────────────────────────────────────
-	var importFile = document.getElementById('cfwaf-import-file');
-	if (importFile) {
-		importFile.addEventListener('change', function(e) {
-			var file = e.target.files[0];
-			if (!file) return;
-			var reader = new FileReader();
-			reader.onload = function(ev) {
-				try {
-					var parsed = JSON.parse(ev.target.result);
-					// Accept either {settings:{...}} wrapper or bare settings object
-					var imported = parsed.settings || parsed;
-					// Validate schema
-					var errors = validateImport(imported);
-					if (errors.length) {
-						console.error('[CF WAF Import] Validation errors:', errors);
-						toast('\u2717 Import failed: ' + errors[0], 'error');
-						return;
-					}
-					// Merge imported settings (imported values win)
-					var WAF = window.cfWAF || {};
-					var current = window._cfwafGetSettings ? window._cfwafGetSettings() : (WAF.settings || {});
-					['rule1','rule2','rule3','rule4','rule5'].forEach(function(rule) {
-						if (!imported[rule]) return;
-						if (!current[rule]) current[rule] = {};
-						Object.assign(current[rule], imported[rule]);
-					});
-					// Push back to plugin state
-					if (window._cfwafSetSettings) window._cfwafSetSettings(current);
-					// Sync to UI
-					if (typeof syncToUI === 'function') syncToUI();
-					// Auto-save to DB
-					var WAFajax = window.cfWAF || {};
-					var fd = new FormData();
-					fd.append('action', 'wpwaf_save_settings');
-					fd.append('nonce', WAFajax.nonce);
-					fd.append('settings', JSON.stringify(current));
-					fetch(WAFajax.ajax_url, { method: 'POST', body: fd })
-						.then(function(r) { return r.json(); })
-						.then(function(res) {
-							if (res.success) {
-								toast('\u2713 Settings imported and saved!');
-							} else {
-								toast('\u2713 Settings imported (save failed, try Save Settings manually)');
-							}
-						})
-						.catch(function() {
-							toast('\u2713 Settings imported (offline save skipped)');
-						});
-				} catch(err) {
-					console.error('[CF WAF Import] Parse error:', err);
-					toast('\u2717 Import failed: invalid JSON file', 'error');
-				}
-				// Reset file input so same file can be re-imported
-				importFile.value = '';
-			};
-			reader.readAsText(file);
-		});
-	}
 
 })();

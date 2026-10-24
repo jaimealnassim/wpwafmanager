@@ -470,10 +470,16 @@ function openModal(rec=null){
 	qs('#cfwaf-dns-ttl').value     = rec?.ttl     || 1;
 	qs('#cfwaf-dns-proxied').checked = !!rec?.proxied;
 	qs('#cfwaf-dns-priority').value  = rec?.priority || 10;
+	// TTL is locked to Auto only while the record is proxied.
+	if(rec?.proxied){ qs('#cfwaf-dns-ttl').value = 1; }
+	qs('#cfwaf-dns-ttl').disabled = !!rec?.proxied;
 
 	if(rec?.type === 'SRV' && rec.data){
-		qs('#cfwaf-srv-service').value  = rec.data.service  || '';
-		qs('#cfwaf-srv-proto').value    = rec.data.proto    || '_tcp';
+		// Cloudflare keeps the service and protocol in the name: _sip._tcp.example.com
+		const m = /^(_[^.]+)\.(_[^.]+)\.?(.*)$/.exec(rec.name || '');
+		qs('#cfwaf-dns-name').value     = m ? (m[3] || '@') : (rec.name || '');
+		qs('#cfwaf-srv-service').value  = rec.data.service || (m ? m[1] : '');
+		qs('#cfwaf-srv-proto').value    = rec.data.proto || (m ? m[2] : '_tcp');
 		qs('#cfwaf-srv-priority').value = rec.data.priority || 0;
 		qs('#cfwaf-srv-weight').value   = rec.data.weight   || 0;
 		qs('#cfwaf-srv-port').value     = rec.data.port     || 0;
@@ -496,7 +502,7 @@ function closeModal(){ qs('#cfwaf-dns-modal').style.display='none'; editingId=''
 function updateTypeUI(type){
 	const isSRV = type === 'SRV';
 	const isCAA = type === 'CAA';
-	const hasPriority = ['MX','SRV','URI'].includes(type);
+	const hasPriority = ['MX','URI'].includes(type);
 	const canProxy = PROXYABLE.includes(type);
 
 	qs('#cfwaf-dns-content-field').style.display = (isSRV||isCAA) ? 'none' : '';

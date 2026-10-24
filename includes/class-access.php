@@ -70,6 +70,13 @@ class WPWAF_Access {
 			return 'You cannot remove your own access. Your account must remain in the list.';
 		}
 
+		// Every administrator ticked means no restriction, as the Settings page
+		// says. Store it as empty, so administrators added later also get access.
+		$admins = array_map( static fn( $u ) => (int) $u->ID, self::admin_users() );
+		if ( $user_ids && count( $admins ) < 100 && ! array_diff( $admins, $user_ids ) ) {
+			$user_ids = [];
+		}
+
 		// Empty list = "all admins" - store as empty array.
 		update_option( self::OPTION, $user_ids, false );
 		return '';

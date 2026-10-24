@@ -159,6 +159,43 @@ const NONCE    = <?php echo wp_json_encode( $nonce ); ?>;
 const AJAX_URL = <?php echo wp_json_encode( $ajax_url ); ?>;
 
 let allZones = [];
+// Real Under Attack / Development Mode state per zone, loaded in small batches.
+const zoneState = {};
+let stateQueue = [];
+let stateBusy  = false;
+
+function applyState(zoneId){
+  const st = zoneState[zoneId];
+  const attack = qs(`[data-zone="${zoneId}"].cfwaf-zc-attack-toggle`);
+  const dev    = qs(`[data-zone="${zoneId}"].cfwaf-zc-devmode-toggle`);
+  if (!st){
+    if (attack) attack.disabled = true;
+    if (dev)    dev.disabled = true;
+    const label = qs('#zc-attack-label-' + zoneId);
+    if (label) label.querySelector('.cfwaf-zc-attack-sub').textContent = 'Checking…';
+    return;
+  }
+  if (attack) attack.disabled = false;
+  if (dev)    { dev.disabled = false; dev.checked = !!st.dev; }
+  updateAttackUI(zoneId, !!st.attack);
+}
+
+function loadStates(ids){
+  ids.forEach(id => { if (!zoneState[id] && !stateQueue.includes(id)) stateQueue.push(id); });
+  if (stateBusy || !stateQueue.length) return;
+  stateBusy = true;
+  const batch = stateQueue.splice(0, 10);
+  ajax('wpwaf_zone_quick_state', {zone_ids: batch.join(',')}, (res) => {
+    const states = (res.success && res.data.states) ? res.data.states : {};
+    batch.forEach(id => {
+      // When a zone could not be read, fall back to Off so the switch still works.
+      zoneState[id] = states[id] || {attack:false, dev:false};
+      applyState(id);
+    });
+    stateBusy = false;
+    loadStates([]);
+  });
+}
 
 // Placeholder and hint for each purge type. Cloudflare takes up to 100 items per purge.
 const PURGE_HELP = {
@@ -207,7 +244,8 @@ function renderGrid(zones){
   if (!zones.length){ grid.innerHTML = '<div class="cfwaf-zc-loading">No zones match your search.</div>'; return; }
   grid.innerHTML = zones.map(z => cardHTML(z)).join('');
   // Wire up all cards
-  zones.forEach(z => initCard(z.id, z.name));
+  zones.forEach(z => { initCard(z.id, z.name); applyState(z.id); });
+  loadStates(zones.map(z => z.id));
 }
 
 function cardHTML(z){
@@ -282,6 +320,7 @@ function initCard(zoneId, zoneName){
     ajax('wpwaf_zone_setting_update', {zone_id:zoneId, key:'security_level', value: on ? 'under_attack' : 'medium'}, (res) => {
       this.disabled = false;
       if (res.success){
+        zoneState[zoneId] = Object.assign({}, zoneState[zoneId], {attack:on});
         updateAttackUI(zoneId, on);
         toast(on ? '⚡ Under Attack enabled on ' + zoneName : '✓ Under Attack disabled on ' + zoneName, !on || true);
       } else {
@@ -298,7 +337,7 @@ function initCard(zoneId, zoneName){
     this.disabled = true;
     ajax('wpwaf_zone_setting_update', {zone_id:zoneId, key:'development_mode', value: on ? 'on' : 'off'}, (res) => {
       this.disabled = false;
-      if (res.success) toast((on ? '🔧 Dev mode on' : '✓ Dev mode off') + ': ' + zoneName);
+      if (res.success){ zoneState[zoneId] = Object.assign({}, zoneState[zoneId], {dev:on}); toast((on ? '🔧 Dev mode on' : '✓ Dev mode off') + ': ' + zoneName); }
       else { this.checked = !on; toast('Failed: ' + (res.data?.message||'error'), false); }
     });
   });
@@ -374,9 +413,8 @@ function loadSettings(zoneId, body){
 
     // Sync attack/devmode toggles from actual settings
     const secLevel = s['security_level'] || 'medium';
-    updateAttackUI(zoneId, secLevel === 'under_attack');
-    const devToggle = qs(`[data-zone="${zoneId}"].cfwaf-zc-devmode-toggle`);
-    if (devToggle) devToggle.checked = s['development_mode'] === 'on';
+    zoneState[zoneId] = {attack: secLevel === 'under_attack', dev: s['development_mode'] === 'on'};
+    applyState(zoneId);
 
     body.innerHTML = settingsHTML(zoneId, s);
     wireSettings(zoneId, body);
@@ -449,12 +487,19 @@ function managedRow(zoneId, managed, id, label, hint){
 function wireSettings(zoneId, body){
   // Dropdowns
   body.querySelectorAll('.cfwaf-zc-setting-select').forEach(sel => {
+    sel.dataset.prev = sel.value;
     sel.addEventListener('change', function(){
       const key = this.dataset.key, value = this.value;
       this.disabled = true;
       ajax('wpwaf_zone_setting_update', {zone_id:zoneId, key, value}, (res) => {
         this.disabled = false;
-        res.success ? toast('✓ ' + key.replace(/_/g,' ') + ' updated') : toast('Failed: ' + (res.data?.message||'error'), false);
+        if (res.success){
+          this.dataset.prev = value;
+          toast('✓ ' + key.replace(/_/g,' ') + ' updated');
+        } else {
+          this.value = this.dataset.prev; // put back what Cloudflare still has
+          toast('Failed: ' + (res.data?.message||'error'), false);
+        }
       });
     });
   });
@@ -505,7 +550,7 @@ qs('#cfwaf-zc-attack-all-on')?.addEventListener('click', function(){
   let done = 0, failed = 0;
   allZones.forEach(z => {
     ajax('wpwaf_zone_setting_update', {zone_id:z.id, key:'security_level', value:'under_attack'}, (res) => {
-      if (res.success){ done++; updateAttackUI(z.id, true); }
+      if (res.success){ done++; zoneState[z.id] = Object.assign({}, zoneState[z.id], {attack:true}); updateAttackUI(z.id, true); }
       else failed++;
       if (done + failed === count){
         btn.disabled = false;

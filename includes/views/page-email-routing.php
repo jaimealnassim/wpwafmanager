@@ -362,6 +362,9 @@ function ajax(action, data, cb){
   var fd = new FormData();
   fd.append('action', action);
   fd.append('nonce', NONCE);
+  // Every request works on the account chosen above, without changing the
+  // account the other screens use.
+  if (typeof pluginAccountId !== 'undefined' && pluginAccountId && !('plugin_account_id' in data)) fd.append('plugin_account_id', pluginAccountId);
   Object.keys(data).forEach(function(k){ fd.append(k, data[k]); });
   fetch(AJAX_URL, {method:'POST', body:fd})
     .then(function(r){ return r.json(); })
@@ -389,18 +392,15 @@ if (accountSelEl) {
     accountId = ''; // reset CF account ID - will re-fetch
     allAddresses = [];
     currentZone = ''; currentZoneName = '';
-    // Switch active account then reload zones
-    ajax('wpwaf_switch_account', {account_id: pluginAccountId}, function(){
-      // Reload zone dropdown
-      var sel = qs('#wpwaf-er-zone');
-      if(sel) sel.innerHTML = '<option value="">Select a zone</option>';
-      if(qs('#wpwaf-er-status-bar')) qs('#wpwaf-er-status-bar').style.display = 'none';
-      if(qs('#wpwaf-er-table-wrap')) qs('#wpwaf-er-table-wrap').style.display = 'none';
-      if(qs('#wpwaf-er-add-btn')) qs('#wpwaf-er-add-btn').disabled = true;
-      if(qs('#wpwaf-er-sync-btn')) qs('#wpwaf-er-sync-btn').disabled = true;
-      var notice = qs('#wpwaf-er-sync-notice'); if(notice) notice.style.display = 'none';
-      loadZones();
-    });
+    // Reload zones for the chosen account (the active account is not changed).
+    var sel = qs('#wpwaf-er-zone');
+    if(sel) sel.innerHTML = '<option value="">Select a zone</option>';
+    if(qs('#wpwaf-er-status-bar')) qs('#wpwaf-er-status-bar').style.display = 'none';
+    if(qs('#wpwaf-er-table-wrap')) qs('#wpwaf-er-table-wrap').style.display = 'none';
+    if(qs('#wpwaf-er-add-btn')) qs('#wpwaf-er-add-btn').disabled = true;
+    if(qs('#wpwaf-er-sync-btn')) qs('#wpwaf-er-sync-btn').disabled = true;
+    var notice = qs('#wpwaf-er-sync-notice'); if(notice) notice.style.display = 'none';
+    loadZones();
   });
 }
 
@@ -510,10 +510,14 @@ qs('#wpwaf-er-toggle-btn').addEventListener('click', function(){
 });
 
 // ── Catch-all rule ─────────────────────────────────────────────────────────────
+var loadedCatchAll = {on:false, action:'drop', dest:''};
 function renderCatchAll(rule){
   var action  = rule.actions && rule.actions[0] ? rule.actions[0].type : 'drop';
   var dest    = rule.actions && rule.actions[0] && rule.actions[0].value ? rule.actions[0].value[0] : '';
-  var enabled = rule.enabled !== false;
+  // "On" means the catch-all is enabled and forwards somewhere. A disabled
+  // catch-all, or one that drops mail, shows as Off.
+  var enabled = rule.enabled !== false && action === 'forward';
+  loadedCatchAll = {on:enabled, action:action, dest:dest};
 
   var enabledEl = qs('#wpwaf-er-catchall-enabled');
   var statusEl  = qs('#wpwaf-er-catchall-status');
@@ -546,14 +550,18 @@ qs('#wpwaf-er-catchall-save').addEventListener('click', function(){
   var dest       = qs('#wpwaf-er-catchall-dest') ? qs('#wpwaf-er-catchall-dest').value.trim() : '';
   var catchAllOn = qs('#wpwaf-er-catchall-enabled') ? qs('#wpwaf-er-catchall-enabled').checked : false;
   var msgEl      = qs('#wpwaf-er-catchall-msg');
-  if(!dest){ msgEl.textContent = '⚠ Select a verified destination inbox'; msgEl.style.color = '#dc2626'; return; }
+  if(!dest && (catchAllOn || local)){ msgEl.textContent = '⚠ Select a verified destination inbox'; msgEl.style.color = '#dc2626'; return; }
   msgEl.textContent = '';
   this.disabled = true;
   this.textContent = 'Saving…';
   var btn    = this;
   var done   = 0;
   var errors = [];
-  var total  = (local && currentZoneName) ? 2 : 1;
+  // Only touch the catch-all when it should forward, or when it forwarded and is now turned off.
+  // That leaves a catch-all set up in Cloudflare (a Worker, say) alone.
+  var updateCatchAll = catchAllOn || loadedCatchAll.on;
+  var total  = (updateCatchAll ? 1 : 0) + ((local && currentZoneName) ? 1 : 0);
+  if(!total){ msgEl.textContent = '⚠ Enter an address on your domain, or turn on Catch-All'; msgEl.style.color = '#dc2626'; btn.disabled = false; btn.textContent = 'Save'; return; }
 
   function finish(){
     done++;
@@ -572,16 +580,20 @@ qs('#wpwaf-er-catchall-save').addEventListener('click', function(){
     }
   }
 
-  // 1. Update catch-all rule
-  ajax('wpwaf_catch_all_update', {
-    zone_id:    currentZone,
-    action_type: catchAllOn && dest ? 'forward' : 'drop',
-    destination: catchAllOn ? dest : '',
-    enabled:    '1'
-  }, function(res){
-    if(!res.success) errors.push('Catch-all: ' + (res.data ? res.data.message : 'failed'));
-    finish();
-  });
+  // 1. Update catch-all rule: forward when on, disabled when off (Cloudflare then
+  //    rejects mail to addresses without a rule, so senders get a bounce).
+  if(updateCatchAll){
+    ajax('wpwaf_catch_all_update', {
+      zone_id:     currentZone,
+      action_type: catchAllOn ? 'forward' : 'drop',
+      destination: catchAllOn ? dest : '',
+      enabled:     catchAllOn ? '1' : '0'
+    }, function(res){
+      if(!res.success) errors.push('Catch-all: ' + (res.data ? res.data.message : 'failed'));
+      else loadedCatchAll = {on:catchAllOn, action:catchAllOn ? 'forward' : 'drop', dest:catchAllOn ? dest : ''};
+      finish();
+    });
+  }
 
   // 2. Create specific rule if local part entered
   if(local && currentZoneName){

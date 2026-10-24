@@ -53,6 +53,11 @@ class WPWAF_Settings {
 		return self::$cache;
 	}
 
+	/** Forget the in-request copy after the option is written elsewhere. */
+	public static function flush(): void {
+		self::$cache = null;
+	}
+
 	/** Return a single setting value. */
 	public static function get( string $key, mixed $fallback = null ): mixed {
 		$all = self::all();

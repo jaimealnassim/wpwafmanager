@@ -16,7 +16,8 @@ class WPWAF_DNS {
 	];
 
 	// Types that support Cloudflare proxy (orange cloud)
-	public const PROXYABLE = [ 'A', 'AAAA', 'CNAME', 'HTTPS', 'SRV', 'SVCB' ];
+	// Cloudflare proxies only the records used for IP address resolution.
+	public const PROXYABLE = [ 'A', 'AAAA', 'CNAME' ];
 
 	// TTL options (0 = Auto)
 	public const TTL_OPTIONS = [
@@ -50,8 +51,9 @@ class WPWAF_DNS {
 		$proxied = filter_var( $raw['proxied'] ?? false, FILTER_VALIDATE_BOOLEAN );
 		$comment = sanitize_text_field( $raw['comment'] ?? '' );
 
+		if ( $name === '' && $type === 'SRV' ) $name = '@';
 		if ( $name === '' ) return [ 'valid' => false, 'error' => 'Name is required.' ];
-		if ( $content === '' && $type !== 'CAA' ) return [ 'valid' => false, 'error' => 'Content is required.' ];
+		if ( $content === '' && ! in_array( $type, [ 'CAA', 'SRV' ], true ) ) return [ 'valid' => false, 'error' => 'Content is required.' ];
 
 		$data = compact( 'type', 'name', 'content', 'ttl' );
 
@@ -64,21 +66,36 @@ class WPWAF_DNS {
 
 		if ( $comment !== '' ) $data['comment'] = $comment;
 
-		// Priority (MX, SRV, URI)
-		if ( isset( $raw['priority'] ) && in_array( $type, [ 'MX', 'SRV', 'URI' ], true ) ) {
+		// Priority (MX, URI). SRV carries its priority inside data.
+		if ( isset( $raw['priority'] ) && in_array( $type, [ 'MX', 'URI' ], true ) ) {
 			$data['priority'] = (int) $raw['priority'];
 		}
 
-		// SRV data
-		if ( $type === 'SRV' && isset( $raw['data'] ) && is_array( $raw['data'] ) ) {
+		// SRV: Cloudflare takes the service and protocol in the record name
+		// (_sip._tcp.example.com) and priority, weight, port and target in data.
+		if ( $type === 'SRV' ) {
+			$d       = is_array( $raw['data'] ?? null ) ? $raw['data'] : [];
+			$service = sanitize_text_field( (string) ( $d['service'] ?? '' ) );
+			$proto   = sanitize_text_field( (string) ( $d['proto'] ?? '_tcp' ) );
+			$target  = sanitize_text_field( (string) ( $d['target'] ?? '' ) );
+			$port    = (int) ( $d['port'] ?? 0 );
+			if ( $service !== '' && $service[0] !== '_' ) $service = '_' . $service;
+			if ( ! preg_match( '/^_[a-z0-9-]{1,62}$/i', $service ) ) {
+				return [ 'valid' => false, 'error' => 'Enter the SRV service, for example _sip.' ];
+			}
+			if ( ! in_array( $proto, [ '_tcp', '_udp', '_tls' ], true ) ) {
+				return [ 'valid' => false, 'error' => 'Choose TCP, UDP or TLS for the SRV protocol.' ];
+			}
+			if ( $target === '' ) return [ 'valid' => false, 'error' => 'Enter the SRV target hostname.' ];
+			if ( $port < 0 || $port > 65535 ) return [ 'valid' => false, 'error' => 'The SRV port must be between 0 and 65535.' ];
+
+			$host         = ( $name === '@' ) ? '' : '.' . ltrim( $name, '.' );
+			$data['name'] = $service . '.' . $proto . $host;
 			$data['data'] = [
-				'service'  => sanitize_text_field( $raw['data']['service']  ?? '' ),
-				'proto'    => sanitize_text_field( $raw['data']['proto']    ?? '_tcp' ),
-				'name'     => sanitize_text_field( $raw['data']['name']     ?? '' ),
-				'priority' => (int) ( $raw['data']['priority'] ?? 0 ),
-				'weight'   => (int) ( $raw['data']['weight']   ?? 0 ),
-				'port'     => (int) ( $raw['data']['port']     ?? 0 ),
-				'target'   => sanitize_text_field( $raw['data']['target']   ?? '' ),
+				'priority' => max( 0, min( 65535, (int) ( $d['priority'] ?? 0 ) ) ),
+				'weight'   => max( 0, min( 65535, (int) ( $d['weight'] ?? 0 ) ) ),
+				'port'     => $port,
+				'target'   => $target,
 			];
 			unset( $data['content'] );
 		}

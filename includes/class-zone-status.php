@@ -32,10 +32,24 @@ class WPWAF_Zone_Status {
 		$s['sync_interval']  = max( 300, (int) ( $s['sync_interval'] ?? 3600 ) );
 		$s['days_analytics'] = max( 1, min( 30, (int) ( $s['days_analytics'] ?? 7 ) ) );
 		$s['allowed_zones']  = is_array( $s['allowed_zones'] ?? null )
-			? array_filter( array_map( 'sanitize_text_field', $s['allowed_zones'] ) )
+			? array_values( array_filter( array_map( 'sanitize_text_field', $s['allowed_zones'] ) ) )
 			: [];
 		update_option( self::OPT_SETTINGS, $s, false );
-		self::reschedule_cron( $s['sync_interval'] );
+
+		// Keep the same three values on the Settings page (and the dashboard widget) in step.
+		$plugin = get_option( 'wpwaf_plugin_settings', [] );
+		$plugin = is_array( $plugin ) ? $plugin : [];
+		$plugin['analytics_auto_sync'] = $s['enabled'];
+		$plugin['analytics_interval']  = $s['sync_interval'];
+		$plugin['analytics_days']      = $s['days_analytics'];
+		update_option( 'wpwaf_plugin_settings', $plugin, false );
+		WPWAF_Settings::flush();
+
+		if ( $s['enabled'] ) {
+			self::reschedule_cron( $s['sync_interval'] );
+		} else {
+			self::clear_cron();
+		}
 	}
 
 	// ── Cron ──────────────────────────────────────────────────────────────────
@@ -53,12 +67,22 @@ class WPWAF_Zone_Status {
 
 	// ── Sync ──────────────────────────────────────────────────────────────────
 
+	/** WP-Cron entry point: syncs only while auto-sync is on. */
 	public static function run_sync(): void {
-		$settings = self::get_settings();
-		if ( ! $settings['enabled'] ) return;
+		if ( ! self::get_settings()['enabled'] ) return;
+		self::sync();
+	}
 
-		$active = WPWAF_Accounts::active();
-		if ( ! $active ) return;
+	/**
+	 * Fetches fresh analytics for the monitored zones and stores them for the
+	 * Zone Status cards. Also used by Sync Now, which works with auto-sync off.
+	 *
+	 * @return array{success:bool,message?:string,zones?:int}
+	 */
+	public static function sync(): array {
+		$settings = self::get_settings();
+		$active   = WPWAF_Accounts::active();
+		if ( ! $active ) return [ 'success' => false, 'message' => 'No Cloudflare account connected.' ];
 
 		$api   = new WPWAF_API(
 			$active['auth_method'],
@@ -67,7 +91,9 @@ class WPWAF_Zone_Status {
 			$active['api_key']    ?? '',
 		);
 		$zones = $api->list_zones();
-		if ( empty( $zones['success'] ) ) return;
+		if ( empty( $zones['success'] ) ) {
+			return [ 'success' => false, 'message' => (string) ( $zones['message'] ?? 'Could not load zones.' ) ];
+		}
 
 		$allowed = $settings['allowed_zones'] ?? [];
 		$cache   = [];
@@ -81,7 +107,10 @@ class WPWAF_Zone_Status {
 			];
 		}
 		update_option( self::OPT_CACHE, $cache, false );
-		self::reschedule_cron( $settings['sync_interval'] );
+		if ( $settings['enabled'] ) {
+			self::reschedule_cron( $settings['sync_interval'] );
+		}
+		return [ 'success' => true, 'zones' => count( $cache ) ];
 	}
 
 	public static function get_cache(): array {

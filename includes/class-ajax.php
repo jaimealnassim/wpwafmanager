@@ -23,6 +23,9 @@ class WPWAF_Ajax {
 		add_action( 'wp_ajax_wpwaf_deploy_rules',         [ $self, 'deploy_rules' ] );
 		add_action( 'wp_ajax_wpwaf_list_zone_rules',      [ $self, 'list_zone_rules' ] );
 		add_action( 'wp_ajax_wpwaf_save_settings',        [ $self, 'save_settings' ] );
+		add_action( 'wp_ajax_wpwaf_import_settings',      [ $self, 'import_settings' ] );
+		add_action( 'wp_ajax_wpwaf_dismiss_rules_notice', [ $self, 'dismiss_rules_notice' ] );
+		add_action( 'wp_ajax_wpwaf_zone_quick_state',     [ $self, 'zone_quick_state' ] );
 		add_action( 'wp_ajax_wpwaf_preview_rules',        [ $self, 'preview_rules' ] );
 		// Profile management
 		add_action( 'wp_ajax_wpwaf_profile_switch',              [ $self, 'profile_switch' ] );
@@ -197,7 +200,7 @@ class WPWAF_Ajax {
 	public function list_zones(): void {
 		$this->check();
 		$this->require_active_account();
-		$result = WPWAF_Accounts::api()->list_zones();
+		$result = $this->request_api()->list_zones();
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -265,11 +268,17 @@ class WPWAF_Ajax {
 			wp_send_json_error( [ 'message' => 'No rules to deploy. All rules are disabled.' ] );
 			wp_die();
 		}
+		$too_long = WPWAF_Rule_Builder::too_long( $rules );
+		if ( $too_long !== null ) {
+			wp_send_json_error( [ 'message' => $too_long ] );
+			wp_die();
+		}
 
-		$api     = WPWAF_Accounts::api();
-		$results = [];
+		$replace_all = ( $_POST['replace_all'] ?? '' ) === '1';
+		$api         = WPWAF_Accounts::api();
+		$results     = [];
 		foreach ( $zone_ids as $zone_id ) {
-			$results[ $zone_id ] = $api->deploy_rules( $zone_id, $rules );
+			$results[ $zone_id ] = $api->deploy_rules( $zone_id, $rules, $replace_all );
 		}
 
 		$success_count = count( array_filter( $results, fn( $r ) => ! empty( $r['success'] ) ) );
@@ -316,6 +325,87 @@ class WPWAF_Ajax {
 		wp_die();
 	}
 
+	/**
+	 * Imports a settings file exported by any version of the plugin. Unknown
+	 * keys are ignored and older formats are converted, then the result is
+	 * saved to the active Rule Profile and returned for the screen.
+	 */
+	public function import_settings(): void {
+		$this->check();
+		$data = json_decode( wp_unslash( $_POST['file'] ?? '' ), associative: true );
+		if ( ! is_array( $data ) ) {
+			wp_send_json_error( [ 'message' => 'That file is not valid JSON.' ] );
+			wp_die();
+		}
+		$imported = isset( $data['settings'] ) && is_array( $data['settings'] ) ? $data['settings'] : $data;
+		$found    = array_intersect( array_keys( $imported ), [ 'rule1', 'rule2', 'rule3', 'rule4', 'rule5' ] );
+		if ( ! $found ) {
+			wp_send_json_error( [ 'message' => 'No WAF rule settings were found in that file.' ] );
+			wp_die();
+		}
+
+		$profile_id = sanitize_key( $_POST['active_profile'] ?? '' );
+		$profiles   = WPWAF_Profiles::all();
+		if ( ! isset( $profiles[ $profile_id ] ) ) $profile_id = WPWAF_Profiles::active_id();
+
+		// Rules missing from the file keep their current values.
+		$current  = WPWAF_Rule_Builder::sanitize_settings( (array) ( $profiles[ $profile_id ]['settings'] ?? [] ) );
+		$imported = WPWAF_Rule_Builder::migrate( $imported );
+		foreach ( $found as $rule ) {
+			if ( is_array( $imported[ $rule ] ) ) $current[ $rule ] = array_merge( $current[ $rule ], $imported[ $rule ] );
+		}
+		$settings = WPWAF_Rule_Builder::sanitize_settings( $current );
+
+		update_option( 'wpwaf_rule_settings', $settings, false );
+		WPWAF_Profiles::save_settings_to_profile( $profile_id, $settings );
+
+		wp_send_json_success( [
+			'settings'   => $settings,
+			'profile_id' => $profile_id,
+			'message'    => sprintf( 'Settings imported into the "%s" profile.', (string) ( $profiles[ $profile_id ]['name'] ?? 'Default' ) ),
+		] );
+		wp_die();
+	}
+
+	/**
+	 * Under Attack and Development Mode state for up to 10 zones, read in
+	 * parallel, so the Zone Controls switches show each zone's real state.
+	 */
+	public function zone_quick_state(): void {
+		$this->check();
+		$this->require_active_account();
+		$ids = array_slice( array_values( array_filter(
+			array_map( 'trim', explode( ',', sanitize_text_field( wp_unslash( $_POST['zone_ids'] ?? '' ) ) ) ),
+			static fn( $z ) => (bool) preg_match( '/^[a-f0-9]{32}$/', $z )
+		) ), 0, 10 );
+		$paths = [];
+		foreach ( $ids as $id ) {
+			$paths[ $id . ':sl' ] = "zones/{$id}/settings/security_level";
+			$paths[ $id . ':dm' ] = "zones/{$id}/settings/development_mode";
+		}
+		$results = $paths ? WPWAF_Accounts::api()->get_many( $paths ) : [];
+		$states  = [];
+		foreach ( $ids as $id ) {
+			$sl = $results[ $id . ':sl' ] ?? [];
+			$dm = $results[ $id . ':dm' ] ?? [];
+			if ( empty( $sl['success'] ) && empty( $dm['success'] ) ) continue;
+			$states[ $id ] = [
+				'attack' => ( $sl['result']['value'] ?? '' ) === 'under_attack',
+				'dev'    => ( $dm['result']['value'] ?? '' ) === 'on',
+			];
+		}
+		wp_send_json_success( [ 'states' => $states ] );
+		wp_die();
+	}
+
+	/** Hides the "rules updated" notice on the WAF Rules screen. */
+	public function dismiss_rules_notice(): void {
+		$this->check();
+		delete_option( 'wpwaf_rules_moved_agents' );
+		wp_send_json_success();
+		wp_die();
+	}
+
 	// ── Profile handlers ───────────────────────────────────────────────────────
 
 	public function profile_switch(): void {
@@ -331,7 +421,7 @@ class WPWAF_Ajax {
 		update_option( 'wpwaf_active_profile', $id, false );
 		wp_send_json_success( [
 			'profile_id' => $id,
-			'settings'   => $profiles[ $id ]['settings'],
+			'settings'   => WPWAF_Rule_Builder::sanitize_settings( (array) ( $profiles[ $id ]['settings'] ?? [] ) ),
 		] );
 		wp_die();
 	}
@@ -559,6 +649,16 @@ class WPWAF_Ajax {
 	// ── Per-account API helper ────────────────────────────────────────────────
 
 	/**
+	 * The account a screen asked for (plugin_account_id), or the active account.
+	 * Lets a screen work on another connected account without switching the
+	 * account every other screen uses.
+	 */
+	private function request_api(): WPWAF_API {
+		$id = sanitize_text_field( wp_unslash( $_POST['plugin_account_id'] ?? '' ) );
+		return ( $id !== '' ? WPWAF_Accounts::api_for( $id ) : null ) ?? WPWAF_Accounts::api();
+	}
+
+	/**
 	 * Return a WPWAF_API instance for a specific plugin account ID.
 	 * Returns null if the account is not found.
 	 */
@@ -593,10 +693,15 @@ class WPWAF_Ajax {
 	public function zone_status_sync(): void {
 		$this->check();
 		$this->require_active_account();
-		WPWAF_Zone_Status::run_sync();
+		$result = WPWAF_Zone_Status::sync();
+		if ( empty( $result['success'] ) ) {
+			wp_send_json_error( [ 'message' => $result['message'] ?? 'Sync failed.' ] );
+			wp_die();
+		}
 		wp_send_json_success( [
 			'next_sync' => WPWAF_Zone_Status::get_next_sync(),
 			'synced_at' => time(),
+			'zones'     => (int) ( $result['zones'] ?? 0 ),
 		] );
 		wp_die();
 	}
@@ -679,7 +784,7 @@ class WPWAF_Ajax {
 		$value      = sanitize_text_field( $_POST['value']      ?? '' );
 		$note       = sanitize_text_field( $_POST['note']       ?? '' );
 
-		$allowed_modes   = [ 'whitelist', 'block', 'challenge', 'js_challenge' ];
+		$allowed_modes   = [ 'whitelist', 'block', 'managed_challenge', 'challenge', 'js_challenge' ];
 		$allowed_targets = [ 'ip', 'ip_range', 'country', 'asn' ];
 
 		if ( empty( $account_id ) || empty( $value ) ) {
@@ -722,7 +827,7 @@ class WPWAF_Ajax {
 		}
 
 		$data = [ 'notes' => $note ];
-		$allowed_modes = [ 'whitelist', 'block', 'challenge', 'js_challenge' ];
+		$allowed_modes = [ 'whitelist', 'block', 'managed_challenge', 'challenge', 'js_challenge' ];
 		if ( $mode !== '' && in_array( $mode, $allowed_modes, true ) ) {
 			$data['mode'] = $mode;
 		}
@@ -1005,16 +1110,16 @@ class WPWAF_Ajax {
 		$zone_id    = $this->cf_id( 'zone_id' );
 		if ( empty( $account_id ) && ! empty( $zone_id ) ) {
 			// Resolve from a specific zone - only requires Zone → Zone → Read.
-			$account_id = WPWAF_Accounts::api()->get_account_id_from_zone( $zone_id );
+			$account_id = $this->request_api()->get_account_id_from_zone( $zone_id );
 		}
 		if ( empty( $account_id ) ) {
 			// Final fallback: attempt the accounts endpoint (needs broader token scope).
-			$account_id = WPWAF_Accounts::api()->get_account_id();
+			$account_id = $this->request_api()->get_account_id();
 		}
 		if ( empty( $account_id ) ) {
 			wp_send_json_error( [ 'message' => 'Could not determine account ID. Ensure your API token has Zone → Zone → Read permission.' ] ); wp_die();
 		}
-		$result = WPWAF_Accounts::api()->list_email_addresses( $account_id );
+		$result = $this->request_api()->list_email_addresses( $account_id );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -1028,12 +1133,12 @@ class WPWAF_Ajax {
 		}
 		$account_id = $this->cf_id( 'account_id' );
 		if ( empty( $account_id ) ) {
-			$account_id = WPWAF_Accounts::api()->get_account_id();
+			$account_id = $this->request_api()->get_account_id();
 		}
 		if ( empty( $account_id ) ) {
 			wp_send_json_error( [ 'message' => 'Could not determine account ID.' ] ); wp_die();
 		}
-		$result = WPWAF_Accounts::api()->create_email_address( $account_id, $email );
+		$result = $this->request_api()->create_email_address( $account_id, $email );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -1043,7 +1148,7 @@ class WPWAF_Ajax {
 		$this->require_active_account();
 		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) { wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die(); }
-		$result = WPWAF_Accounts::api()->get_catch_all_rule( $zone_id );
+		$result = $this->request_api()->get_catch_all_rule( $zone_id );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -1064,7 +1169,7 @@ class WPWAF_Ajax {
 				? [ [ 'type' => 'forward', 'value' => [ $dest ] ] ]
 				: [ [ 'type' => $action ] ],
 		];
-		$result = WPWAF_Accounts::api()->update_catch_all_rule( $zone_id, $data );
+		$result = $this->request_api()->update_catch_all_rule( $zone_id, $data );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -1074,7 +1179,7 @@ class WPWAF_Ajax {
 		$this->require_active_account();
 		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) { wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die(); }
-		$routing = WPWAF_Accounts::api()->get_email_routing( $zone_id );
+		$routing = $this->request_api()->get_email_routing( $zone_id );
 		$routing['success'] ? wp_send_json_success( $routing ) : wp_send_json_error( $routing );
 		wp_die();
 	}
@@ -1085,7 +1190,7 @@ class WPWAF_Ajax {
 		$zone_id = $this->cf_id( 'zone_id' );
 		$enable  = filter_var( $_POST['enable'] ?? false, FILTER_VALIDATE_BOOLEAN );
 		if ( empty( $zone_id ) ) { wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die(); }
-		$api    = WPWAF_Accounts::api();
+		$api    = $this->request_api();
 		$result = $enable ? $api->enable_email_routing( $zone_id ) : $api->disable_email_routing( $zone_id );
 		$result['success'] ? wp_send_json_success( [] ) : wp_send_json_error( $result );
 		wp_die();
@@ -1096,7 +1201,7 @@ class WPWAF_Ajax {
 		$this->require_active_account();
 		$zone_id = $this->cf_id( 'zone_id' );
 		if ( empty( $zone_id ) ) { wp_send_json_error( [ 'message' => 'zone_id required.' ] ); wp_die(); }
-		$result = WPWAF_Accounts::api()->list_email_rules( $zone_id );
+		$result = $this->request_api()->list_email_rules( $zone_id );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -1122,7 +1227,7 @@ class WPWAF_Ajax {
 			'matchers' => [ [ 'type' => 'literal', 'field' => 'to', 'value' => $from ] ],
 			'actions'  => [ [ 'type' => $action_type, 'value' => [ $to ] ] ],
 		];
-		$result = WPWAF_Accounts::api()->create_email_rule( $zone_id, $data );
+		$result = $this->request_api()->create_email_rule( $zone_id, $data );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -1158,7 +1263,7 @@ class WPWAF_Ajax {
 					: [],
 			], $raw['actions'] );
 		}
-		$result = WPWAF_Accounts::api()->update_email_rule( $zone_id, $rule_id, $data );
+		$result = $this->request_api()->update_email_rule( $zone_id, $rule_id, $data );
 		$result['success'] ? wp_send_json_success( $result ) : wp_send_json_error( $result );
 		wp_die();
 	}
@@ -1171,7 +1276,7 @@ class WPWAF_Ajax {
 		if ( empty( $zone_id ) || empty( $rule_id ) ) {
 			wp_send_json_error( [ 'message' => 'zone_id and rule_id required.' ] ); wp_die();
 		}
-		$result = WPWAF_Accounts::api()->delete_email_rule( $zone_id, $rule_id );
+		$result = $this->request_api()->delete_email_rule( $zone_id, $rule_id );
 		$result['success'] ? wp_send_json_success( [] ) : wp_send_json_error( $result );
 		wp_die();
 	}

@@ -407,3 +407,35 @@
 /* ── Flare badges ────────────────────────────────────────────────────────── */
 .cfwaf-flare-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 10px; font-weight: 700; border-radius: 4px; border: 1px solid; vertical-align: middle; letter-spacing: .02em; line-height: 1.6; white-space: nowrap; }
 .cfwaf-zones-flare-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; border: 1px solid; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+/* ── 1.0.25: October 2026 ruleset ───────────────────────────────────────── */
+.cfwaf-check-label > span { display: block; min-width: 0; }
+.cfwaf-check-strong { align-items: flex-start; padding: 8px 6px; }
+.cfwaf-check-strong input[type="checkbox"], .cfwaf-service-row input[type="checkbox"], .cfwaf-service-sub input[type="checkbox"] { margin-top: 2px !important; }
+.cfwaf-check-desc { display: block; font-size: 12px; color: #6b7280; line-height: 1.45; margin-top: 2px; font-weight: normal; }
+.cfwaf-check-meta { display: block; font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.cfwaf-service-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2px 16px; }
+.cfwaf-service-row { align-items: flex-start; }
+.cfwaf-service-sub { align-items: flex-start; margin-left: 28px; }
+.cfwaf-service-sub input[type="checkbox"]:disabled + span { opacity: .5; }
+.cfwaf-cat-card.is-disabled { opacity: .5; cursor: default; }
+.cfwaf-cat-card.is-disabled input[type="checkbox"] { cursor: default; }
+#cfwaf-host-grid.is-disabled { opacity: .5; }
+.cfwaf-covered { margin-top: 14px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; background: #fafafa; }
+.cfwaf-covered-title { margin: 0 0 4px; font-weight: 600; font-size: 13px; color: #111111; }
+.cfwaf-covered-row { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: #374151; padding: 4px 0; border-top: 1px solid #f0f0f0; line-height: 1.45; }
+.cfwaf-covered-state { flex: 0 0 92px; font-weight: 600; color: #b45309; }
+.cfwaf-covered-row.is-covered .cfwaf-covered-state { color: #15803d; }
+.cfwaf-expr-length { margin: 6px 0 0; font-size: 12px; color: #6b7280; }
+.cfwaf-expr-length.is-near { color: #b45309; font-weight: 600; }
+.cfwaf-expr-length.is-over { color: #b91c1c; font-weight: 600; }
+.cfwaf-deploy-mode { margin: 12px 0; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
+.cfwaf-deploy-mode .cfwaf-hint { margin: 0 0 6px; }
+.cfwaf-rules-moved { margin-bottom: 16px; }
+.cfwaf-rules-moved p { margin: 0 0 8px; }
+@media (max-width: 600px) {
+	.cfwaf-service-list { grid-template-columns: 1fr; }
+	.cfwaf-covered-row { flex-direction: column; gap: 2px; }
+	.cfwaf-covered-state { flex: none; }
+}
+.cfwaf-notice-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }

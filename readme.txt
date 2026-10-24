@@ -4,7 +4,7 @@ Tags: waf, firewall, cloudflare, security, turnstile
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.24.1
+Stable tag: 1.0.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,15 +16,15 @@ Manage Cloudflare from WordPress: WAF rules, DNS, bots, SSL, cache, alerts, Turn
 
 = WAF Rules Builder =
 
-Deploy five pre-configured, battle-tested security rules to any Cloudflare zone in one click, based on the open-source [wafrules.com](https://wafrules.com) ruleset:
+Deploy five pre-configured, battle-tested security rules to any Cloudflare zone in one click, based on the open-source [wafrules.com](https://wafrules.com) ruleset (last updated October 21, 2026):
 
-* **Allow Good Bots**: Whitelist Cloudflare verified bot categories (Googlebot, Bingbot, uptime monitors, payment processors) plus custom IP, user agent and Cloudflare expression allowlists
-* **Block Aggressive Crawlers**: Block SEO scrapers, exploit scanners (SQLMap, Nikto, Masscan, Nmap), and sensitive WordPress paths (xmlrpc.php, wp-config.php, install.php)
-* **Block or Challenge Web Hosts & TOR**: Block or challenge traffic from cloud hosting ASNs (DigitalOcean, Vultr, Hetzner, OVH, Contabo, and more) and TOR exit nodes
-* **Challenge Large Cloud Providers**: Managed challenge for AWS EC2, Google Cloud, and Azure traffic
-* **Challenge VPN & wp-login**: Managed challenge for NordVPN, ExpressVPN, Surfshark, and other VPN providers plus the WordPress login page
+* **Allow Good Bots**: Allow every Cloudflare verified bot or only the categories you pick, services matched by their published IP lists (ManageWP, WP Umbrella, ShortPixel, Patchstack and more), Let's Encrypt, your server IPs, custom user agents and Cloudflare expressions
+* **Block Aggressive Crawlers & WordPress Paths**: Block aggressive crawlers, exploit scanners (SQLMap, Nikto, Masscan, Nmap), and sensitive WordPress paths (xmlrpc.php, wp-config.php, install.php)
+* **Block or Challenge Web Hosts / TOR & Exploit URIs**: Block or challenge traffic from cloud hosting ASNs (DigitalOcean, Vultr, Hetzner, OVH, Contabo, and more) and TOR exit nodes, and block six groups of exploit URIs
+* **Challenge Large Providers / Country**: Managed challenge for AWS EC2, Google Cloud, and Azure traffic and the countries you pick
+* **Challenge VPN Connections & wp-login**: Managed challenge for NordVPN, ExpressVPN, Surfshark, and other VPN providers plus the WordPress login page
 
-Additional: live expression preview, multi-zone deployment, JSON export/import, automatic Free plan compatibility.
+Additional: live expression preview with a 4,096 character check, multi-zone deployment that keeps your other custom rules, JSON export/import, automatic Free plan compatibility.
 
 * **Rule Profiles**: save complete rule configurations under a name, with notes, and switch between them in one click (up to 10)
 * **Domain Profiles**: save groups of zones and select them all before a deploy in one click (up to 10)
@@ -250,13 +250,16 @@ The free version on GitHub is fully featured. Pro at [wpwafmanager.com](https://
 
 = Why are zones blank on first install? =
 
-Zone Status starts with no zones selected and auto-sync off. This prevents surprise API calls to Cloudflare on first activation. Pick your zones under Zones to Sync on the Zone Status page, then turn on auto-sync in Settings when ready.
+Zone Status starts with no zones selected and auto-sync off. This prevents surprise API calls to Cloudflare on first activation. Pick your zones under Zones to Sync on the Zone Status page, then click Sync Now, or turn on auto-sync in Settings when ready.
 
 == Changelog ==
 
 Full changelog at https://www.wpwafmanager.com/changelog/
 
 == Upgrade Notice ==
+
+= 1.0.25 =
+WAF rules updated to the October 21, 2026 wafrules.com release. Your saved rule settings and profiles are moved to the new layout automatically. Redeploy to your zones to apply the new rules.
 
 = 1.0.0 =
 Initial release. If upgrading from the cloudflare-waf-manager plugin, deactivate and delete it first. Both plugins cannot run simultaneously.

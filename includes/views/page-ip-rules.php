@@ -172,6 +172,7 @@ $active_id = WPWAF_Accounts::active_id();
 			<button class="cfwaf-ip-filter-tab active" data-mode="" role="tab">All</button>
 			<button class="cfwaf-ip-filter-tab" data-mode="whitelist" role="tab">✅ Allow</button>
 			<button class="cfwaf-ip-filter-tab" data-mode="block" role="tab">🚫 Block</button>
+			<button class="cfwaf-ip-filter-tab" data-mode="managed_challenge" role="tab">🛡️ Managed Challenge</button>
 			<button class="cfwaf-ip-filter-tab" data-mode="challenge" role="tab">⚠️ Challenge</button>
 			<button class="cfwaf-ip-filter-tab" data-mode="js_challenge" role="tab">🔒 JS Challenge</button>
 		</div>
@@ -235,12 +236,16 @@ $active_id = WPWAF_Accounts::active_id();
 							<label for="cfwaf-ip-mode-block"><span class="cfwaf-ip-mode-dot block"></span> Block</label>
 						</div>
 						<div class="cfwaf-ip-mode-option">
-							<input type="radio" name="cfwaf-ip-mode" id="cfwaf-ip-mode-challenge" value="challenge">
+							<input type="radio" name="cfwaf-ip-mode" id="cfwaf-ip-mode-challenge" value="managed_challenge">
 							<label for="cfwaf-ip-mode-challenge"><span class="cfwaf-ip-mode-dot challenge"></span> Managed Challenge</label>
 						</div>
 						<div class="cfwaf-ip-mode-option">
 							<input type="radio" name="cfwaf-ip-mode" id="cfwaf-ip-mode-js" value="js_challenge">
 							<label for="cfwaf-ip-mode-js"><span class="cfwaf-ip-mode-dot js_challenge"></span> JS Challenge</label>
+						</div>
+						<div class="cfwaf-ip-mode-option" id="cfwaf-ip-mode-legacy-wrap" style="display:none">
+							<input type="radio" name="cfwaf-ip-mode" id="cfwaf-ip-mode-legacy" value="challenge">
+							<label for="cfwaf-ip-mode-legacy"><span class="cfwaf-ip-mode-dot challenge"></span> Challenge (legacy)</label>
 						</div>
 					</div>
 				</div>
@@ -378,6 +383,7 @@ qs('#cfwaf-ip-search')?.addEventListener('input', renderTable);
 const MODE_LABELS = {
 	whitelist:    { label:'Allow',        cls:'whitelist',   icon:'✅' },
 	block:        { label:'Block',         cls:'block',       icon:'🚫' },
+	managed_challenge: { label:'Managed Challenge', cls:'challenge', icon:'🛡️' },
 	challenge:    { label:'Challenge',     cls:'challenge',   icon:'⚠️' },
 	js_challenge: { label:'JS Challenge',  cls:'js_challenge',icon:'🔒' },
 };
@@ -462,6 +468,8 @@ function openModal(rule=null){
 
 	// Set mode radio
 	const mode = rule?.mode || 'whitelist';
+	// The older "Challenge" mode is only offered when editing a rule that already uses it.
+	qs('#cfwaf-ip-mode-legacy-wrap').style.display = mode === 'challenge' ? '' : 'none';
 	const radio = qs(`input[name="cfwaf-ip-mode"][value="${mode}"]`);
 	if (radio) radio.checked = true;
 

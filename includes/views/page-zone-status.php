@@ -215,15 +215,11 @@ a.cfwaf-zs-card{display:block;text-decoration:none;color:inherit;}
 	if ( empty( $display_cache ) ) :
 	?>
 		<div class="cfwaf-zs-no-data">
-		<?php if ( empty( $allowed_zones ) ) : ?>
-			<p style="font-size:28px;margin:0 0 8px;">🌐</p>
-			<p style="font-size:15px;font-weight:700;margin:0 0 6px;color:var(--zs-dark);">No zones selected</p>
-			<p style="margin:0;font-size:13px;">Open the <strong>Zone Picker</strong> above, select the zones you want to monitor, then click <strong>Save &amp; Sync</strong>.</p>
-		<?php else : ?>
 			<p style="font-size:28px;margin:0 0 8px;">📡</p>
 			<p style="font-size:15px;font-weight:700;margin:0 0 6px;color:var(--zs-dark);">No data yet</p>
-			<p style="margin:0;font-size:13px;">Click <strong>Sync Now</strong> to fetch analytics for your selected zones.</p>
-		<?php endif; ?>
+			<p style="margin:0;font-size:13px;"><?php echo empty( $allowed_zones )
+				? 'Click <strong>Sync Now</strong> to fetch analytics for every zone in this account. To monitor only some zones, open <strong>Zones to Sync</strong> above first.'
+				: 'Click <strong>Sync Now</strong> to fetch analytics for your selected zones.'; ?></p>
 		</div>
 	<?php else : ?>
 		<div class="cfwaf-zs-grid">

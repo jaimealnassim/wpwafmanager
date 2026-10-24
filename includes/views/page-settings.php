@@ -190,9 +190,11 @@ $s        = $settings; // passed from render_settings_page()
         <div class="wpwaf-st-control">
           <select id="st-analytics-interval" class="wpwaf-st-select">
             <option value="300"   <?php selected( $s['analytics_interval'], 300 );   ?>>Every 5 minutes</option>
+            <option value="600"   <?php selected( $s['analytics_interval'], 600 );   ?>>Every 10 minutes</option>
             <option value="900"   <?php selected( $s['analytics_interval'], 900 );   ?>>Every 15 minutes</option>
             <option value="1800"  <?php selected( $s['analytics_interval'], 1800 );  ?>>Every 30 minutes</option>
             <option value="3600"  <?php selected( $s['analytics_interval'], 3600 );  ?>>Every hour</option>
+            <option value="7200"  <?php selected( $s['analytics_interval'], 7200 );  ?>>Every 2 hours</option>
             <option value="21600" <?php selected( $s['analytics_interval'], 21600 ); ?>>Every 6 hours</option>
             <option value="86400" <?php selected( $s['analytics_interval'], 86400 ); ?>>Every 24 hours</option>
           </select>
@@ -207,6 +209,7 @@ $s        = $settings; // passed from render_settings_page()
         <div class="wpwaf-st-control">
           <select id="st-analytics-days" class="wpwaf-st-select">
             <option value="1"  <?php selected( $s['analytics_days'], 1 );  ?>>Last 24 hours</option>
+            <option value="3"  <?php selected( $s['analytics_days'], 3 );  ?>>Last 3 days</option>
             <option value="7"  <?php selected( $s['analytics_days'], 7 );  ?>>Last 7 days</option>
             <option value="14" <?php selected( $s['analytics_days'], 14 ); ?>>Last 14 days</option>
             <option value="30" <?php selected( $s['analytics_days'], 30 ); ?>>Last 30 days</option>

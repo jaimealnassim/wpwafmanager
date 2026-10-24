@@ -252,19 +252,55 @@ class WPWAF_API {
 		return [ 'success' => true, 'rules' => $data['rules'], 'ruleset_id' => $ruleset['id'] ];
 	}
 
-	public function deploy_rules( string $zone_id, array $new_rules ): array {
-		$ruleset          = $this->get_waf_ruleset( $zone_id );
+	/**
+	 * Deploys the plugin's rules to a zone's custom rules.
+	 *
+	 * The plugin's own rules (named "[CF WAF] ...") are replaced and placed first,
+	 * so Rule 1's Skip runs before everything else. Other custom rules in the
+	 * zone are kept after them, unless $replace_all is true.
+	 */
+	public function deploy_rules( string $zone_id, array $new_rules, bool $replace_all = false ): array {
+		$ruleset = $this->get_waf_ruleset( $zone_id );
+		$others  = [];
 
-		$do_request = function( array $rules ) use ( $zone_id, $ruleset ): array {
+		if ( $ruleset ) {
+			$detail = $this->get_ruleset_detail( $zone_id, $ruleset['id'] );
+			if ( empty( $detail['success'] ) ) {
+				return [ 'success' => false, 'message' => $detail['message'] ?? 'Could not read the zone\'s custom rules.' ];
+			}
+			$existing_ids = [];
+			foreach ( $detail['rules'] as $rule ) {
+				$desc = (string) ( $rule['description'] ?? '' );
+				if ( WPWAF_Rule_Builder::is_plugin_rule( $desc ) ) {
+					$slot = WPWAF_Rule_Builder::slot_for( $desc );
+					if ( $slot !== null && ! isset( $existing_ids[ $slot ] ) && ! empty( $rule['id'] ) ) {
+						$existing_ids[ $slot ] = (string) $rule['id'];
+					}
+					continue;
+				}
+				if ( $replace_all ) continue;
+				unset( $rule['version'], $rule['last_updated'] );
+				$others[] = $rule;
+			}
+			// Update the plugin's existing rules in place so their history in Cloudflare is kept.
+			foreach ( $new_rules as $i => $rule ) {
+				$slot = WPWAF_Rule_Builder::slot_for( (string) $rule['description'] );
+				if ( $slot !== null && isset( $existing_ids[ $slot ] ) ) {
+					$new_rules[ $i ]['id'] = $existing_ids[ $slot ];
+				}
+			}
+		}
+
+		$do_request = function( array $rules ) use ( $zone_id, $ruleset, $others ): array {
+			$all = array_merge( $rules, $others );
 			if ( $ruleset ) {
-				// Replace all existing rules with the new set (clean deploy).
-				return $this->request( 'PUT', "zones/{$zone_id}/rulesets/{$ruleset['id']}", [ 'rules' => $rules ] );
+				return $this->request( 'PUT', "zones/{$zone_id}/rulesets/{$ruleset['id']}", [ 'rules' => $all ] );
 			}
 			return $this->request( 'POST', "zones/{$zone_id}/rulesets", [
 				'name'  => 'WAF Custom Rules',
 				'kind'  => 'zone',
 				'phase' => 'http_request_firewall_custom',
-				'rules' => $rules,
+				'rules' => $all,
 			] );
 		};
 
@@ -289,10 +325,20 @@ class WPWAF_API {
 		}
 
 		if ( empty( $result['success'] ) ) {
-			return [ 'success' => false, 'message' => $this->first_error( $result ) ];
+			$message = $this->first_error( $result );
+			if ( $others ) {
+				$message  = rtrim( $message );
+				$message .= preg_match( '/[.!?]$/', $message ) ? '' : '.';
+				$message .= sprintf( ' Nothing was changed. This zone also has %d other custom rule(s); if the plan does not allow that many rules, remove some in Cloudflare or deploy with "Replace all custom rules in the zone".', count( $others ) );
+			}
+			return [ 'success' => false, 'message' => $message ];
 		}
-		$count = count( $new_rules );
-		return [ 'success' => true, 'message' => "{$count} rule(s) deployed." ];
+		$count   = count( $new_rules );
+		$message = "{$count} rule(s) deployed.";
+		if ( $others ) {
+			$message .= sprintf( ' %d other custom rule(s) kept after them.', count( $others ) );
+		}
+		return [ 'success' => true, 'message' => $message, 'kept' => count( $others ) ];
 	}
 
 	// ── DNS Records ────────────────────────────────────────────────────────────

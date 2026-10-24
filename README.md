@@ -14,21 +14,24 @@
 
 ### WAF Rules Builder
 
-Five pre-configured, battle-tested security rules deployable in one click, based on the [wafrules.com](https://wafrules.com) ruleset (last updated July 2, 2026):
+Five pre-configured, battle-tested security rules deployable in one click, based on the [wafrules.com](https://wafrules.com) ruleset (last updated October 21, 2026):
 
 | Rule | Action | Purpose |
 |------|--------|---------|
-| Allow Good Bots | Skip | Googlebot, Bingbot, uptime monitors, payment processors + custom IP, user agent and expression allowlists |
-| Block Aggressive Crawlers | Block | SEO scrapers, exploit scanners (SQLMap, Nikto, Masscan), sensitive WP paths |
-| Block Web Hosts & TOR | Block or Managed Challenge | Cloud hosting ASNs (DigitalOcean, Vultr, Hetzner, OVH…) and TOR exit nodes |
-| Challenge Large Cloud Providers | Managed Challenge | AWS EC2, Google Cloud, Azure |
-| Challenge VPN & wp-login | Managed Challenge | NordVPN, ExpressVPN, Surfshark, other VPN providers + WordPress login |
+| Allow Good Bots | Skip | Every Cloudflare verified bot (or chosen categories), services matched by their published IP lists (ManageWP, WP Umbrella, ShortPixel, Patchstack and more), Let's Encrypt + your server IPs, custom user agents and expressions |
+| Block Aggressive Crawlers & WordPress Paths | Block | Aggressive crawlers, exploit scanners (SQLMap, Nikto, Masscan), sensitive WP paths and exposed files |
+| Block or Challenge Web Hosts / TOR & Exploit URIs | Block or Managed Challenge | Cloud hosting ASNs (DigitalOcean, Vultr, Hetzner, OVH and more), TOR exit nodes and six exploit URI groups (SQL injection, file inclusion, XSS and more) |
+| Challenge Large Providers / Country | Managed Challenge | AWS EC2, Google Cloud, Azure and the countries you pick |
+| Challenge VPN Connections & wp-login | Managed Challenge | NordVPN, ExpressVPN, Surfshark, other VPN providers + WordPress login |
 
-- Custom IP allowlist (IPv4, IPv6, CIDR), user agent allowlist and custom Cloudflare expressions to exclude trusted traffic from all rules
+- Rule 1 skips the later custom rules, rate limiting, Super Bot Fight Mode and legacy security products for allowed traffic. Cloudflare managed rules still run
+- Your server IPs (IPv4, IPv6, CIDR), custom user agents and custom Cloudflare expressions to exclude trusted traffic from all rules
+- Saved settings from older versions are moved to the new rule layout automatically
 - Rule Profiles: save complete configurations under a name, with notes, and switch in one click
 - Domain Profiles: save groups of zones and select them all before a deploy in one click
 - Live expression preview before deployment
-- Deploy to one zone, a selection, or all zones at once
+- Deploy to one zone, a selection, or all zones at once. Deploys replace only the plugin's rules and keep other custom rules on the zone, or replace all custom rules when you choose
+- Each rule is checked against Cloudflare's 4,096 character expression limit before deploy
 - JSON export/import for sharing and backing up configurations
 - Automatic Cloudflare Free plan compatibility: strips restricted phases on error 20120 and retries
 
