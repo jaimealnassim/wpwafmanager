@@ -155,7 +155,7 @@ $guide_url = WPWAF_Page_Rules::GUIDE_URL;
 	</div>
 
 	<div class="wpwaf-pr-toolbar">
-		<button type="button" id="wpwaf-pr-scan" class="wpwaf-pr-btn wpwaf-pr-btn--primary">&#128269; Scan all zones</button>
+		<button type="button" id="wpwaf-pr-scan" class="wpwaf-pr-btn wpwaf-pr-btn--primary"><?php echo WPWAF_Icons::svg( 'search' ); ?> Scan all zones</button>
 		<input type="search" id="wpwaf-pr-search" class="wpwaf-pr-search" placeholder="Filter zones&hellip;">
 		<label class="wpwaf-pr-check"><input type="checkbox" id="wpwaf-pr-only" checked> Only zones with Page Rules</label>
 		<span class="wpwaf-pr-progress" id="wpwaf-pr-progress"></span>
@@ -191,10 +191,10 @@ let zones   = [];          // from wpwaf_list_zones
 const state = {};          // zone id => { status:'pending'|'loading'|'done'|'error', data, error }
 let scanning = false;
 
-function toast(msg, ok = true){
+function toast(msg, ok = true, icon){
   const el = document.createElement('div');
   el.className = 'wpwaf-pr-toast ' + (ok ? 'ok' : 'err');
-  el.textContent = msg;
+  if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, ok ? 3000 : 6000);
 }
@@ -257,7 +257,7 @@ function finishScan(){
   scanning = false;
   const btn = qs('#wpwaf-pr-scan');
   btn.disabled = false;
-  btn.innerHTML = '&#8635; Scan again';
+  btn.innerHTML = wpwafIconText('refresh', 'Scan again');
 }
 
 function setProgress(html){ qs('#wpwaf-pr-progress').innerHTML = html; }
@@ -295,7 +295,7 @@ function render(){
   if (!list.length){
     const allDone = zones.every(z => state[z.id] && state[z.id].status !== 'pending' && state[z.id].status !== 'loading');
     wrap.innerHTML = '<div class="wpwaf-pr-empty">' + (allDone && qs('#wpwaf-pr-only').checked && !qs('#wpwaf-pr-search').value
-      ? '&#127881; No Page Rules found in any zone. Nothing to migrate.'
+      ? wpwafIconText('circle-check', 'No Page Rules found in any zone. Nothing to migrate.')
       : 'No zones match your filter.') + '</div>';
     return;
   }
@@ -345,7 +345,7 @@ function zoneHTML(z){
     body = '<div class="wpwaf-pr-zone-empty"><span class="wpwaf-pr-spinner"></span> Reading Page Rules&hellip;</div>';
   } else if (s.status === 'error'){
     body = '<div class="wpwaf-pr-zone-warn">' + esc(s.error) + '</div><div class="wpwaf-pr-zone-empty"></div>';
-    actions = '<button type="button" class="wpwaf-pr-btn wpwaf-pr-btn--sm" data-pr-rescan="' + esc(z.id) + '">&#8635; Retry</button>';
+    actions = '<button type="button" class="wpwaf-pr-btn wpwaf-pr-btn--sm" data-pr-rescan="' + esc(z.id) + '">' + wpwafIconText('refresh', 'Retry') + '</button>';
   } else {
     const d = s.data, rules = d.rules || [], mig = d.migrated || {}, lim = d.limits || {};
     const counts = d.counts || {};
@@ -357,7 +357,7 @@ function zoneHTML(z){
     if (eligible.length > 1){
       actions = '<button type="button" class="wpwaf-pr-btn wpwaf-pr-btn--sm" data-pr-all="' + esc(z.id) + '">Migrate all eligible (' + eligible.length + ')</button>';
     }
-    actions += '<button type="button" class="wpwaf-pr-btn wpwaf-pr-btn--sm" data-pr-rescan="' + esc(z.id) + '">&#8635; Rescan</button>';
+    actions += '<button type="button" class="wpwaf-pr-btn wpwaf-pr-btn--sm" data-pr-rescan="' + esc(z.id) + '">' + wpwafIconText('refresh', 'Rescan') + '</button>';
     body = (d.warning ? '<div class="wpwaf-pr-zone-warn">' + esc(d.warning) + '</div>' : '')
       + (rules.length ? rules.map(r => ruleHTML(z, r, mig[r.id])).join('') : '<div class="wpwaf-pr-zone-empty">No Page Rules in this zone.</div>');
   }
@@ -373,7 +373,7 @@ function ruleHTML(z, r, migrated){
   const kindLabel = r.kind === 'redirect' ? 'Single Redirect' : 'Cache Rule';
   let badges = '<span class="wpwaf-pr-badge">Priority ' + esc(r.priority) + '</span>'
     + '<span class="wpwaf-pr-badge ' + (on ? 'wpwaf-pr-badge--on' : 'wpwaf-pr-badge--off') + '">' + (on ? 'On' : 'Off') + '</span>';
-  if (migrated) badges += '<span class="wpwaf-pr-badge wpwaf-pr-badge--done">&#10003; Migrated</span>';
+  if (migrated) badges += '<span class="wpwaf-pr-badge wpwaf-pr-badge--done">' + wpwafIconText('check', 'Migrated') + '</span>';
   else if (r.auto) badges += '<span class="wpwaf-pr-badge wpwaf-pr-badge--auto">Auto migrate to ' + kindLabel + '</span>';
 
   const acts = (r.actions || []).map(a =>
@@ -491,7 +491,7 @@ async function migrate(z, r, keepQs){
       if (r.kind === 'cache' && d.counts && d.counts.cache != null) d.counts.cache++;
     }
     render();
-    toast(res.success ? '✓ ' + (r.kind === 'redirect' ? 'Single Redirect' : 'Cache Rule') + ' created for ' + z.name : res.data.message);
+    toast(res.success ? (r.kind === 'redirect' ? 'Single Redirect' : 'Cache Rule') + ' created for ' + z.name : res.data.message);
     return true;
   }
   toast('Migration failed: ' + ((res.data && res.data.message) || 'error'), false);
@@ -531,7 +531,7 @@ async function setStatus(zid, rid, status, btn){
   if (res.success){
     r.status = status;
     render();
-    toast(status === 'disabled' ? '✓ Page Rule turned off' : '✓ Page Rule turned back on');
+    toast(status === 'disabled' ? 'Page Rule turned off' : 'Page Rule turned back on');
   } else {
     btn.disabled = false;
     toast('Failed: ' + ((res.data && res.data.message) || 'error'), false);

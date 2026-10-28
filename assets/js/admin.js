@@ -64,10 +64,10 @@
 	}
 
 	// ── Toast ──────────────────────────────────────────────────────────────────
-	function toast(msg, type) {
+	function toast(msg, type, icon) {
 		const el = document.createElement('div');
 		el.className = 'cfwaf-toast cfwaf-toast-' + (type === 'error' ? 'error' : 'success');
-		el.textContent = msg;
+		el.innerHTML = window.wpwafToastBody ? window.wpwafToastBody(msg, type !== 'error', icon) : escHtml(msg);
 		document.body.appendChild(el);
 		setTimeout(function () {
 			el.style.opacity = '0';
@@ -90,6 +90,12 @@
 		if (uaTA) {
 			const uas = uaTA.value.split('\n').map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
 			setVal(settings, 'rule1.allow_user_agents', uas);
+		}
+
+		const curlTA = document.getElementById('cfwaf-curl-hosts');
+		if (curlTA) {
+			const hosts = curlTA.value.split(/[\s,]+/).map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
+			setVal(settings, 'rule2.curl_host_exceptions', hosts);
 		}
 
 		const exprInputs = Array.from(document.querySelectorAll('.cfwaf-expr-input'));
@@ -131,6 +137,12 @@
 			updateUACount();
 		}
 
+		const curlTA2 = document.getElementById('cfwaf-curl-hosts');
+		if (curlTA2) {
+			const savedHosts = getVal(settings, 'rule2.curl_host_exceptions') || [];
+			curlTA2.value = Array.isArray(savedHosts) ? savedHosts.join('\n') : '';
+		}
+
 		const savedExprs = getVal(settings, 'rule1.custom_expressions') || [];
 		renderExpressionList(Array.isArray(savedExprs) ? savedExprs : []);
 
@@ -152,6 +164,7 @@
 		updateVpnState();
 		updateRule1State();
 		updateHostState();
+		updateCurlState();
 	}
 
 	// ── UI state helpers ───────────────────────────────────────────────────────
@@ -186,10 +199,8 @@
 			const on    = all || cats.indexOf(row.dataset.cat) !== -1;
 			const state = row.querySelector('.cfwaf-covered-state');
 			row.classList.toggle('is-covered', on);
-			if (state) state.textContent = on ? '\u2713 Covered' : 'Not covered';
+			if (state) state.innerHTML = on ? window.wpwafIconText('check', 'Covered') : 'Not covered';
 		});
-		const wpu = qs('#cfwaf-wpu-monitors');
-		if (wpu) wpu.disabled = !getVal(settings, 'rule1.allow_wpumbrella');
 	}
 
 	// Rule 3: the host list only counts while "Block Web Host ASNs" is on.
@@ -198,6 +209,15 @@
 		qsa('.cfwaf-host-check').forEach(function (el) { el.disabled = !on; });
 		const grid = qs('#cfwaf-host-grid');
 		if (grid) grid.classList.toggle('is-disabled', !on);
+	}
+
+	// Rule 2: the curl hostname exceptions only count while curl blocking is on.
+	function updateCurlState() {
+		const on = Boolean(getVal(settings, 'rule2.block_curl'));
+		const ta = qs('#cfwaf-curl-hosts');
+		if (ta) ta.disabled = !on;
+		const box = qs('.cfwaf-curl-hosts');
+		if (box) box.classList.toggle('is-disabled', !on);
 	}
 
 	function updateVpnState() {
@@ -251,6 +271,7 @@
 			if (key === 'rule5.challenge_all_vpn') updateVpnState();
 			if (key.indexOf('rule1.') === 0)       updateRule1State();
 			if (key === 'rule3.block_hosts')       updateHostState();
+			if (key === 'rule2.block_curl')        updateCurlState();
 			if (key === 'rule2.block_wpcron') {
 				const warn = qs('#cfwaf-wpcron-warning');
 				if (warn) warn.style.display = el.checked ? '' : 'none';
@@ -307,7 +328,7 @@
 				resetAccountForm();
 				loadZones();
 			} else {
-				toast('\u2717 ' + ((res.data && res.data.message) || 'Token invalid'), 'error');
+				toast(((res.data && res.data.message) || 'Token invalid'), 'error');
 				const badge = qs('#cfwaf-token-status');
 				if (badge) { badge.textContent = 'Error'; badge.classList.remove('connected'); }
 			}
@@ -344,7 +365,7 @@
 				resetAccountForm();
 				loadZones();
 			} else {
-				toast('\u2717 ' + ((res.data && res.data.message) || 'Credentials invalid'), 'error');
+				toast(((res.data && res.data.message) || 'Credentials invalid'), 'error');
 			}
 		});
 	});
@@ -352,7 +373,7 @@
 	function setConnected(msg) {
 		const badge = qs('#cfwaf-token-status');
 		if (badge) { badge.textContent = 'Connected'; badge.classList.add('connected'); }
-		toast('\u2713 ' + msg);
+		toast(msg);
 	}
 
 	// ── Zones ──────────────────────────────────────────────────────────────────
@@ -412,7 +433,7 @@
 					const isAuthError = msg.indexOf('9103') !== -1 || msg.indexOf('10000') !== -1 || /auth|invalid.*token|unknown.*key/i.test(msg);
 					loadingEl.innerHTML =
 						'<div class="cfwaf-zone-load-error">' +
-						'<strong>\u2717 Could not load zones.</strong><br>' +
+						'<strong>' + window.wpwafIcon('x') + ' Could not load zones.</strong><br>' +
 						( isAuthError
 							? 'Cloudflare rejected your credentials (<code>' + msg + '</code>). Your API token or API key &amp; email appear to be invalid or expired. Check the <strong>Accounts</strong> section at the top of this page and re-enter your credentials.'
 							: 'Cloudflare returned an error: <code>' + msg + '</code>. Verify your credentials in the <strong>Accounts</strong> section above.' ) +
@@ -539,23 +560,23 @@
 		if (btn) { btn.textContent = 'Saving\u2026'; btn.disabled = true; }
 		ajax('wpwaf_domain_profile_save', { profile_id: activeDomainProfileId, zone_ids: JSON.stringify(ids) }, function (res) {
 			if (btn) { btn.textContent = 'Save'; btn.disabled = false; }
-			res.success ? toast('\u2713 Domain profile saved') : toast('\u2717 ' + ((res.data && res.data.message) || 'Could not save'), 'error');
+			res.success ? toast('Domain profile saved') : toast(((res.data && res.data.message) || 'Could not save'), 'error');
 		});
 	});
 
 	on(qs('#cfwaf-domain-profile-new'), 'click', function () {
 		if ((WAF.domain_profiles || []).length >= 10) {
-			toast('\u2717 Maximum of 10 domain profiles reached', 'error'); return;
+			toast('Maximum of 10 domain profiles reached', 'error'); return;
 		}
 		const name = prompt('Domain profile name:');
 		if (!name || !name.trim()) return;
 		const ids = qsa('.cfwaf-zone-check:checked').map(function (cb) { return cb.value; });
 		ajax('wpwaf_domain_profile_create', { name: name.trim(), zone_ids: JSON.stringify(ids) }, function (res) {
-			if (!res.success) { toast('\u2717 ' + ((res.data && res.data.message) || 'Could not save profile'), 'error'); return; }
+			if (!res.success) { toast(((res.data && res.data.message) || 'Could not save profile'), 'error'); return; }
 			WAF.domain_profiles   = res.data.domain_profiles;
 			activeDomainProfileId = res.data.profile_id;
 			renderDomainProfileSelect();
-			toast('\u2713 Domain profile \u201c' + name.trim() + '\u201d created');
+			toast('Domain profile \u201c' + name.trim() + '\u201d created');
 		});
 	});
 
@@ -565,13 +586,13 @@
 		const name    = profile ? profile.name : activeDomainProfileId;
 		if (!confirm('Delete domain profile \u201c' + name + '\u201d? This cannot be undone.')) return;
 		ajax('wpwaf_domain_profile_delete', { profile_id: activeDomainProfileId }, function (res) {
-			if (!res.success) { toast('\u2717 ' + (res.data.message || 'Could not delete'), 'error'); return; }
+			if (!res.success) { toast((res.data.message || 'Could not delete'), 'error'); return; }
 			WAF.domain_profiles   = res.data.domain_profiles;
 			activeDomainProfileId = res.data.active_domain_profile_id;
 			renderDomainProfileSelect();
 			// Clear zone selection when falling back to Default (empty)
 			if (activeDomainProfileId === 'default') applyDomainProfile([]);
-			toast('\u2713 Domain profile deleted');
+			toast('Domain profile deleted');
 		});
 	});
 
@@ -608,8 +629,8 @@
 			if (!resultsEl) return;
 			if (!res.success) {
 				const msg = (res.data && res.data.message) ? res.data.message : 'Deploy failed.';
-				resultsEl.innerHTML = '<div class="cfwaf-result-item fail">\u2717 ' + escHtml(msg) + '</div>';
-				toast('\u2717 ' + msg, 'error');
+				resultsEl.innerHTML = '<div class="cfwaf-result-item fail">' + window.wpwafIconText('x', msg) + '</div>';
+				toast(msg, 'error');
 				return;
 			}
 			const results = (res.data && res.data.results) ? res.data.results : {};
@@ -619,7 +640,7 @@
 				const zone = zones.find(function (z) { return z.id === zid; });
 				const name = escHtml(zone ? zone.name : zid);
 				const cls  = r.success ? 'ok' : 'fail';
-				const icon = r.success ? '\u2713' : '\u2717';
+				const icon = window.wpwafIcon(r.success ? 'check' : 'x');
 				const detail = escHtml(r.message || (r.success ? 'Rules deployed successfully' : 'Unknown error'));
 				html += '<div class="cfwaf-result-item ' + cls + '">' + icon + ' <strong>' + name + '</strong>: ' + detail + '</div>';
 			});
@@ -627,8 +648,8 @@
 			const sc = (res.data && res.data.success_count) || 0;
 			const rc = (res.data && res.data.rule_count)    || 0;
 			const fc = (res.data && res.data.fail_count)    || 0;
-			if (sc > 0) toast('\u2713 Deployed ' + rc + ' rules to ' + sc + ' zone(s)!');
-			if (fc > 0) toast('\u2717 ' + fc + ' zone(s) failed. See the results below.', 'error');
+			if (sc > 0) toast('Deployed ' + rc + ' rules to ' + sc + ' zone(s)!');
+			if (fc > 0) toast(fc + ' zone(s) failed. See the results below.', 'error');
 		});
 	});
 
@@ -665,7 +686,7 @@
 		const id = this.value;
 		if (id === activeProfileId) return;
 		ajax('wpwaf_profile_switch', { profile_id: id }, function (res) {
-			if (!res.success) { toast('\u2717 Could not load profile', 'error'); return; }
+			if (!res.success) { toast('Could not load profile', 'error'); return; }
 			activeProfileId  = res.data.profile_id;
 			settings         = res.data.settings;
 			syncToUI();
@@ -675,13 +696,13 @@
 			const notesEl  = qs('#cfwaf-profile-notes');
 			const profile   = (WAF.profiles || []).find(function (p) { return p.id === activeProfileId; });
 			if (notesEl) notesEl.value = (profile && profile.notes) ? profile.notes : '';
-			toast('\u2713 Profile loaded');
+			toast('Profile loaded');
 		});
 	});
 
 	on(qs('#cfwaf-profile-new'), 'click', function () {
 		if ((WAF.profiles || []).length >= 10) {
-			toast('\u2717 Maximum of 10 profiles reached', 'error'); return;
+			toast('Maximum of 10 profiles reached', 'error'); return;
 		}
 		const name = prompt('Profile name:');
 		if (!name || !name.trim()) return;
@@ -689,11 +710,11 @@
 		const notesEl = qs('#cfwaf-profile-notes');
 		const notes   = notesEl ? notesEl.value : '';
 		ajax('wpwaf_profile_create', { name: name.trim(), notes: notes, settings: JSON.stringify(settings) }, function (res) {
-			if (!res.success) { toast('\u2717 ' + (res.data.message || 'Could not create profile'), 'error'); return; }
+			if (!res.success) { toast((res.data.message || 'Could not create profile'), 'error'); return; }
 			WAF.profiles    = res.data.profiles;
 			activeProfileId = res.data.profile_id;
 			renderProfileSelect();
-			toast('\u2713 Profile \u201c' + name.trim() + '\u201d created');
+			toast('Profile \u201c' + name.trim() + '\u201d created');
 		});
 	});
 
@@ -704,11 +725,11 @@
 		const name     = active ? active.name : activeProfileId;
 		if (!confirm('Delete profile \u201c' + name + '\u201d? This cannot be undone.')) return;
 		ajax('wpwaf_profile_delete', { profile_id: activeProfileId }, function (res) {
-			if (!res.success) { toast('\u2717 ' + (res.data.message || 'Could not delete profile'), 'error'); return; }
+			if (!res.success) { toast((res.data.message || 'Could not delete profile'), 'error'); return; }
 			WAF.profiles    = res.data.profiles;
 			activeProfileId = res.data.active_profile_id;
 			renderProfileSelect();
-			toast('\u2713 Profile deleted');
+			toast('Profile deleted');
 		});
 	});
 
@@ -738,7 +759,7 @@
 				const profile = (WAF.profiles || []).find(function (p) { return p.id === activeProfileId; });
 				if (profile) profile.notes = notes;
 			}
-			res.success ? toast('\u2713 Settings saved!') : toast('\u2717 Save failed', 'error');
+			res.success ? toast('Settings saved!') : toast('Save failed', 'error');
 		});
 	});
 
@@ -905,7 +926,7 @@
 			accounts = res.data.accounts;
 			activeId = res.data.active_id;
 			renderAccountsList();
-			toast('\u2713 Account removed');
+			toast('Account removed');
 			if (!accounts.length) {
 				const badge = qs('#cfwaf-token-status');
 				if (badge) { badge.textContent = 'Not Connected'; badge.classList.remove('connected'); }
@@ -1187,7 +1208,7 @@
 		a.click();
 		a.remove();
 		URL.revokeObjectURL(url);
-		toast('\u2713 Settings exported');
+		toast('Settings exported');
 	});
 
 	on(qs('#cfwaf-import-file'), 'change', function (e) {
@@ -1200,15 +1221,15 @@
 			ajax('wpwaf_import_settings', { file: String(ev.target.result || ''), active_profile: activeProfileId }, function (res) {
 				input.value = '';
 				if (!res.success) {
-					toast('\u2717 Import failed: ' + ((res.data && res.data.message) || 'unknown error'), 'error');
+					toast('Import failed: ' + ((res.data && res.data.message) || 'unknown error'), 'error');
 					return;
 				}
 				settings = res.data.settings;
 				syncToUI();
-				toast('\u2713 ' + res.data.message);
+				toast(res.data.message);
 			});
 		};
-		reader.onerror = function () { input.value = ''; toast('\u2717 Could not read that file.', 'error'); };
+		reader.onerror = function () { input.value = ''; toast('Could not read that file.', 'error'); };
 		reader.readAsText(file);
 	});
 

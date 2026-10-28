@@ -168,8 +168,8 @@ $wpwaf_si_cache = $has_creds ? WPWAF_SSL_Insights::cached_scans() : [];
 <?php else : ?>
 
 	<div class="wpwaf-si-tabs" role="tablist">
-		<button type="button" class="wpwaf-si-tab active" data-tab="certs" role="tab">🔒 Certificates &amp; HTTPS</button>
-		<button type="button" class="wpwaf-si-tab" data-tab="insights" role="tab">🛡 Security Insights</button>
+		<button type="button" class="wpwaf-si-tab active" data-tab="certs" role="tab"><?php echo WPWAF_Icons::svg( 'lock' ); ?> Certificates &amp; HTTPS</button>
+		<button type="button" class="wpwaf-si-tab" data-tab="insights" role="tab"><?php echo WPWAF_Icons::svg( 'shield' ); ?> Security Insights</button>
 	</div>
 
 	<!-- ── Certificates & HTTPS ─────────────────────────────────────────── -->
@@ -200,7 +200,7 @@ $wpwaf_si_cache = $has_creds ? WPWAF_SSL_Insights::cached_scans() : [];
 				<option value="unscanned">Not scanned</option>
 			</select>
 			<span class="wpwaf-si-progress" id="wpwaf-si-progress"><span class="wpwaf-si-spinner"></span><span id="wpwaf-si-progress-text"></span></span>
-			<button type="button" class="wpwaf-si-btn wpwaf-si-btn--primary" id="wpwaf-si-scan-all">↻ Scan all zones</button>
+			<button type="button" class="wpwaf-si-btn wpwaf-si-btn--primary" id="wpwaf-si-scan-all"><?php echo WPWAF_Icons::svg( 'refresh' ); ?> Scan all zones</button>
 		</div>
 
 		<div id="wpwaf-si-grid" class="wpwaf-si-grid">
@@ -236,7 +236,7 @@ $wpwaf_si_cache = $has_creds ? WPWAF_SSL_Insights::cached_scans() : [];
 				<option value="low">Low</option>
 			</select>
 			<input type="search" id="wpwaf-si-isearch" class="wpwaf-si-search" placeholder="Filter by subject or issue…">
-			<button type="button" class="wpwaf-si-btn" id="wpwaf-si-irefresh">↻ Refresh</button>
+			<button type="button" class="wpwaf-si-btn" id="wpwaf-si-irefresh"><?php echo WPWAF_Icons::svg( 'refresh' ); ?> Refresh</button>
 		</div>
 		<div class="wpwaf-si-sevbar" id="wpwaf-si-sevbar"></div>
 		<div id="wpwaf-si-insights"><div class="wpwaf-si-empty">Choose an account to load its insights.</div></div>
@@ -276,10 +276,10 @@ const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'
 const qs  = (s, c) => (c || document).querySelector(s);
 const qsa = (s, c) => Array.from((c || document).querySelectorAll(s));
 
-function toast(msg, ok = true){
+function toast(msg, ok = true, icon){
 	const el = document.createElement('div');
 	el.className = 'wpwaf-si-toast ' + (ok ? 'ok' : 'err');
-	el.textContent = msg;
+	if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
 	document.body.appendChild(el);
 	setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, ok ? 3000 : 6000);
 }
@@ -392,7 +392,7 @@ function statusPill(ev, scan){
 	const n = ev.issues.filter(i => i.level !== 'info').length;
 	if (ev.level === 'crit') return '<span class="wpwaf-si-pill wpwaf-si-pill--crit">' + n + ' issue' + (n === 1 ? '' : 's') + '</span>';
 	if (ev.level === 'warn') return '<span class="wpwaf-si-pill wpwaf-si-pill--warn">' + n + ' issue' + (n === 1 ? '' : 's') + '</span>';
-	return '<span class="wpwaf-si-pill wpwaf-si-pill--ok">✓ OK</span>';
+	return '<span class="wpwaf-si-pill wpwaf-si-pill--ok">' + wpwafIconText('check', 'OK') + '</span>';
 }
 
 function certHTML(c){
@@ -458,7 +458,7 @@ function cardHTML(z){
 		+ (scan ? statusPill(ev, scan) + '<span class="wpwaf-si-card-when">Scanned ' + esc(ago(scan.scanned_at)) + '</span>' : '<span class="wpwaf-si-card-when">Not scanned yet</span>')
 		+ '</div></div>'
 		+ (scan
-			? '<button type="button" class="wpwaf-si-btn wpwaf-si-btn--icon wpwaf-si-scan-one" data-zone="' + esc(z.id) + '" title="Scan again" aria-label="Scan ' + esc(z.name) + ' again">↻</button>'
+			? '<button type="button" class="wpwaf-si-btn wpwaf-si-btn--icon wpwaf-si-scan-one" data-zone="' + esc(z.id) + '" title="Scan again" aria-label="Scan ' + esc(z.name) + ' again">' + wpwafIcon('refresh') + '</button>'
 			: '<button type="button" class="wpwaf-si-btn wpwaf-si-btn--sm wpwaf-si-scan-one" data-zone="' + esc(z.id) + '" aria-label="Scan ' + esc(z.name) + '">Scan</button>')
 		+ '</div>';
 	if (!scan){
@@ -527,7 +527,7 @@ function renderGrid(){
 	const grid = qs('#wpwaf-si-grid');
 	const btn = qs('#wpwaf-si-scan-all');
 	const filtered = list.length !== zones.length;
-	if (!scanning) btn.textContent = filtered ? '↻ Scan ' + list.length + ' shown zone' + (list.length === 1 ? '' : 's') : '↻ Scan all zones';
+	if (!scanning) btn.innerHTML = wpwafIconText('refresh', filtered ? 'Scan ' + list.length + ' shown zone' + (list.length === 1 ? '' : 's') : 'Scan all zones');
 	btn.disabled = scanning || !list.length;
 	renderSummary();
 	if (!zones.length){ grid.innerHTML = '<div class="wpwaf-si-empty" style="grid-column:1/-1;">No active zones found in this account.</div>'; return; }
@@ -588,7 +588,7 @@ function scanMany(ids){
 			scanning = false;
 			prog.classList.remove('on');
 			renderGrid();
-			toast(failed ? 'Scanned ' + (done - failed) + ' of ' + total + ' zones. ' + failed + ' failed.' : '✓ Scanned ' + total + ' zone' + (total === 1 ? '' : 's'), !failed);
+			toast(failed ? 'Scanned ' + (done - failed) + ' of ' + total + ' zones. ' + failed + ' failed.' : 'Scanned ' + total + ' zone' + (total === 1 ? '' : 's'), !failed);
 			resolve();
 		});
 	});
@@ -620,7 +620,7 @@ qs('#wpwaf-si-grid').addEventListener('click', e => {
 					scan.settings[res.data.setting] = Object.assign({}, scan.settings[res.data.setting] || {}, {value: res.data.value});
 				}
 				replaceCard(zoneId);
-				toast('✓ ' + (FIX_DONE[key] || cap(key)) + ' on ' + (z ? z.name : 'zone'));
+				toast((FIX_DONE[key] || cap(key)) + ' on ' + (z ? z.name : 'zone'));
 			} else {
 				fix.disabled = false; fix.textContent = label;
 				toast(errMsg(res), false);
@@ -741,7 +741,7 @@ qs('#wpwaf-si-insights').addEventListener('click', e => {
 		insights = insights.map(i => i.id === id ? Object.assign({}, i, {dismissed: dismiss}) : i)
 			.filter(i => view === 'all' || (view === 'dismissed' ? i.dismissed : !i.dismissed));
 		renderInsights();
-		toast(dismiss ? '✓ Insight dismissed' : '✓ Insight restored');
+		toast(dismiss ? 'Insight dismissed' : 'Insight restored');
 	});
 });
 

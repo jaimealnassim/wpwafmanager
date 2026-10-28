@@ -125,7 +125,7 @@ defined( 'ABSPATH' ) || exit;
 	<!-- Widgets -->
 	<div class="wpwaf-ts-card">
 		<div class="wpwaf-ts-card-head">
-			<h2>🧩 Widgets</h2>
+			<h2><?php echo WPWAF_Icons::svg( 'puzzle' ); ?> Widgets</h2>
 			<button type="button" class="wpwaf-ts-btn wpwaf-ts-btn--primary" id="wpwaf-ts-new-btn">+ Create widget</button>
 		</div>
 		<div class="wpwaf-ts-card-body">
@@ -172,7 +172,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<!-- Help -->
 	<div class="wpwaf-ts-card">
-		<div class="wpwaf-ts-card-head"><h2>🔑 Using a widget on a client site</h2></div>
+		<div class="wpwaf-ts-card-head"><h2><?php echo WPWAF_Icons::svg( 'key' ); ?> Using a widget on a client site</h2></div>
 		<div class="wpwaf-ts-card-body wpwaf-ts-help">
 			Click <strong>Keys</strong> on a widget to copy its site key and secret key, then paste them into the Turnstile settings of the client site (for example a Turnstile, forms or security plugin). The widget's hostnames must include the client site's domain.<br>
 			<strong>Rotating a secret</strong> gives the widget a new secret key. The old one keeps working for 2 hours, so update every client site that uses the widget within that time.<br>
@@ -197,10 +197,10 @@ let widgets = [];
 const qs  = (s,c) => (c||document).querySelector(s);
 const qsa = (s,c) => Array.from((c||document).querySelectorAll(s));
 function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function toast(msg, ok=true){
+function toast(msg, ok=true, icon){
   const el = document.createElement('div');
   el.className = 'wpwaf-ts-toast ' + (ok ? 'ok' : 'err');
-  el.textContent = msg;
+  if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, ok ? 3000 : 6000);
 }

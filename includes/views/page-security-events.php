@@ -147,12 +147,12 @@ $ajax_url = admin_url( 'admin-ajax.php' );
   <!-- Filter pills (shown after load) -->
   <div class="cfwaf-se-filters" id="cfwaf-se-filters" style="display:none;">
     <button class="cfwaf-se-filter-tab active" data-action="">All</button>
-    <button class="cfwaf-se-filter-tab" data-action="block">🚫 Block</button>
-    <button class="cfwaf-se-filter-tab" data-action="managed_challenge">⚠️ Managed Challenge</button>
-    <button class="cfwaf-se-filter-tab" data-action="js_challenge">🔒 JS Challenge</button>
-    <button class="cfwaf-se-filter-tab" data-action="challenge">🟡 Challenge</button>
-    <button class="cfwaf-se-filter-tab" data-action="allow">✅ Allow</button>
-    <button class="cfwaf-se-filter-tab" data-action="log">📋 Log</button>
+    <button class="cfwaf-se-filter-tab" data-action="block"><?php echo WPWAF_Icons::svg( 'ban' ); ?> Block</button>
+    <button class="cfwaf-se-filter-tab" data-action="managed_challenge"><?php echo WPWAF_Icons::svg( 'shield' ); ?> Managed Challenge</button>
+    <button class="cfwaf-se-filter-tab" data-action="js_challenge"><?php echo WPWAF_Icons::svg( 'lock' ); ?> JS Challenge</button>
+    <button class="cfwaf-se-filter-tab" data-action="challenge"><?php echo WPWAF_Icons::svg( 'help' ); ?> Challenge</button>
+    <button class="cfwaf-se-filter-tab" data-action="allow"><?php echo WPWAF_Icons::svg( 'circle-check' ); ?> Allow</button>
+    <button class="cfwaf-se-filter-tab" data-action="log"><?php echo WPWAF_Icons::svg( 'clipboard' ); ?> Log</button>
   </div>
 
   <!-- Summary (shown after load) -->
@@ -187,6 +187,7 @@ $ajax_url = admin_url( 'admin-ajax.php' );
   <?php endif; ?>
 </div>
 
+<?php WPWAF_Flags::print_script(); ?>
 <script>
 'use strict';
 (function(){
@@ -258,7 +259,7 @@ qs('#cfwaf-se-load')?.addEventListener('click', function(){
       if (isPlanErr){
         qs('#cfwaf-se-plan-notice').style.display = '';
       } else {
-        qs('#cfwaf-se-error').textContent = '⚠ ' + msg;
+        wpwafSetText(qs('#cfwaf-se-error'), 'alert', msg);
         qs('#cfwaf-se-error').style.display = '';
       }
       return;
@@ -312,7 +313,7 @@ function renderSummary(){
 }
 
 // ── Table ───────────────────────────────────────────────────────────────────
-const ACTION_ICONS = {block:'🚫',managed_challenge:'⚠️',js_challenge:'🔒',challenge:'🟡',allow:'✅',log:'📋',skip:'↩'};
+const ACTION_ICONS = {block:'ban',managed_challenge:'shield',js_challenge:'lock',challenge:'help',allow:'circle-check',log:'clipboard',skip:'undo'};
 const SOURCE_MAP   = {firewallRules:'WAF Rules',firewallCustomRules:'Custom Rules',firewallManagedRules:'Managed Rules',
   firewallRateLimit:'Rate Limit',ipAccessRules:'IP Rules',uaBlock:'UA Block',bic:'Browser Check',
   securityLevel:'Security Level',hot:'Hotlink',rateLimit:'Rate Limit',waf:'WAF'};
@@ -349,10 +350,10 @@ function renderTable(filterAction){
     const rule = e.ruleId && e.ruleId !== '0' ? `<br><span class="cfwaf-se-ray" style="margin-top:3px;display:block;">${escHtml(e.ruleId.slice(0,16))}…</span>` : '';
     return `<tr>
       <td class="cfwaf-se-time">${fmtTime(e.datetime)}</td>
-      <td><span class="cfwaf-se-action ${e.action}">${ACTION_ICONS[e.action]||''} ${escHtml(e.action)}</span></td>
+      <td><span class="cfwaf-se-action ${e.action}">${wpwafIcon(ACTION_ICONS[e.action]||'')} ${escHtml(e.action)}</span></td>
       <td>
         <div class="cfwaf-se-ip">${escHtml(e.clientIP||'-')}</div>
-        <div class="cfwaf-se-country">${escHtml(e.clientCountryName||'')} ${e.clientAsn?'AS'+escHtml(String(e.clientAsn)):''}</div>
+        <div class="cfwaf-se-country">${window.wpwafFlag ? window.wpwafFlag(e.clientCountryName) : ''}${escHtml(e.clientCountryName||'')} ${e.clientAsn?'AS'+escHtml(String(e.clientAsn)):''}</div>
       </td>
       <td style="font-size:11px;font-weight:600;">${escHtml(e.clientRequestHTTPMethodName||'-')}</td>
       <td><div class="cfwaf-se-path" title="${path(e)}">${path(e)}</div></td>

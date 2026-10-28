@@ -6,13 +6,13 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Published IP lists for services allowed by Rule 1 (Allow Good Bots).
  *
- * Source: the wafrules.com ruleset of October 21, 2026. Each list comes from the
+ * Source: the wafrules.com ruleset of October 24, 2026. Each list comes from the
  * service's own published page (see 'sources'). Services Cloudflare already
  * verifies as bots are covered by cf.client.bot; their lists are optional.
  */
 final class WPWAF_Service_IPs {
 
-	public const RULES_DATE = '2026-10-21';
+	public const RULES_DATE = '2026-10-24';
 
 	/** @return array<int,array<string,mixed>> */
 	public static function all(): array {
@@ -159,17 +159,17 @@ final class WPWAF_Service_IPs {
 				'label'        => 'WP Umbrella',
 				'settings'     => [ 'allow_wpumbrella' ],
 				'verified_bot' => false,
-				'updated'      => '2026-10-21',
-				'sources'      => [ 'https://wp-umbrella.com/ips-v4/', 'https://wp-umbrella.com/ips-v6/', 'https://wp-umbrella.com/ips-monitoring/', 'https://wp-umbrella.com/ips-broken-link-checker/', 'https://wp-umbrella.com/ips-lighthouse/' ],
-				'notes'        => 'Management v4/v6, monitoring, broken-link checker, and Lighthouse. 2001:BC8:2B7F:801::292/64 is normalized to 2001:bc8:2b7f:801::/64. Listed in Cloudflare Radar, but real traffic does not verify. Unlisted DigitalOcean uptime monitors stay on the interim AS14061 clause and are not added here.',
+				'updated'      => '2026-10-23',
+				'sources'      => [ 'https://wp-umbrella.com/ips-v4/', 'https://wp-umbrella.com/ips-v6/', 'https://wp-umbrella.com/ips-monitoring/', 'https://wp-umbrella.com/ips-broken-link-checker/', 'https://wp-umbrella.com/ips-lighthouse/', 'https://wp-umbrella.com/communication-with-our-service/' ],
+				'notes'        => 'Management v4/v6, uptime monitoring, broken-link checker and Lighthouse IPs from WP Umbrella\'s published lists. 2001:BC8:2B7F:801::292/64 is normalized to 2001:bc8:2b7f:801::/64. Listed in Cloudflare Radar, but real traffic does not verify. WP Umbrella corrected its monitoring list on 2026-10-23.',
 				'ips'          => [
-					'15.235.231.33', '51.159.196.255', '51.159.202.198', '51.178.24.243',
-					'62.4.26.31', '64.23.156.169', '128.199.86.31', '128.199.121.7',
-					'134.199.170.244', '142.93.161.1', '142.93.205.116', '143.244.149.185',
-					'157.245.77.230', '159.223.167.118', '161.35.231.200', '165.227.83.88',
-					'165.227.147.208', '167.99.218.133', '167.99.218.170', '188.166.163.58',
-					'188.166.165.9', '206.189.101.66', '209.38.89.16', '212.83.142.5',
-					'212.83.175.107', '212.129.45.77', '2001:bc8:2b7f:801::/64', '2001:41d0:306:1702::/64',
+					'15.235.231.33', '51.159.202.198', '62.4.26.31', '104.248.132.78',
+					'128.199.86.31', '128.199.121.7', '134.199.170.244', '142.93.205.116',
+					'143.198.153.189', '143.244.149.185', '157.245.77.230', '159.65.120.212',
+					'159.223.167.118', '165.227.83.88', '165.232.128.149', '167.99.218.133',
+					'167.99.218.170', '188.166.163.58', '188.166.165.9', '206.189.101.66',
+					'209.38.89.16', '212.83.142.5', '212.83.175.107', '212.129.45.77',
+					'2001:bc8:2b7f:801::/64', '2001:41d0:306:1702::/64',
 				],
 			],
 		];

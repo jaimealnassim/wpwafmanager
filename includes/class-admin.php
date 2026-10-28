@@ -142,6 +142,9 @@ class WPWAF_Admin {
 			true  // load in footer
 		);
 
+		// Icon helpers for the inline page scripts (emoji are replaced by SVG icons).
+		add_action( 'admin_head', [ 'WPWAF_Icons', 'print_script' ] );
+
 		// Viewport meta - WordPress admin doesn't set this; needed for mobile scaling.
 		add_action( 'admin_head', static function (): void {
 			echo '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' . "\n";
@@ -197,7 +200,7 @@ class WPWAF_Admin {
 	public function register_dashboard_widget(): void {
 		wp_add_dashboard_widget(
 			'wpwaf_dashboard_widget',
-			'🛡 WP WAF Manager',
+			WPWAF_Icons::text( 'shield', 'WP WAF Manager' ),
 			[ $this, 'render_dashboard_widget' ]
 		);
 	}
@@ -221,7 +224,7 @@ class WPWAF_Admin {
 		<div class="wpwaf-dw">
 		<?php if ( ! $active ) : ?>
 			<p style="color:#92400e;background:#fff8f5;padding:8px 12px;border-radius:6px;margin:0;">
-				⚠ No account connected. <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpwafmanager' ) ); ?>">Add credentials →</a>
+				<?php echo WPWAF_Icons::svg( 'alert' ); ?> No account connected. <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpwafmanager' ) ); ?>">Add credentials →</a>
 			</p>
 		<?php else :
 			$zone_count  = count( $cache );
@@ -239,7 +242,7 @@ class WPWAF_Admin {
 			</div>
 			<div class="wpwaf-dw-row">
 				<span class="wpwaf-dw-label">Auto-sync</span>
-				<span class="wpwaf-dw-val <?php echo $auto_sync ? 'wpwaf-dw-ok' : 'wpwaf-dw-off'; ?>"><?php echo $auto_sync ? '✓ On' : 'Off'; ?></span>
+				<span class="wpwaf-dw-val <?php echo $auto_sync ? 'wpwaf-dw-ok' : 'wpwaf-dw-off'; ?>"><?php echo $auto_sync ? WPWAF_Icons::text( 'check', 'On' ) : 'Off'; ?></span>
 			</div>
 			<div class="wpwaf-dw-row">
 				<span class="wpwaf-dw-label">Last sync</span>

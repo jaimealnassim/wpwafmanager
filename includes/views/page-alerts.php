@@ -82,7 +82,7 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 .wpwaf-al-presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
 .wpwaf-al-preset{display:flex;flex-direction:column;gap:6px;text-align:left;padding:14px;border:1px solid var(--al-border);border-radius:10px;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s;font:inherit;color:inherit;min-width:0;}
 .wpwaf-al-preset:hover,.wpwaf-al-preset.active{border-color:var(--al-orange);box-shadow:0 4px 14px rgba(255,106,0,.08);}
-.wpwaf-al-preset-icon{font-size:20px;line-height:1;}
+.wpwaf-al-preset-icon{font-size:20px;line-height:1;color:#FF6A00;display:inline-flex;}
 .wpwaf-al-preset-title{font-size:13px;font-weight:700;color:var(--al-dark);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .wpwaf-al-preset-desc{font-size:12px;color:var(--al-muted);line-height:1.5;}
 .wpwaf-al-other{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;}
@@ -156,8 +156,8 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 <?php return; endif; ?>
 
 	<div class="wpwaf-al-tabs" role="tablist">
-		<button type="button" class="wpwaf-al-tab active" data-tab="alerts" role="tab">&#128276; Alerts</button>
-		<button type="button" class="wpwaf-al-tab" data-tab="health" role="tab">&#128154; Health Checks</button>
+		<button type="button" class="wpwaf-al-tab active" data-tab="alerts" role="tab"><?php echo WPWAF_Icons::svg( 'bell' ); ?> Alerts</button>
+		<button type="button" class="wpwaf-al-tab" data-tab="health" role="tab"><?php echo WPWAF_Icons::svg( 'heart-pulse' ); ?> Health Checks</button>
 	</div>
 
 	<!-- ═══ Alerts ═══ -->
@@ -165,11 +165,11 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 		<div class="wpwaf-al-toolbar">
 			<label for="wpwaf-al-account">Cloudflare account</label>
 			<select id="wpwaf-al-account" class="wpwaf-al-select"><option value="">Loading accounts&hellip;</option></select>
-			<button type="button" class="wpwaf-al-btn" id="wpwaf-al-refresh">&#8635; Refresh</button>
+			<button type="button" class="wpwaf-al-btn" id="wpwaf-al-refresh"><?php echo WPWAF_Icons::svg( 'refresh' ); ?> Refresh</button>
 		</div>
 
 		<details class="wpwaf-al-help">
-			<summary>&#128273; API token permissions for this page</summary>
+			<summary><?php echo WPWAF_Icons::svg( 'key' ); ?> API token permissions for this page</summary>
 			<div class="wpwaf-al-help-body">
 				Alerts need <code>Account &rarr; Notifications &rarr; Edit</code> (Read is enough to view them).
 				Health Checks need <code>Zone &rarr; Health Checks &rarr; Edit</code> (Read is enough to view them).
@@ -277,7 +277,7 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 		<div class="wpwaf-al-toolbar">
 			<label for="wpwaf-al-zone">Zone</label>
 			<select id="wpwaf-al-zone" class="wpwaf-al-select"><option value="">Loading zones&hellip;</option></select>
-			<button type="button" class="wpwaf-al-btn" id="wpwaf-al-hc-refresh">&#8635; Refresh</button>
+			<button type="button" class="wpwaf-al-btn" id="wpwaf-al-hc-refresh"><?php echo WPWAF_Icons::svg( 'refresh' ); ?> Refresh</button>
 			<button type="button" class="wpwaf-al-btn wpwaf-al-btn--primary" id="wpwaf-al-hc-add">+ Add health check</button>
 		</div>
 
@@ -397,10 +397,10 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 	// Presets for WordPress sites. A preset is shown only when Cloudflare lists its
 	// type as available on the selected account; the name shown comes from Cloudflare.
 	const PRESETS = [
-		{ type:'dos_attack_l7', icon:'🛡', name:'HTTP DDoS attack', desc:'Email me when Cloudflare mitigates an HTTP DDoS attack on any of my sites.' },
-		{ type:'universal_ssl_event_type', icon:'🔒', name:'SSL certificate events', desc:'Validation, issuance, renewal and expiry notices for Universal SSL certificates.' },
-		{ type:'health_check_status_notification', icon:'💚', name:'Health Check status', desc:'Email me when a health check finds my origin server down or back up.', pro:true },
-		{ type:'security_insights_alert', icon:'🔎', name:'Security Insights', desc:'New findings from Cloudflare Security Insights scans, such as exposed DNS records.' }
+		{ type:'dos_attack_l7', icon:'shield', name:'HTTP DDoS attack', desc:'Email me when Cloudflare mitigates an HTTP DDoS attack on any of my sites.' },
+		{ type:'universal_ssl_event_type', icon:'lock', name:'SSL certificate events', desc:'Validation, issuance, renewal and expiry notices for Universal SSL certificates.' },
+		{ type:'health_check_status_notification', icon:'heart-pulse', name:'Health Check status', desc:'Email me when a health check finds my origin server down or back up.', pro:true },
+		{ type:'security_insights_alert', icon:'search', name:'Security Insights', desc:'New findings from Cloudflare Security Insights scans, such as exposed DNS records.' }
 	];
 	const REGIONS = [
 		['WNAM','Western North America'],['ENAM','Eastern North America'],['WEU','Western Europe'],['EEU','Eastern Europe'],
@@ -422,10 +422,10 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 			.catch(e => cb({ success:false, data:{ message:e.message || 'Request failed' } }));
 	}
 	function errMsg(res){ return (res && res.data && res.data.message) || 'Cloudflare API error'; }
-	function toast(msg, ok){
+	function toast(msg, ok, icon){
 		const el = document.createElement('div');
 		el.className = 'wpwaf-al-toast ' + (ok === false ? 'err' : 'ok');
-		el.textContent = msg;
+		if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
 		document.body.appendChild(el);
 		setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3200);
 	}
@@ -544,8 +544,8 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 				const emails = (m.email || []).map(e => e.id);
 				const hooks  = (m.webhooks || []).map(w => { const h = webhooks.find(x => x.id === w.id); return h ? h.name : 'Webhook'; });
 				const pd     = (m.pagerduty || []).length;
-				const chips  = emails.map(e => '<span class="wpwaf-al-chip">&#9993; ' + esc(e) + '</span>').join('') +
-					hooks.map(h => '<span class="wpwaf-al-chip">&#128279; ' + esc(h) + '</span>').join('') +
+				const chips  = emails.map(e => '<span class="wpwaf-al-chip">' + wpwafIcon('mail') + ' ' + esc(e) + '</span>').join('') +
+					hooks.map(h => '<span class="wpwaf-al-chip">' + wpwafIcon('link') + ' ' + esc(h) + '</span>').join('') +
 					(pd ? '<span class="wpwaf-al-chip">PagerDuty</span>' : '');
 				return '<tr data-id="' + esc(p.id) + '">' +
 					'<td data-label="Alert"><div class="wpwaf-al-name">' + esc(p.name || '(no name)') + '</div><div class="wpwaf-al-meta">' + esc(typeName(p.alert_type)) + (p.description ? ' &middot; ' + esc(p.description) : '') + '</div></td>' +
@@ -587,7 +587,7 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 		const shown = PRESETS.filter(p => available.some(a => a.type === p.type));
 		box.innerHTML = shown.length ? shown.map(p =>
 			'<button type="button" class="wpwaf-al-preset" data-type="' + esc(p.type) + '">' +
-				'<span class="wpwaf-al-preset-icon">' + p.icon + '</span>' +
+				'<span class="wpwaf-al-preset-icon">' + wpwafIcon(p.icon) + '</span>' +
 				'<span class="wpwaf-al-preset-title">' + esc(typeName(p.type)) + (p.pro ? ' <span class="wpwaf-al-pill wpwaf-al-pill--pro">Pro+</span>' : '') + '</span>' +
 				'<span class="wpwaf-al-preset-desc">' + esc(p.desc) + '</span>' +
 			'</button>').join('')
@@ -857,7 +857,7 @@ $wpwaf_al_email = ( $wpwaf_al_user && ! empty( $wpwaf_al_user->user_email ) ) ? 
 					'<td data-label="Status">' + statusPill(c) + (c.status === 'unhealthy' && c.failure_reason ? '<div class="wpwaf-al-meta" style="color:#991b1b;">' + esc(c.failure_reason) + '</div>' : '') + '</td>' +
 					'<td data-label="Schedule"><div class="wpwaf-al-meta">Every ' + esc(c.interval || '?') + 's &middot; ' + esc(regions) + '</div>' + (c.modified_on ? '<div class="wpwaf-al-meta">Changed ' + esc(fmtDate(c.modified_on)) + '</div>' : '') + '</td>' +
 					'<td><div class="wpwaf-al-actions">' +
-						'<button type="button" class="wpwaf-al-btn wpwaf-al-btn--sm wpwaf-al-hc-alert" data-id="' + esc(c.id) + '">&#128276; Alert me</button>' +
+						'<button type="button" class="wpwaf-al-btn wpwaf-al-btn--sm wpwaf-al-hc-alert" data-id="' + esc(c.id) + '">' + wpwafIcon('bell') + ' Alert me</button>' +
 						'<button type="button" class="wpwaf-al-btn wpwaf-al-btn--sm wpwaf-al-hc-pause" data-id="' + esc(c.id) + '" data-suspended="' + (c.suspended ? '1' : '0') + '">' + (c.suspended ? 'Resume' : 'Pause') + '</button>' +
 						'<button type="button" class="wpwaf-al-btn wpwaf-al-btn--sm wpwaf-al-hc-edit" data-id="' + esc(c.id) + '">Edit</button>' +
 						'<button type="button" class="wpwaf-al-btn wpwaf-al-btn--sm wpwaf-al-btn--danger wpwaf-al-hc-del" data-id="' + esc(c.id) + '">Delete</button>' +

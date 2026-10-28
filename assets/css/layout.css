@@ -105,3 +105,43 @@ body.wpwaf-admin .cfwaf-zn-domain { overflow-wrap: anywhere; }
 	body.wpwaf-admin .cfwaf-profile-bar__left { width: 100%; }
 	body.wpwaf-admin .cfwaf-profile-bar__select { flex: 1 1 160px; min-width: 0; }
 }
+
+/* ── Country flags (assets/flags, shown at 20 x 15) ───────────────────────── */
+body.wpwaf-admin .wpwaf-flag {
+	display: inline-block;
+	flex: 0 0 auto;
+	width: 20px;
+	height: 15px;
+	margin-right: 6px;
+	vertical-align: -2px;
+	border-radius: 2px;
+	object-fit: cover;
+	box-shadow: 0 0 0 1px rgba(15, 23, 42, .12);
+}
+body.wpwaf-admin .wpwaf-flag--none {
+	box-shadow: none;
+}
+/* Smaller flag on the Security Events country line (10px text). */
+body.wpwaf-admin .cfwaf-se-country .wpwaf-flag {
+	width: 16px;
+	height: 12px;
+	margin-right: 4px;
+	vertical-align: -2px;
+}
+
+/* ── Search fields: magnifier icon (SVG) instead of an emoji in the placeholder ── */
+body.wpwaf-admin .cfwaf-search-input,
+body.wpwaf-admin .cfwaf-zones-search {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: 10px 50%;
+	background-size: 15px 15px;
+	padding-left: 32px;
+}
+
+/* ── Inline SVG icons (replace emoji) ──────────────────────────────────────── */
+body.wpwaf-admin .wpwaf-ic {
+	display: inline-block;
+	flex-shrink: 0;
+	vertical-align: -0.125em;
+}

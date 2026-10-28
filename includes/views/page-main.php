@@ -22,7 +22,7 @@
 				</div>
 			</a>
 			<div class="cfwaf-header-meta">
-				<div class="cfwaf-header-meta-updated">Rules last updated: October 21, 2026, from <a href="https://wafrules.com" target="_blank" rel="noopener">wafrules.com</a></div>
+				<div class="cfwaf-header-meta-updated">Rules last updated: <?php echo esc_html( gmdate( 'F j, Y', (int) strtotime( WPWAF_Service_IPs::RULES_DATE . ' 00:00:00 UTC' ) ) ); ?>, from <a href="https://wafrules.com" target="_blank" rel="noopener">wafrules.com</a></div>
 				<a href="https://github.com/jaimealnassim/wpwafmanager" target="_blank" rel="noopener" class="cfwaf-header-github" title="View on GitHub" style="justify-content:flex-end;">
 					<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
 					<span>GitHub</span>
@@ -168,7 +168,7 @@
 					<div class="cfwaf-step-num">1</div>
 					<div class="cfwaf-step-content">
 						<h3>Connect &amp; Configure</h3>
-						<p>Enter your Cloudflare API credentials above and click <strong>Verify &amp; Save</strong>. Then customize the five WAF rules below to match your site&rsquo;s needs. Every checkbox option is saved to your WordPress database &mdash; your configuration persists between sessions. You can return any time and your settings will be exactly as you left them.</p>
+						<p>Enter your Cloudflare API credentials above and click <strong>Verify &amp; Save</strong>. Then customize the five WAF rules below to match your site&rsquo;s needs. Every checkbox option is saved to your WordPress database, so your configuration persists between sessions. You can return any time and your settings will be exactly as you left them.</p>
 					</div>
 				</div>
 
@@ -176,7 +176,7 @@
 					<div class="cfwaf-step-num">2</div>
 					<div class="cfwaf-step-content">
 						<h3>Deploy to Your Sites</h3>
-						<p>Once configured, scroll to the bottom and click <strong>Deploy Rules to Your Sites</strong>. All your Cloudflare zones will load automatically. Pick one site, a handful, or all of them at once &mdash; then click <strong>Deploy</strong>. The plugin pushes all five rules directly to Cloudflare via API in the correct order. No copy-pasting expressions into the Cloudflare dashboard required.</p>
+						<p>Once configured, scroll to the bottom and click <strong>Deploy Rules to Your Sites</strong>. All your Cloudflare zones will load automatically. Pick one site, a handful, or all of them at once, then click <strong>Deploy</strong>. The plugin pushes all five rules directly to Cloudflare via API in the correct order. No copy-pasting expressions into the Cloudflare dashboard required.</p>
 						<p class="cfwaf-hint"><strong>Why order matters:</strong> Rule 1 (Allow Good Bots) must be first because it uses the Skip action to whitelist legitimate bots before any blocking rules run. Block rules come before Challenge rules because a blocked request stops evaluation immediately, so no further rules are checked.</p>
 					</div>
 				</div>
@@ -185,7 +185,7 @@
 					<div class="cfwaf-step-num">3</div>
 					<div class="cfwaf-step-content">
 						<h3>Monitor &amp; Adjust</h3>
-						<p>After deploying, monitor your Cloudflare Security Events log at <strong>Security &rarr; Analytics &rarr; Events</strong>. Watch closely for false positives &mdash; legitimate traffic being blocked or challenged. If a service you need is being blocked, enable it in Rule 1 and redeploy. These rules work well for most sites with default settings, but every site is different. Use the <strong>Zone Rules</strong> tab below to inspect what&rsquo;s live on any zone at any time.</p>
+						<p>After deploying, monitor your Cloudflare Security Events log at <strong>Security &rarr; Analytics &rarr; Events</strong>. Watch closely for false positives: legitimate traffic being blocked or challenged. If a service you need is being blocked, enable it in Rule 1 and redeploy. These rules work well for most sites with default settings, but every site is different. Use the <strong>Zone Rules</strong> tab below to inspect what&rsquo;s live on any zone at any time.</p>
 					</div>
 				</div>
 
@@ -222,7 +222,7 @@
 			$moved_agents = get_option( 'wpwaf_rules_moved_agents', [] );
 			if ( is_array( $moved_agents ) && $moved_agents ) : ?>
 			<div class="cfwaf-notice cfwaf-notice-info cfwaf-rules-moved" id="cfwaf-rules-moved">
-				<p><strong>WAF rules updated to the October 21, 2026 ruleset.</strong> Rule 1 no longer allows services by user agent, because a user agent is easy to fake. Services Cloudflare verifies are covered by &ldquo;Allow every Cloudflare verified bot&rdquo;, and services with a published IP list now have their own switch.</p>
+				<p><strong>WAF rules updated to the October 2026 ruleset.</strong> Rule 1 no longer allows services by user agent, because a user agent is easy to fake. Services Cloudflare verifies are covered by &ldquo;Allow every Cloudflare verified bot&rdquo;, and services with a published IP list now have their own switch.</p>
 				<p>So nothing stops working, these user agents were moved to <strong>Custom User Agents to Allow</strong> in your saved profiles: <?php echo implode( ', ', array_map( static fn( $ua ) => '<code>' . esc_html( (string) $ua ) . '</code>', $moved_agents ) ); ?>. Remove any you don&rsquo;t need, and add those services&rsquo; server IPs under <strong>Your server IPs</strong> instead where you can. Deploy again to apply the new rules.</p>
 				<button type="button" class="cfwaf-btn cfwaf-btn-sm" id="cfwaf-rules-moved-dismiss">Got it</button>
 			</div>
@@ -318,7 +318,7 @@
 								'allow_imagify'     => [ 'Imagify', '', 'Adds Imagify\'s published optimization IPs.' ],
 								'allow_shortpixel'  => [ 'ShortPixel', '', 'Adds the published IPv4 list. ShortPixel runs on Hetzner, which Rule 3 blocks.' ],
 								'allow_patchstack'  => [ 'Patchstack', '', 'Adds Patchstack\'s published IPs. Patchstack says the list may change without notice.' ],
-								'allow_wpumbrella'  => [ 'WP Umbrella', '', 'Adds the published management, monitoring, broken-link and Lighthouse IPs. WP Umbrella traffic does not verify as a Cloudflare bot.' ],
+								'allow_wpumbrella'  => [ 'WP Umbrella', '', 'Adds WP Umbrella\'s published management, uptime monitoring, broken-link checker and Lighthouse IPs (IP only, no user agent match). WP Umbrella traffic does not verify as a Cloudflare bot.' ],
 								'allow_gosweetspot' => [ 'GoSweetSpot', '', 'Adds the integration-service IPs used for webhooks and order fetches.' ],
 							];
 							foreach ( $svc_rows as $key => [ $label, $tag, $desc ] ) :
@@ -332,12 +332,6 @@
 									<?php if ( $meta ) : ?><span class="cfwaf-check-meta"><?php echo esc_html( $meta ); ?></span><?php endif; ?>
 								</span>
 							</label>
-							<?php if ( $key === 'allow_wpumbrella' ) : ?>
-							<label class="cfwaf-check-label cfwaf-service-sub">
-								<input type="checkbox" data-setting="rule1.allow_wpumbrella_do_monitors" id="cfwaf-wpu-monitors">
-								<span>Include unlisted DigitalOcean monitors (interim)<span class="cfwaf-check-desc">Requests from DigitalOcean (AS14061) with user agent WPUmbrella+, GET or HEAD, no dot in the path and no query string.</span></span>
-							</label>
-							<?php endif; ?>
 							<?php endforeach; ?>
 						</div>
 					</div>
@@ -380,7 +374,7 @@
 						<p class="cfwaf-hint">Add one Cloudflare expression per entry. Each is added to Rule 1 as an OR condition. Leave out the leading <code>or</code>; parentheses are added automatically.</p>
 						<div id="cfwaf-expressions-list" class="cfwaf-expr-list"></div>
 						<button type="button" id="cfwaf-expr-add" class="cfwaf-btn cfwaf-btn-sm" style="margin-top:6px;">+ Add Expression</button>
-						<p class="cfwaf-warn-text" style="margin-top:8px;">&#9888; Expressions must be valid <a href="https://developers.cloudflare.com/ruleset-engine/rules-language/" target="_blank" rel="noopener">Cloudflare rules language</a> syntax. An invalid expression makes the deploy fail for that zone.</p>
+						<p class="cfwaf-warn-text" style="margin-top:8px;"><?php echo WPWAF_Icons::svg( 'alert' ); ?> Expressions must be valid <a href="https://developers.cloudflare.com/ruleset-engine/rules-language/" target="_blank" rel="noopener">Cloudflare rules language</a> syntax. An invalid expression makes the deploy fail for that zone.</p>
 					</div>
 
 					<div class="cfwaf-notice cfwaf-notice-api-skip">
@@ -435,6 +429,17 @@
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule2.block_spider"> Generic &ldquo;spider&rdquo; in User-Agent</label>
 						</div>
 						<p class="cfwaf-hint" style="margin-top:6px">The generic patterns never match Cloudflare verified bots.</p>
+						<label class="cfwaf-check-label cfwaf-check-strong" style="margin-top:10px">
+							<input type="checkbox" data-setting="rule2.block_curl" id="cfwaf-block-curl">
+							<span><strong>Block curl user agents</strong>
+								<span class="cfwaf-check-desc">Turn this off for app or API hosts (Workers, Vercel, webhook endpoints) where people or scripts legitimately call you with curl. Allow server-side monitors in Rule 1 instead.</span>
+							</span>
+						</label>
+						<div class="cfwaf-curl-hosts">
+							<label for="cfwaf-curl-hosts" class="cfwaf-field-label">Except these hostnames</label>
+							<textarea id="cfwaf-curl-hosts" class="cfwaf-ip-textarea" rows="2" placeholder="api.example.com&#10;hooks.example.com" spellcheck="false" autocomplete="off"></textarea>
+							<p class="cfwaf-hint cfwaf-hint-muted">One hostname per line. curl requests to these hostnames are not blocked. IP addresses and ports are ignored.</p>
+						</div>
 					</div>
 
 					<div class="cfwaf-section">
@@ -507,6 +512,25 @@
 							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_alibaba"> Alibaba</label>
 							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_hostroyale"> HostRoyale</label>
 							<label class="cfwaf-check-label"><input type="checkbox" class="cfwaf-host-check" data-setting="rule3.block_cloudvider"> Cloudvider</label>
+						</div>
+					</div>
+
+					<div class="cfwaf-section">
+						<h4>Attack Hosting Networks</h4>
+						<p class="cfwaf-hint">These stay in the rule even when <strong>Block Web Host ASNs</strong> is off. Untick any network you need to allow.</p>
+						<div class="cfwaf-service-list">
+							<label class="cfwaf-check-label cfwaf-service-row">
+								<input type="checkbox" data-setting="rule3.block_techoff">
+								<span><strong>AS48090 TECHOFF SRV / DMZHOST</strong><span class="cfwaf-check-desc">Exploit spray and credential probing.</span></span>
+							</label>
+							<label class="cfwaf-check-label cfwaf-service-row">
+								<input type="checkbox" data-setting="rule3.block_bucklog">
+								<span><strong>AS211590 Bucklog / FBW Networks</strong><span class="cfwaf-check-desc">Secrets scanning from this network.</span></span>
+							</label>
+							<label class="cfwaf-check-label cfwaf-service-row">
+								<input type="checkbox" data-setting="rule3.block_tcdatacenter">
+								<span><strong>AS218785 TC Datacenter</strong><span class="cfwaf-check-desc">WordPress exploit traffic from this network.</span></span>
+							</label>
 						</div>
 					</div>
 
@@ -597,218 +621,218 @@
 					<label class="cfwaf-check-label cfwaf-select-all-label" style="width:auto;padding:7px 14px;margin:0;">
 						<input type="checkbox" id="cfwaf-country-select-all"> <strong>Select All</strong>
 					</label>
-					<button type="button" class="cfwaf-btn cfwaf-btn-ghost-dark" id="cfwaf-country-clear-all" style="padding:6px 14px;font-size:12px;">&#10005; Clear All</button>
-					<input type="search" id="cfwaf-country-search" class="cfwaf-input cfwaf-search-input" placeholder="&#128269; Search countries&hellip;" style="max-width:220px;">
+					<button type="button" class="cfwaf-btn cfwaf-btn-ghost-dark" id="cfwaf-country-clear-all" style="padding:6px 14px;font-size:12px;"><?php echo WPWAF_Icons::svg( 'x' ); ?> Clear All</button>
+					<input type="search" id="cfwaf-country-search" class="cfwaf-input cfwaf-search-input" placeholder="Search countries&hellip;" style="max-width:220px;">
 					<span style="margin-left:auto;font-size:12px;font-weight:600;color:#6b7280;" id="cfwaf-country-count">0 selected</span>
 				</div>
 
 				<div class="cfwaf-country-regions">
 					<span class="cfwaf-country-regions-label">Quick Pick:</span>
-					<button type="button" class="cfwaf-region-btn" data-region="north-america">&#127758; North America</button>
-					<button type="button" class="cfwaf-region-btn" data-region="europe">&#127757; Europe</button>
-					<button type="button" class="cfwaf-region-btn" data-region="asia">&#127759; Asia</button>
-					<button type="button" class="cfwaf-region-btn" data-region="oceania">&#127756; Oceania</button>
-					<button type="button" class="cfwaf-region-btn" data-region="latin-america">&#127758; Latin America</button>
-					<button type="button" class="cfwaf-region-btn" data-region="mena">MENA</button>
-					<button type="button" class="cfwaf-region-btn" data-region="gcc">GCC</button>
-					<button type="button" class="cfwaf-region-btn" data-region="africa">&#127757; Africa</button>
+					<button type="button" class="cfwaf-region-btn" data-region="north-america"><?php echo WPWAF_Icons::region( 'north-america' ); ?> North America</button>
+					<button type="button" class="cfwaf-region-btn" data-region="europe"><?php echo WPWAF_Icons::region( 'europe' ); ?> Europe</button>
+					<button type="button" class="cfwaf-region-btn" data-region="asia"><?php echo WPWAF_Icons::region( 'asia' ); ?> Asia</button>
+					<button type="button" class="cfwaf-region-btn" data-region="oceania"><?php echo WPWAF_Icons::region( 'oceania' ); ?> Oceania</button>
+					<button type="button" class="cfwaf-region-btn" data-region="latin-america"><?php echo WPWAF_Icons::region( 'latin-america' ); ?> Latin America</button>
+					<button type="button" class="cfwaf-region-btn" data-region="mena"><?php echo WPWAF_Icons::region( 'mena' ); ?> MENA</button>
+					<button type="button" class="cfwaf-region-btn" data-region="gcc"><?php echo WPWAF_Icons::region( 'gcc' ); ?> GCC</button>
+					<button type="button" class="cfwaf-region-btn" data-region="africa"><?php echo WPWAF_Icons::region( 'africa' ); ?> Africa</button>
 				</div>
 
 				<div class="cfwaf-zones-grid" id="cfwaf-country-grid" style="max-height:420px;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));margin-top:12px;">
-					<div class="cfwaf-zone-item" data-cc="AF"><input type="checkbox" class="cfwaf-country-check" value="AF"><div><div class="cfwaf-zone-name">Afghanistan</div><div class="cfwaf-zone-plan">AF</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AL"><input type="checkbox" class="cfwaf-country-check" value="AL"><div><div class="cfwaf-zone-name">Albania</div><div class="cfwaf-zone-plan">AL</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="DZ"><input type="checkbox" class="cfwaf-country-check" value="DZ"><div><div class="cfwaf-zone-name">Algeria</div><div class="cfwaf-zone-plan">DZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AD"><input type="checkbox" class="cfwaf-country-check" value="AD"><div><div class="cfwaf-zone-name">Andorra</div><div class="cfwaf-zone-plan">AD</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AO"><input type="checkbox" class="cfwaf-country-check" value="AO"><div><div class="cfwaf-zone-name">Angola</div><div class="cfwaf-zone-plan">AO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AG"><input type="checkbox" class="cfwaf-country-check" value="AG"><div><div class="cfwaf-zone-name">Antigua &amp; Barbuda</div><div class="cfwaf-zone-plan">AG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AR"><input type="checkbox" class="cfwaf-country-check" value="AR"><div><div class="cfwaf-zone-name">Argentina</div><div class="cfwaf-zone-plan">AR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AM"><input type="checkbox" class="cfwaf-country-check" value="AM"><div><div class="cfwaf-zone-name">Armenia</div><div class="cfwaf-zone-plan">AM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AU"><input type="checkbox" class="cfwaf-country-check" value="AU"><div><div class="cfwaf-zone-name">Australia</div><div class="cfwaf-zone-plan">AU</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AT"><input type="checkbox" class="cfwaf-country-check" value="AT"><div><div class="cfwaf-zone-name">Austria</div><div class="cfwaf-zone-plan">AT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AZ"><input type="checkbox" class="cfwaf-country-check" value="AZ"><div><div class="cfwaf-zone-name">Azerbaijan</div><div class="cfwaf-zone-plan">AZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BS"><input type="checkbox" class="cfwaf-country-check" value="BS"><div><div class="cfwaf-zone-name">Bahamas</div><div class="cfwaf-zone-plan">BS</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BH"><input type="checkbox" class="cfwaf-country-check" value="BH"><div><div class="cfwaf-zone-name">Bahrain</div><div class="cfwaf-zone-plan">BH</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BD"><input type="checkbox" class="cfwaf-country-check" value="BD"><div><div class="cfwaf-zone-name">Bangladesh</div><div class="cfwaf-zone-plan">BD</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BB"><input type="checkbox" class="cfwaf-country-check" value="BB"><div><div class="cfwaf-zone-name">Barbados</div><div class="cfwaf-zone-plan">BB</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BY"><input type="checkbox" class="cfwaf-country-check" value="BY"><div><div class="cfwaf-zone-name">Belarus</div><div class="cfwaf-zone-plan">BY</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BE"><input type="checkbox" class="cfwaf-country-check" value="BE"><div><div class="cfwaf-zone-name">Belgium</div><div class="cfwaf-zone-plan">BE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BZ"><input type="checkbox" class="cfwaf-country-check" value="BZ"><div><div class="cfwaf-zone-name">Belize</div><div class="cfwaf-zone-plan">BZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BJ"><input type="checkbox" class="cfwaf-country-check" value="BJ"><div><div class="cfwaf-zone-name">Benin</div><div class="cfwaf-zone-plan">BJ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BT"><input type="checkbox" class="cfwaf-country-check" value="BT"><div><div class="cfwaf-zone-name">Bhutan</div><div class="cfwaf-zone-plan">BT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BO"><input type="checkbox" class="cfwaf-country-check" value="BO"><div><div class="cfwaf-zone-name">Bolivia</div><div class="cfwaf-zone-plan">BO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BA"><input type="checkbox" class="cfwaf-country-check" value="BA"><div><div class="cfwaf-zone-name">Bosnia &amp; Herzegovina</div><div class="cfwaf-zone-plan">BA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BW"><input type="checkbox" class="cfwaf-country-check" value="BW"><div><div class="cfwaf-zone-name">Botswana</div><div class="cfwaf-zone-plan">BW</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BR"><input type="checkbox" class="cfwaf-country-check" value="BR"><div><div class="cfwaf-zone-name">Brazil</div><div class="cfwaf-zone-plan">BR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BN"><input type="checkbox" class="cfwaf-country-check" value="BN"><div><div class="cfwaf-zone-name">Brunei</div><div class="cfwaf-zone-plan">BN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BG"><input type="checkbox" class="cfwaf-country-check" value="BG"><div><div class="cfwaf-zone-name">Bulgaria</div><div class="cfwaf-zone-plan">BG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BF"><input type="checkbox" class="cfwaf-country-check" value="BF"><div><div class="cfwaf-zone-name">Burkina Faso</div><div class="cfwaf-zone-plan">BF</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="BI"><input type="checkbox" class="cfwaf-country-check" value="BI"><div><div class="cfwaf-zone-name">Burundi</div><div class="cfwaf-zone-plan">BI</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CV"><input type="checkbox" class="cfwaf-country-check" value="CV"><div><div class="cfwaf-zone-name">Cabo Verde</div><div class="cfwaf-zone-plan">CV</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KH"><input type="checkbox" class="cfwaf-country-check" value="KH"><div><div class="cfwaf-zone-name">Cambodia</div><div class="cfwaf-zone-plan">KH</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CM"><input type="checkbox" class="cfwaf-country-check" value="CM"><div><div class="cfwaf-zone-name">Cameroon</div><div class="cfwaf-zone-plan">CM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CA"><input type="checkbox" class="cfwaf-country-check" value="CA"><div><div class="cfwaf-zone-name">Canada</div><div class="cfwaf-zone-plan">CA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CF"><input type="checkbox" class="cfwaf-country-check" value="CF"><div><div class="cfwaf-zone-name">Central African Rep.</div><div class="cfwaf-zone-plan">CF</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TD"><input type="checkbox" class="cfwaf-country-check" value="TD"><div><div class="cfwaf-zone-name">Chad</div><div class="cfwaf-zone-plan">TD</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CL"><input type="checkbox" class="cfwaf-country-check" value="CL"><div><div class="cfwaf-zone-name">Chile</div><div class="cfwaf-zone-plan">CL</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CN"><input type="checkbox" class="cfwaf-country-check" value="CN"><div><div class="cfwaf-zone-name">China</div><div class="cfwaf-zone-plan">CN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CO"><input type="checkbox" class="cfwaf-country-check" value="CO"><div><div class="cfwaf-zone-name">Colombia</div><div class="cfwaf-zone-plan">CO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KM"><input type="checkbox" class="cfwaf-country-check" value="KM"><div><div class="cfwaf-zone-name">Comoros</div><div class="cfwaf-zone-plan">KM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CG"><input type="checkbox" class="cfwaf-country-check" value="CG"><div><div class="cfwaf-zone-name">Congo</div><div class="cfwaf-zone-plan">CG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CR"><input type="checkbox" class="cfwaf-country-check" value="CR"><div><div class="cfwaf-zone-name">Costa Rica</div><div class="cfwaf-zone-plan">CR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="HR"><input type="checkbox" class="cfwaf-country-check" value="HR"><div><div class="cfwaf-zone-name">Croatia</div><div class="cfwaf-zone-plan">HR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CU"><input type="checkbox" class="cfwaf-country-check" value="CU"><div><div class="cfwaf-zone-name">Cuba</div><div class="cfwaf-zone-plan">CU</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CY"><input type="checkbox" class="cfwaf-country-check" value="CY"><div><div class="cfwaf-zone-name">Cyprus</div><div class="cfwaf-zone-plan">CY</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CZ"><input type="checkbox" class="cfwaf-country-check" value="CZ"><div><div class="cfwaf-zone-name">Czech Republic</div><div class="cfwaf-zone-plan">CZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="DK"><input type="checkbox" class="cfwaf-country-check" value="DK"><div><div class="cfwaf-zone-name">Denmark</div><div class="cfwaf-zone-plan">DK</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="DJ"><input type="checkbox" class="cfwaf-country-check" value="DJ"><div><div class="cfwaf-zone-name">Djibouti</div><div class="cfwaf-zone-plan">DJ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="DM"><input type="checkbox" class="cfwaf-country-check" value="DM"><div><div class="cfwaf-zone-name">Dominica</div><div class="cfwaf-zone-plan">DM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="DO"><input type="checkbox" class="cfwaf-country-check" value="DO"><div><div class="cfwaf-zone-name">Dominican Republic</div><div class="cfwaf-zone-plan">DO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="EC"><input type="checkbox" class="cfwaf-country-check" value="EC"><div><div class="cfwaf-zone-name">Ecuador</div><div class="cfwaf-zone-plan">EC</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="EG"><input type="checkbox" class="cfwaf-country-check" value="EG"><div><div class="cfwaf-zone-name">Egypt</div><div class="cfwaf-zone-plan">EG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SV"><input type="checkbox" class="cfwaf-country-check" value="SV"><div><div class="cfwaf-zone-name">El Salvador</div><div class="cfwaf-zone-plan">SV</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GQ"><input type="checkbox" class="cfwaf-country-check" value="GQ"><div><div class="cfwaf-zone-name">Equatorial Guinea</div><div class="cfwaf-zone-plan">GQ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ER"><input type="checkbox" class="cfwaf-country-check" value="ER"><div><div class="cfwaf-zone-name">Eritrea</div><div class="cfwaf-zone-plan">ER</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="EE"><input type="checkbox" class="cfwaf-country-check" value="EE"><div><div class="cfwaf-zone-name">Estonia</div><div class="cfwaf-zone-plan">EE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SZ"><input type="checkbox" class="cfwaf-country-check" value="SZ"><div><div class="cfwaf-zone-name">Eswatini</div><div class="cfwaf-zone-plan">SZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ET"><input type="checkbox" class="cfwaf-country-check" value="ET"><div><div class="cfwaf-zone-name">Ethiopia</div><div class="cfwaf-zone-plan">ET</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="FJ"><input type="checkbox" class="cfwaf-country-check" value="FJ"><div><div class="cfwaf-zone-name">Fiji</div><div class="cfwaf-zone-plan">FJ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="FI"><input type="checkbox" class="cfwaf-country-check" value="FI"><div><div class="cfwaf-zone-name">Finland</div><div class="cfwaf-zone-plan">FI</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="FR"><input type="checkbox" class="cfwaf-country-check" value="FR"><div><div class="cfwaf-zone-name">France</div><div class="cfwaf-zone-plan">FR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GA"><input type="checkbox" class="cfwaf-country-check" value="GA"><div><div class="cfwaf-zone-name">Gabon</div><div class="cfwaf-zone-plan">GA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GM"><input type="checkbox" class="cfwaf-country-check" value="GM"><div><div class="cfwaf-zone-name">Gambia</div><div class="cfwaf-zone-plan">GM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GE"><input type="checkbox" class="cfwaf-country-check" value="GE"><div><div class="cfwaf-zone-name">Georgia</div><div class="cfwaf-zone-plan">GE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="DE"><input type="checkbox" class="cfwaf-country-check" value="DE"><div><div class="cfwaf-zone-name">Germany</div><div class="cfwaf-zone-plan">DE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GH"><input type="checkbox" class="cfwaf-country-check" value="GH"><div><div class="cfwaf-zone-name">Ghana</div><div class="cfwaf-zone-plan">GH</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GR"><input type="checkbox" class="cfwaf-country-check" value="GR"><div><div class="cfwaf-zone-name">Greece</div><div class="cfwaf-zone-plan">GR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GD"><input type="checkbox" class="cfwaf-country-check" value="GD"><div><div class="cfwaf-zone-name">Grenada</div><div class="cfwaf-zone-plan">GD</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GT"><input type="checkbox" class="cfwaf-country-check" value="GT"><div><div class="cfwaf-zone-name">Guatemala</div><div class="cfwaf-zone-plan">GT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GN"><input type="checkbox" class="cfwaf-country-check" value="GN"><div><div class="cfwaf-zone-name">Guinea</div><div class="cfwaf-zone-plan">GN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GW"><input type="checkbox" class="cfwaf-country-check" value="GW"><div><div class="cfwaf-zone-name">Guinea-Bissau</div><div class="cfwaf-zone-plan">GW</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GY"><input type="checkbox" class="cfwaf-country-check" value="GY"><div><div class="cfwaf-zone-name">Guyana</div><div class="cfwaf-zone-plan">GY</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="HT"><input type="checkbox" class="cfwaf-country-check" value="HT"><div><div class="cfwaf-zone-name">Haiti</div><div class="cfwaf-zone-plan">HT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="HN"><input type="checkbox" class="cfwaf-country-check" value="HN"><div><div class="cfwaf-zone-name">Honduras</div><div class="cfwaf-zone-plan">HN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="HK"><input type="checkbox" class="cfwaf-country-check" value="HK"><div><div class="cfwaf-zone-name">Hong Kong</div><div class="cfwaf-zone-plan">HK</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="HU"><input type="checkbox" class="cfwaf-country-check" value="HU"><div><div class="cfwaf-zone-name">Hungary</div><div class="cfwaf-zone-plan">HU</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="IS"><input type="checkbox" class="cfwaf-country-check" value="IS"><div><div class="cfwaf-zone-name">Iceland</div><div class="cfwaf-zone-plan">IS</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="IN"><input type="checkbox" class="cfwaf-country-check" value="IN"><div><div class="cfwaf-zone-name">India</div><div class="cfwaf-zone-plan">IN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ID"><input type="checkbox" class="cfwaf-country-check" value="ID"><div><div class="cfwaf-zone-name">Indonesia</div><div class="cfwaf-zone-plan">ID</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="IR"><input type="checkbox" class="cfwaf-country-check" value="IR"><div><div class="cfwaf-zone-name">Iran</div><div class="cfwaf-zone-plan">IR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="IQ"><input type="checkbox" class="cfwaf-country-check" value="IQ"><div><div class="cfwaf-zone-name">Iraq</div><div class="cfwaf-zone-plan">IQ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="IE"><input type="checkbox" class="cfwaf-country-check" value="IE"><div><div class="cfwaf-zone-name">Ireland</div><div class="cfwaf-zone-plan">IE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="IL"><input type="checkbox" class="cfwaf-country-check" value="IL"><div><div class="cfwaf-zone-name">Israel</div><div class="cfwaf-zone-plan">IL</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="IT"><input type="checkbox" class="cfwaf-country-check" value="IT"><div><div class="cfwaf-zone-name">Italy</div><div class="cfwaf-zone-plan">IT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="JM"><input type="checkbox" class="cfwaf-country-check" value="JM"><div><div class="cfwaf-zone-name">Jamaica</div><div class="cfwaf-zone-plan">JM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="JP"><input type="checkbox" class="cfwaf-country-check" value="JP"><div><div class="cfwaf-zone-name">Japan</div><div class="cfwaf-zone-plan">JP</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="JO"><input type="checkbox" class="cfwaf-country-check" value="JO"><div><div class="cfwaf-zone-name">Jordan</div><div class="cfwaf-zone-plan">JO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KZ"><input type="checkbox" class="cfwaf-country-check" value="KZ"><div><div class="cfwaf-zone-name">Kazakhstan</div><div class="cfwaf-zone-plan">KZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KE"><input type="checkbox" class="cfwaf-country-check" value="KE"><div><div class="cfwaf-zone-name">Kenya</div><div class="cfwaf-zone-plan">KE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KI"><input type="checkbox" class="cfwaf-country-check" value="KI"><div><div class="cfwaf-zone-name">Kiribati</div><div class="cfwaf-zone-plan">KI</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KW"><input type="checkbox" class="cfwaf-country-check" value="KW"><div><div class="cfwaf-zone-name">Kuwait</div><div class="cfwaf-zone-plan">KW</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KG"><input type="checkbox" class="cfwaf-country-check" value="KG"><div><div class="cfwaf-zone-name">Kyrgyzstan</div><div class="cfwaf-zone-plan">KG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LA"><input type="checkbox" class="cfwaf-country-check" value="LA"><div><div class="cfwaf-zone-name">Laos</div><div class="cfwaf-zone-plan">LA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LV"><input type="checkbox" class="cfwaf-country-check" value="LV"><div><div class="cfwaf-zone-name">Latvia</div><div class="cfwaf-zone-plan">LV</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LB"><input type="checkbox" class="cfwaf-country-check" value="LB"><div><div class="cfwaf-zone-name">Lebanon</div><div class="cfwaf-zone-plan">LB</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LS"><input type="checkbox" class="cfwaf-country-check" value="LS"><div><div class="cfwaf-zone-name">Lesotho</div><div class="cfwaf-zone-plan">LS</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LR"><input type="checkbox" class="cfwaf-country-check" value="LR"><div><div class="cfwaf-zone-name">Liberia</div><div class="cfwaf-zone-plan">LR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LY"><input type="checkbox" class="cfwaf-country-check" value="LY"><div><div class="cfwaf-zone-name">Libya</div><div class="cfwaf-zone-plan">LY</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LI"><input type="checkbox" class="cfwaf-country-check" value="LI"><div><div class="cfwaf-zone-name">Liechtenstein</div><div class="cfwaf-zone-plan">LI</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LT"><input type="checkbox" class="cfwaf-country-check" value="LT"><div><div class="cfwaf-zone-name">Lithuania</div><div class="cfwaf-zone-plan">LT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LU"><input type="checkbox" class="cfwaf-country-check" value="LU"><div><div class="cfwaf-zone-name">Luxembourg</div><div class="cfwaf-zone-plan">LU</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MG"><input type="checkbox" class="cfwaf-country-check" value="MG"><div><div class="cfwaf-zone-name">Madagascar</div><div class="cfwaf-zone-plan">MG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MW"><input type="checkbox" class="cfwaf-country-check" value="MW"><div><div class="cfwaf-zone-name">Malawi</div><div class="cfwaf-zone-plan">MW</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MY"><input type="checkbox" class="cfwaf-country-check" value="MY"><div><div class="cfwaf-zone-name">Malaysia</div><div class="cfwaf-zone-plan">MY</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MV"><input type="checkbox" class="cfwaf-country-check" value="MV"><div><div class="cfwaf-zone-name">Maldives</div><div class="cfwaf-zone-plan">MV</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ML"><input type="checkbox" class="cfwaf-country-check" value="ML"><div><div class="cfwaf-zone-name">Mali</div><div class="cfwaf-zone-plan">ML</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MT"><input type="checkbox" class="cfwaf-country-check" value="MT"><div><div class="cfwaf-zone-name">Malta</div><div class="cfwaf-zone-plan">MT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MH"><input type="checkbox" class="cfwaf-country-check" value="MH"><div><div class="cfwaf-zone-name">Marshall Islands</div><div class="cfwaf-zone-plan">MH</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MR"><input type="checkbox" class="cfwaf-country-check" value="MR"><div><div class="cfwaf-zone-name">Mauritania</div><div class="cfwaf-zone-plan">MR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MU"><input type="checkbox" class="cfwaf-country-check" value="MU"><div><div class="cfwaf-zone-name">Mauritius</div><div class="cfwaf-zone-plan">MU</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MX"><input type="checkbox" class="cfwaf-country-check" value="MX"><div><div class="cfwaf-zone-name">Mexico</div><div class="cfwaf-zone-plan">MX</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="FM"><input type="checkbox" class="cfwaf-country-check" value="FM"><div><div class="cfwaf-zone-name">Micronesia</div><div class="cfwaf-zone-plan">FM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MD"><input type="checkbox" class="cfwaf-country-check" value="MD"><div><div class="cfwaf-zone-name">Moldova</div><div class="cfwaf-zone-plan">MD</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MC"><input type="checkbox" class="cfwaf-country-check" value="MC"><div><div class="cfwaf-zone-name">Monaco</div><div class="cfwaf-zone-plan">MC</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MN"><input type="checkbox" class="cfwaf-country-check" value="MN"><div><div class="cfwaf-zone-name">Mongolia</div><div class="cfwaf-zone-plan">MN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ME"><input type="checkbox" class="cfwaf-country-check" value="ME"><div><div class="cfwaf-zone-name">Montenegro</div><div class="cfwaf-zone-plan">ME</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MA"><input type="checkbox" class="cfwaf-country-check" value="MA"><div><div class="cfwaf-zone-name">Morocco</div><div class="cfwaf-zone-plan">MA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MZ"><input type="checkbox" class="cfwaf-country-check" value="MZ"><div><div class="cfwaf-zone-name">Mozambique</div><div class="cfwaf-zone-plan">MZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MM"><input type="checkbox" class="cfwaf-country-check" value="MM"><div><div class="cfwaf-zone-name">Myanmar</div><div class="cfwaf-zone-plan">MM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NA"><input type="checkbox" class="cfwaf-country-check" value="NA"><div><div class="cfwaf-zone-name">Namibia</div><div class="cfwaf-zone-plan">NA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NR"><input type="checkbox" class="cfwaf-country-check" value="NR"><div><div class="cfwaf-zone-name">Nauru</div><div class="cfwaf-zone-plan">NR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NP"><input type="checkbox" class="cfwaf-country-check" value="NP"><div><div class="cfwaf-zone-name">Nepal</div><div class="cfwaf-zone-plan">NP</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NL"><input type="checkbox" class="cfwaf-country-check" value="NL"><div><div class="cfwaf-zone-name">Netherlands</div><div class="cfwaf-zone-plan">NL</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NZ"><input type="checkbox" class="cfwaf-country-check" value="NZ"><div><div class="cfwaf-zone-name">New Zealand</div><div class="cfwaf-zone-plan">NZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NI"><input type="checkbox" class="cfwaf-country-check" value="NI"><div><div class="cfwaf-zone-name">Nicaragua</div><div class="cfwaf-zone-plan">NI</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NE"><input type="checkbox" class="cfwaf-country-check" value="NE"><div><div class="cfwaf-zone-name">Niger</div><div class="cfwaf-zone-plan">NE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NG"><input type="checkbox" class="cfwaf-country-check" value="NG"><div><div class="cfwaf-zone-name">Nigeria</div><div class="cfwaf-zone-plan">NG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KP"><input type="checkbox" class="cfwaf-country-check" value="KP"><div><div class="cfwaf-zone-name">North Korea</div><div class="cfwaf-zone-plan">KP</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="MK"><input type="checkbox" class="cfwaf-country-check" value="MK"><div><div class="cfwaf-zone-name">North Macedonia</div><div class="cfwaf-zone-plan">MK</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="NO"><input type="checkbox" class="cfwaf-country-check" value="NO"><div><div class="cfwaf-zone-name">Norway</div><div class="cfwaf-zone-plan">NO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="OM"><input type="checkbox" class="cfwaf-country-check" value="OM"><div><div class="cfwaf-zone-name">Oman</div><div class="cfwaf-zone-plan">OM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PK"><input type="checkbox" class="cfwaf-country-check" value="PK"><div><div class="cfwaf-zone-name">Pakistan</div><div class="cfwaf-zone-plan">PK</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PW"><input type="checkbox" class="cfwaf-country-check" value="PW"><div><div class="cfwaf-zone-name">Palau</div><div class="cfwaf-zone-plan">PW</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PS"><input type="checkbox" class="cfwaf-country-check" value="PS"><div><div class="cfwaf-zone-name">Palestine</div><div class="cfwaf-zone-plan">PS</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PA"><input type="checkbox" class="cfwaf-country-check" value="PA"><div><div class="cfwaf-zone-name">Panama</div><div class="cfwaf-zone-plan">PA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PG"><input type="checkbox" class="cfwaf-country-check" value="PG"><div><div class="cfwaf-zone-name">Papua New Guinea</div><div class="cfwaf-zone-plan">PG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PY"><input type="checkbox" class="cfwaf-country-check" value="PY"><div><div class="cfwaf-zone-name">Paraguay</div><div class="cfwaf-zone-plan">PY</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PE"><input type="checkbox" class="cfwaf-country-check" value="PE"><div><div class="cfwaf-zone-name">Peru</div><div class="cfwaf-zone-plan">PE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PH"><input type="checkbox" class="cfwaf-country-check" value="PH"><div><div class="cfwaf-zone-name">Philippines</div><div class="cfwaf-zone-plan">PH</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PL"><input type="checkbox" class="cfwaf-country-check" value="PL"><div><div class="cfwaf-zone-name">Poland</div><div class="cfwaf-zone-plan">PL</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="PT"><input type="checkbox" class="cfwaf-country-check" value="PT"><div><div class="cfwaf-zone-name">Portugal</div><div class="cfwaf-zone-plan">PT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="QA"><input type="checkbox" class="cfwaf-country-check" value="QA"><div><div class="cfwaf-zone-name">Qatar</div><div class="cfwaf-zone-plan">QA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="RO"><input type="checkbox" class="cfwaf-country-check" value="RO"><div><div class="cfwaf-zone-name">Romania</div><div class="cfwaf-zone-plan">RO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="RU"><input type="checkbox" class="cfwaf-country-check" value="RU"><div><div class="cfwaf-zone-name">Russia</div><div class="cfwaf-zone-plan">RU</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="RW"><input type="checkbox" class="cfwaf-country-check" value="RW"><div><div class="cfwaf-zone-name">Rwanda</div><div class="cfwaf-zone-plan">RW</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KN"><input type="checkbox" class="cfwaf-country-check" value="KN"><div><div class="cfwaf-zone-name">Saint Kitts &amp; Nevis</div><div class="cfwaf-zone-plan">KN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LC"><input type="checkbox" class="cfwaf-country-check" value="LC"><div><div class="cfwaf-zone-name">Saint Lucia</div><div class="cfwaf-zone-plan">LC</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="VC"><input type="checkbox" class="cfwaf-country-check" value="VC"><div><div class="cfwaf-zone-name">Saint Vincent</div><div class="cfwaf-zone-plan">VC</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="WS"><input type="checkbox" class="cfwaf-country-check" value="WS"><div><div class="cfwaf-zone-name">Samoa</div><div class="cfwaf-zone-plan">WS</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SM"><input type="checkbox" class="cfwaf-country-check" value="SM"><div><div class="cfwaf-zone-name">San Marino</div><div class="cfwaf-zone-plan">SM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ST"><input type="checkbox" class="cfwaf-country-check" value="ST"><div><div class="cfwaf-zone-name">Sao Tome &amp; Principe</div><div class="cfwaf-zone-plan">ST</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SA"><input type="checkbox" class="cfwaf-country-check" value="SA"><div><div class="cfwaf-zone-name">Saudi Arabia</div><div class="cfwaf-zone-plan">SA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SN"><input type="checkbox" class="cfwaf-country-check" value="SN"><div><div class="cfwaf-zone-name">Senegal</div><div class="cfwaf-zone-plan">SN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="RS"><input type="checkbox" class="cfwaf-country-check" value="RS"><div><div class="cfwaf-zone-name">Serbia</div><div class="cfwaf-zone-plan">RS</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SC"><input type="checkbox" class="cfwaf-country-check" value="SC"><div><div class="cfwaf-zone-name">Seychelles</div><div class="cfwaf-zone-plan">SC</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SL"><input type="checkbox" class="cfwaf-country-check" value="SL"><div><div class="cfwaf-zone-name">Sierra Leone</div><div class="cfwaf-zone-plan">SL</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SG"><input type="checkbox" class="cfwaf-country-check" value="SG"><div><div class="cfwaf-zone-name">Singapore</div><div class="cfwaf-zone-plan">SG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SK"><input type="checkbox" class="cfwaf-country-check" value="SK"><div><div class="cfwaf-zone-name">Slovakia</div><div class="cfwaf-zone-plan">SK</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SI"><input type="checkbox" class="cfwaf-country-check" value="SI"><div><div class="cfwaf-zone-name">Slovenia</div><div class="cfwaf-zone-plan">SI</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SB"><input type="checkbox" class="cfwaf-country-check" value="SB"><div><div class="cfwaf-zone-name">Solomon Islands</div><div class="cfwaf-zone-plan">SB</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SO"><input type="checkbox" class="cfwaf-country-check" value="SO"><div><div class="cfwaf-zone-name">Somalia</div><div class="cfwaf-zone-plan">SO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ZA"><input type="checkbox" class="cfwaf-country-check" value="ZA"><div><div class="cfwaf-zone-name">South Africa</div><div class="cfwaf-zone-plan">ZA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="KR"><input type="checkbox" class="cfwaf-country-check" value="KR"><div><div class="cfwaf-zone-name">South Korea</div><div class="cfwaf-zone-plan">KR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SS"><input type="checkbox" class="cfwaf-country-check" value="SS"><div><div class="cfwaf-zone-name">South Sudan</div><div class="cfwaf-zone-plan">SS</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ES"><input type="checkbox" class="cfwaf-country-check" value="ES"><div><div class="cfwaf-zone-name">Spain</div><div class="cfwaf-zone-plan">ES</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="LK"><input type="checkbox" class="cfwaf-country-check" value="LK"><div><div class="cfwaf-zone-name">Sri Lanka</div><div class="cfwaf-zone-plan">LK</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SD"><input type="checkbox" class="cfwaf-country-check" value="SD"><div><div class="cfwaf-zone-name">Sudan</div><div class="cfwaf-zone-plan">SD</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SR"><input type="checkbox" class="cfwaf-country-check" value="SR"><div><div class="cfwaf-zone-name">Suriname</div><div class="cfwaf-zone-plan">SR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SE"><input type="checkbox" class="cfwaf-country-check" value="SE"><div><div class="cfwaf-zone-name">Sweden</div><div class="cfwaf-zone-plan">SE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="CH"><input type="checkbox" class="cfwaf-country-check" value="CH"><div><div class="cfwaf-zone-name">Switzerland</div><div class="cfwaf-zone-plan">CH</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="SY"><input type="checkbox" class="cfwaf-country-check" value="SY"><div><div class="cfwaf-zone-name">Syria</div><div class="cfwaf-zone-plan">SY</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TW"><input type="checkbox" class="cfwaf-country-check" value="TW"><div><div class="cfwaf-zone-name">Taiwan</div><div class="cfwaf-zone-plan">TW</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TJ"><input type="checkbox" class="cfwaf-country-check" value="TJ"><div><div class="cfwaf-zone-name">Tajikistan</div><div class="cfwaf-zone-plan">TJ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TZ"><input type="checkbox" class="cfwaf-country-check" value="TZ"><div><div class="cfwaf-zone-name">Tanzania</div><div class="cfwaf-zone-plan">TZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TH"><input type="checkbox" class="cfwaf-country-check" value="TH"><div><div class="cfwaf-zone-name">Thailand</div><div class="cfwaf-zone-plan">TH</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TL"><input type="checkbox" class="cfwaf-country-check" value="TL"><div><div class="cfwaf-zone-name">Timor-Leste</div><div class="cfwaf-zone-plan">TL</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TG"><input type="checkbox" class="cfwaf-country-check" value="TG"><div><div class="cfwaf-zone-name">Togo</div><div class="cfwaf-zone-plan">TG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TO"><input type="checkbox" class="cfwaf-country-check" value="TO"><div><div class="cfwaf-zone-name">Tonga</div><div class="cfwaf-zone-plan">TO</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TT"><input type="checkbox" class="cfwaf-country-check" value="TT"><div><div class="cfwaf-zone-name">Trinidad &amp; Tobago</div><div class="cfwaf-zone-plan">TT</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TN"><input type="checkbox" class="cfwaf-country-check" value="TN"><div><div class="cfwaf-zone-name">Tunisia</div><div class="cfwaf-zone-plan">TN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TR"><input type="checkbox" class="cfwaf-country-check" value="TR"><div><div class="cfwaf-zone-name">Turkey</div><div class="cfwaf-zone-plan">TR</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TM"><input type="checkbox" class="cfwaf-country-check" value="TM"><div><div class="cfwaf-zone-name">Turkmenistan</div><div class="cfwaf-zone-plan">TM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="TV"><input type="checkbox" class="cfwaf-country-check" value="TV"><div><div class="cfwaf-zone-name">Tuvalu</div><div class="cfwaf-zone-plan">TV</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="UG"><input type="checkbox" class="cfwaf-country-check" value="UG"><div><div class="cfwaf-zone-name">Uganda</div><div class="cfwaf-zone-plan">UG</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="UA"><input type="checkbox" class="cfwaf-country-check" value="UA"><div><div class="cfwaf-zone-name">Ukraine</div><div class="cfwaf-zone-plan">UA</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="AE"><input type="checkbox" class="cfwaf-country-check" value="AE"><div><div class="cfwaf-zone-name">United Arab Emirates</div><div class="cfwaf-zone-plan">AE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="GB"><input type="checkbox" class="cfwaf-country-check" value="GB"><div><div class="cfwaf-zone-name">United Kingdom</div><div class="cfwaf-zone-plan">GB</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="US"><input type="checkbox" class="cfwaf-country-check" value="US"><div><div class="cfwaf-zone-name">United States</div><div class="cfwaf-zone-plan">US</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="UY"><input type="checkbox" class="cfwaf-country-check" value="UY"><div><div class="cfwaf-zone-name">Uruguay</div><div class="cfwaf-zone-plan">UY</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="UZ"><input type="checkbox" class="cfwaf-country-check" value="UZ"><div><div class="cfwaf-zone-name">Uzbekistan</div><div class="cfwaf-zone-plan">UZ</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="VU"><input type="checkbox" class="cfwaf-country-check" value="VU"><div><div class="cfwaf-zone-name">Vanuatu</div><div class="cfwaf-zone-plan">VU</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="VE"><input type="checkbox" class="cfwaf-country-check" value="VE"><div><div class="cfwaf-zone-name">Venezuela</div><div class="cfwaf-zone-plan">VE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="VN"><input type="checkbox" class="cfwaf-country-check" value="VN"><div><div class="cfwaf-zone-name">Vietnam</div><div class="cfwaf-zone-plan">VN</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="YE"><input type="checkbox" class="cfwaf-country-check" value="YE"><div><div class="cfwaf-zone-name">Yemen</div><div class="cfwaf-zone-plan">YE</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ZM"><input type="checkbox" class="cfwaf-country-check" value="ZM"><div><div class="cfwaf-zone-name">Zambia</div><div class="cfwaf-zone-plan">ZM</div></div></div>
-					<div class="cfwaf-zone-item" data-cc="ZW"><input type="checkbox" class="cfwaf-country-check" value="ZW"><div><div class="cfwaf-zone-name">Zimbabwe</div><div class="cfwaf-zone-plan">ZW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AF"><input type="checkbox" class="cfwaf-country-check" value="AF"><?php echo WPWAF_Flags::img( 'AF' ); ?><div><div class="cfwaf-zone-name">Afghanistan</div><div class="cfwaf-zone-plan">AF</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AL"><input type="checkbox" class="cfwaf-country-check" value="AL"><?php echo WPWAF_Flags::img( 'AL' ); ?><div><div class="cfwaf-zone-name">Albania</div><div class="cfwaf-zone-plan">AL</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="DZ"><input type="checkbox" class="cfwaf-country-check" value="DZ"><?php echo WPWAF_Flags::img( 'DZ' ); ?><div><div class="cfwaf-zone-name">Algeria</div><div class="cfwaf-zone-plan">DZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AD"><input type="checkbox" class="cfwaf-country-check" value="AD"><?php echo WPWAF_Flags::img( 'AD' ); ?><div><div class="cfwaf-zone-name">Andorra</div><div class="cfwaf-zone-plan">AD</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AO"><input type="checkbox" class="cfwaf-country-check" value="AO"><?php echo WPWAF_Flags::img( 'AO' ); ?><div><div class="cfwaf-zone-name">Angola</div><div class="cfwaf-zone-plan">AO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AG"><input type="checkbox" class="cfwaf-country-check" value="AG"><?php echo WPWAF_Flags::img( 'AG' ); ?><div><div class="cfwaf-zone-name">Antigua &amp; Barbuda</div><div class="cfwaf-zone-plan">AG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AR"><input type="checkbox" class="cfwaf-country-check" value="AR"><?php echo WPWAF_Flags::img( 'AR' ); ?><div><div class="cfwaf-zone-name">Argentina</div><div class="cfwaf-zone-plan">AR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AM"><input type="checkbox" class="cfwaf-country-check" value="AM"><?php echo WPWAF_Flags::img( 'AM' ); ?><div><div class="cfwaf-zone-name">Armenia</div><div class="cfwaf-zone-plan">AM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AU"><input type="checkbox" class="cfwaf-country-check" value="AU"><?php echo WPWAF_Flags::img( 'AU' ); ?><div><div class="cfwaf-zone-name">Australia</div><div class="cfwaf-zone-plan">AU</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AT"><input type="checkbox" class="cfwaf-country-check" value="AT"><?php echo WPWAF_Flags::img( 'AT' ); ?><div><div class="cfwaf-zone-name">Austria</div><div class="cfwaf-zone-plan">AT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AZ"><input type="checkbox" class="cfwaf-country-check" value="AZ"><?php echo WPWAF_Flags::img( 'AZ' ); ?><div><div class="cfwaf-zone-name">Azerbaijan</div><div class="cfwaf-zone-plan">AZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BS"><input type="checkbox" class="cfwaf-country-check" value="BS"><?php echo WPWAF_Flags::img( 'BS' ); ?><div><div class="cfwaf-zone-name">Bahamas</div><div class="cfwaf-zone-plan">BS</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BH"><input type="checkbox" class="cfwaf-country-check" value="BH"><?php echo WPWAF_Flags::img( 'BH' ); ?><div><div class="cfwaf-zone-name">Bahrain</div><div class="cfwaf-zone-plan">BH</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BD"><input type="checkbox" class="cfwaf-country-check" value="BD"><?php echo WPWAF_Flags::img( 'BD' ); ?><div><div class="cfwaf-zone-name">Bangladesh</div><div class="cfwaf-zone-plan">BD</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BB"><input type="checkbox" class="cfwaf-country-check" value="BB"><?php echo WPWAF_Flags::img( 'BB' ); ?><div><div class="cfwaf-zone-name">Barbados</div><div class="cfwaf-zone-plan">BB</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BY"><input type="checkbox" class="cfwaf-country-check" value="BY"><?php echo WPWAF_Flags::img( 'BY' ); ?><div><div class="cfwaf-zone-name">Belarus</div><div class="cfwaf-zone-plan">BY</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BE"><input type="checkbox" class="cfwaf-country-check" value="BE"><?php echo WPWAF_Flags::img( 'BE' ); ?><div><div class="cfwaf-zone-name">Belgium</div><div class="cfwaf-zone-plan">BE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BZ"><input type="checkbox" class="cfwaf-country-check" value="BZ"><?php echo WPWAF_Flags::img( 'BZ' ); ?><div><div class="cfwaf-zone-name">Belize</div><div class="cfwaf-zone-plan">BZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BJ"><input type="checkbox" class="cfwaf-country-check" value="BJ"><?php echo WPWAF_Flags::img( 'BJ' ); ?><div><div class="cfwaf-zone-name">Benin</div><div class="cfwaf-zone-plan">BJ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BT"><input type="checkbox" class="cfwaf-country-check" value="BT"><?php echo WPWAF_Flags::img( 'BT' ); ?><div><div class="cfwaf-zone-name">Bhutan</div><div class="cfwaf-zone-plan">BT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BO"><input type="checkbox" class="cfwaf-country-check" value="BO"><?php echo WPWAF_Flags::img( 'BO' ); ?><div><div class="cfwaf-zone-name">Bolivia</div><div class="cfwaf-zone-plan">BO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BA"><input type="checkbox" class="cfwaf-country-check" value="BA"><?php echo WPWAF_Flags::img( 'BA' ); ?><div><div class="cfwaf-zone-name">Bosnia &amp; Herzegovina</div><div class="cfwaf-zone-plan">BA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BW"><input type="checkbox" class="cfwaf-country-check" value="BW"><?php echo WPWAF_Flags::img( 'BW' ); ?><div><div class="cfwaf-zone-name">Botswana</div><div class="cfwaf-zone-plan">BW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BR"><input type="checkbox" class="cfwaf-country-check" value="BR"><?php echo WPWAF_Flags::img( 'BR' ); ?><div><div class="cfwaf-zone-name">Brazil</div><div class="cfwaf-zone-plan">BR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BN"><input type="checkbox" class="cfwaf-country-check" value="BN"><?php echo WPWAF_Flags::img( 'BN' ); ?><div><div class="cfwaf-zone-name">Brunei</div><div class="cfwaf-zone-plan">BN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BG"><input type="checkbox" class="cfwaf-country-check" value="BG"><?php echo WPWAF_Flags::img( 'BG' ); ?><div><div class="cfwaf-zone-name">Bulgaria</div><div class="cfwaf-zone-plan">BG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BF"><input type="checkbox" class="cfwaf-country-check" value="BF"><?php echo WPWAF_Flags::img( 'BF' ); ?><div><div class="cfwaf-zone-name">Burkina Faso</div><div class="cfwaf-zone-plan">BF</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="BI"><input type="checkbox" class="cfwaf-country-check" value="BI"><?php echo WPWAF_Flags::img( 'BI' ); ?><div><div class="cfwaf-zone-name">Burundi</div><div class="cfwaf-zone-plan">BI</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CV"><input type="checkbox" class="cfwaf-country-check" value="CV"><?php echo WPWAF_Flags::img( 'CV' ); ?><div><div class="cfwaf-zone-name">Cabo Verde</div><div class="cfwaf-zone-plan">CV</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KH"><input type="checkbox" class="cfwaf-country-check" value="KH"><?php echo WPWAF_Flags::img( 'KH' ); ?><div><div class="cfwaf-zone-name">Cambodia</div><div class="cfwaf-zone-plan">KH</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CM"><input type="checkbox" class="cfwaf-country-check" value="CM"><?php echo WPWAF_Flags::img( 'CM' ); ?><div><div class="cfwaf-zone-name">Cameroon</div><div class="cfwaf-zone-plan">CM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CA"><input type="checkbox" class="cfwaf-country-check" value="CA"><?php echo WPWAF_Flags::img( 'CA' ); ?><div><div class="cfwaf-zone-name">Canada</div><div class="cfwaf-zone-plan">CA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CF"><input type="checkbox" class="cfwaf-country-check" value="CF"><?php echo WPWAF_Flags::img( 'CF' ); ?><div><div class="cfwaf-zone-name">Central African Rep.</div><div class="cfwaf-zone-plan">CF</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TD"><input type="checkbox" class="cfwaf-country-check" value="TD"><?php echo WPWAF_Flags::img( 'TD' ); ?><div><div class="cfwaf-zone-name">Chad</div><div class="cfwaf-zone-plan">TD</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CL"><input type="checkbox" class="cfwaf-country-check" value="CL"><?php echo WPWAF_Flags::img( 'CL' ); ?><div><div class="cfwaf-zone-name">Chile</div><div class="cfwaf-zone-plan">CL</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CN"><input type="checkbox" class="cfwaf-country-check" value="CN"><?php echo WPWAF_Flags::img( 'CN' ); ?><div><div class="cfwaf-zone-name">China</div><div class="cfwaf-zone-plan">CN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CO"><input type="checkbox" class="cfwaf-country-check" value="CO"><?php echo WPWAF_Flags::img( 'CO' ); ?><div><div class="cfwaf-zone-name">Colombia</div><div class="cfwaf-zone-plan">CO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KM"><input type="checkbox" class="cfwaf-country-check" value="KM"><?php echo WPWAF_Flags::img( 'KM' ); ?><div><div class="cfwaf-zone-name">Comoros</div><div class="cfwaf-zone-plan">KM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CG"><input type="checkbox" class="cfwaf-country-check" value="CG"><?php echo WPWAF_Flags::img( 'CG' ); ?><div><div class="cfwaf-zone-name">Congo</div><div class="cfwaf-zone-plan">CG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CR"><input type="checkbox" class="cfwaf-country-check" value="CR"><?php echo WPWAF_Flags::img( 'CR' ); ?><div><div class="cfwaf-zone-name">Costa Rica</div><div class="cfwaf-zone-plan">CR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="HR"><input type="checkbox" class="cfwaf-country-check" value="HR"><?php echo WPWAF_Flags::img( 'HR' ); ?><div><div class="cfwaf-zone-name">Croatia</div><div class="cfwaf-zone-plan">HR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CU"><input type="checkbox" class="cfwaf-country-check" value="CU"><?php echo WPWAF_Flags::img( 'CU' ); ?><div><div class="cfwaf-zone-name">Cuba</div><div class="cfwaf-zone-plan">CU</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CY"><input type="checkbox" class="cfwaf-country-check" value="CY"><?php echo WPWAF_Flags::img( 'CY' ); ?><div><div class="cfwaf-zone-name">Cyprus</div><div class="cfwaf-zone-plan">CY</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CZ"><input type="checkbox" class="cfwaf-country-check" value="CZ"><?php echo WPWAF_Flags::img( 'CZ' ); ?><div><div class="cfwaf-zone-name">Czech Republic</div><div class="cfwaf-zone-plan">CZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="DK"><input type="checkbox" class="cfwaf-country-check" value="DK"><?php echo WPWAF_Flags::img( 'DK' ); ?><div><div class="cfwaf-zone-name">Denmark</div><div class="cfwaf-zone-plan">DK</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="DJ"><input type="checkbox" class="cfwaf-country-check" value="DJ"><?php echo WPWAF_Flags::img( 'DJ' ); ?><div><div class="cfwaf-zone-name">Djibouti</div><div class="cfwaf-zone-plan">DJ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="DM"><input type="checkbox" class="cfwaf-country-check" value="DM"><?php echo WPWAF_Flags::img( 'DM' ); ?><div><div class="cfwaf-zone-name">Dominica</div><div class="cfwaf-zone-plan">DM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="DO"><input type="checkbox" class="cfwaf-country-check" value="DO"><?php echo WPWAF_Flags::img( 'DO' ); ?><div><div class="cfwaf-zone-name">Dominican Republic</div><div class="cfwaf-zone-plan">DO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="EC"><input type="checkbox" class="cfwaf-country-check" value="EC"><?php echo WPWAF_Flags::img( 'EC' ); ?><div><div class="cfwaf-zone-name">Ecuador</div><div class="cfwaf-zone-plan">EC</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="EG"><input type="checkbox" class="cfwaf-country-check" value="EG"><?php echo WPWAF_Flags::img( 'EG' ); ?><div><div class="cfwaf-zone-name">Egypt</div><div class="cfwaf-zone-plan">EG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SV"><input type="checkbox" class="cfwaf-country-check" value="SV"><?php echo WPWAF_Flags::img( 'SV' ); ?><div><div class="cfwaf-zone-name">El Salvador</div><div class="cfwaf-zone-plan">SV</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GQ"><input type="checkbox" class="cfwaf-country-check" value="GQ"><?php echo WPWAF_Flags::img( 'GQ' ); ?><div><div class="cfwaf-zone-name">Equatorial Guinea</div><div class="cfwaf-zone-plan">GQ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ER"><input type="checkbox" class="cfwaf-country-check" value="ER"><?php echo WPWAF_Flags::img( 'ER' ); ?><div><div class="cfwaf-zone-name">Eritrea</div><div class="cfwaf-zone-plan">ER</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="EE"><input type="checkbox" class="cfwaf-country-check" value="EE"><?php echo WPWAF_Flags::img( 'EE' ); ?><div><div class="cfwaf-zone-name">Estonia</div><div class="cfwaf-zone-plan">EE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SZ"><input type="checkbox" class="cfwaf-country-check" value="SZ"><?php echo WPWAF_Flags::img( 'SZ' ); ?><div><div class="cfwaf-zone-name">Eswatini</div><div class="cfwaf-zone-plan">SZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ET"><input type="checkbox" class="cfwaf-country-check" value="ET"><?php echo WPWAF_Flags::img( 'ET' ); ?><div><div class="cfwaf-zone-name">Ethiopia</div><div class="cfwaf-zone-plan">ET</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="FJ"><input type="checkbox" class="cfwaf-country-check" value="FJ"><?php echo WPWAF_Flags::img( 'FJ' ); ?><div><div class="cfwaf-zone-name">Fiji</div><div class="cfwaf-zone-plan">FJ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="FI"><input type="checkbox" class="cfwaf-country-check" value="FI"><?php echo WPWAF_Flags::img( 'FI' ); ?><div><div class="cfwaf-zone-name">Finland</div><div class="cfwaf-zone-plan">FI</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="FR"><input type="checkbox" class="cfwaf-country-check" value="FR"><?php echo WPWAF_Flags::img( 'FR' ); ?><div><div class="cfwaf-zone-name">France</div><div class="cfwaf-zone-plan">FR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GA"><input type="checkbox" class="cfwaf-country-check" value="GA"><?php echo WPWAF_Flags::img( 'GA' ); ?><div><div class="cfwaf-zone-name">Gabon</div><div class="cfwaf-zone-plan">GA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GM"><input type="checkbox" class="cfwaf-country-check" value="GM"><?php echo WPWAF_Flags::img( 'GM' ); ?><div><div class="cfwaf-zone-name">Gambia</div><div class="cfwaf-zone-plan">GM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GE"><input type="checkbox" class="cfwaf-country-check" value="GE"><?php echo WPWAF_Flags::img( 'GE' ); ?><div><div class="cfwaf-zone-name">Georgia</div><div class="cfwaf-zone-plan">GE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="DE"><input type="checkbox" class="cfwaf-country-check" value="DE"><?php echo WPWAF_Flags::img( 'DE' ); ?><div><div class="cfwaf-zone-name">Germany</div><div class="cfwaf-zone-plan">DE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GH"><input type="checkbox" class="cfwaf-country-check" value="GH"><?php echo WPWAF_Flags::img( 'GH' ); ?><div><div class="cfwaf-zone-name">Ghana</div><div class="cfwaf-zone-plan">GH</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GR"><input type="checkbox" class="cfwaf-country-check" value="GR"><?php echo WPWAF_Flags::img( 'GR' ); ?><div><div class="cfwaf-zone-name">Greece</div><div class="cfwaf-zone-plan">GR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GD"><input type="checkbox" class="cfwaf-country-check" value="GD"><?php echo WPWAF_Flags::img( 'GD' ); ?><div><div class="cfwaf-zone-name">Grenada</div><div class="cfwaf-zone-plan">GD</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GT"><input type="checkbox" class="cfwaf-country-check" value="GT"><?php echo WPWAF_Flags::img( 'GT' ); ?><div><div class="cfwaf-zone-name">Guatemala</div><div class="cfwaf-zone-plan">GT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GN"><input type="checkbox" class="cfwaf-country-check" value="GN"><?php echo WPWAF_Flags::img( 'GN' ); ?><div><div class="cfwaf-zone-name">Guinea</div><div class="cfwaf-zone-plan">GN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GW"><input type="checkbox" class="cfwaf-country-check" value="GW"><?php echo WPWAF_Flags::img( 'GW' ); ?><div><div class="cfwaf-zone-name">Guinea-Bissau</div><div class="cfwaf-zone-plan">GW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GY"><input type="checkbox" class="cfwaf-country-check" value="GY"><?php echo WPWAF_Flags::img( 'GY' ); ?><div><div class="cfwaf-zone-name">Guyana</div><div class="cfwaf-zone-plan">GY</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="HT"><input type="checkbox" class="cfwaf-country-check" value="HT"><?php echo WPWAF_Flags::img( 'HT' ); ?><div><div class="cfwaf-zone-name">Haiti</div><div class="cfwaf-zone-plan">HT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="HN"><input type="checkbox" class="cfwaf-country-check" value="HN"><?php echo WPWAF_Flags::img( 'HN' ); ?><div><div class="cfwaf-zone-name">Honduras</div><div class="cfwaf-zone-plan">HN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="HK"><input type="checkbox" class="cfwaf-country-check" value="HK"><?php echo WPWAF_Flags::img( 'HK' ); ?><div><div class="cfwaf-zone-name">Hong Kong</div><div class="cfwaf-zone-plan">HK</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="HU"><input type="checkbox" class="cfwaf-country-check" value="HU"><?php echo WPWAF_Flags::img( 'HU' ); ?><div><div class="cfwaf-zone-name">Hungary</div><div class="cfwaf-zone-plan">HU</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="IS"><input type="checkbox" class="cfwaf-country-check" value="IS"><?php echo WPWAF_Flags::img( 'IS' ); ?><div><div class="cfwaf-zone-name">Iceland</div><div class="cfwaf-zone-plan">IS</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="IN"><input type="checkbox" class="cfwaf-country-check" value="IN"><?php echo WPWAF_Flags::img( 'IN' ); ?><div><div class="cfwaf-zone-name">India</div><div class="cfwaf-zone-plan">IN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ID"><input type="checkbox" class="cfwaf-country-check" value="ID"><?php echo WPWAF_Flags::img( 'ID' ); ?><div><div class="cfwaf-zone-name">Indonesia</div><div class="cfwaf-zone-plan">ID</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="IR"><input type="checkbox" class="cfwaf-country-check" value="IR"><?php echo WPWAF_Flags::img( 'IR' ); ?><div><div class="cfwaf-zone-name">Iran</div><div class="cfwaf-zone-plan">IR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="IQ"><input type="checkbox" class="cfwaf-country-check" value="IQ"><?php echo WPWAF_Flags::img( 'IQ' ); ?><div><div class="cfwaf-zone-name">Iraq</div><div class="cfwaf-zone-plan">IQ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="IE"><input type="checkbox" class="cfwaf-country-check" value="IE"><?php echo WPWAF_Flags::img( 'IE' ); ?><div><div class="cfwaf-zone-name">Ireland</div><div class="cfwaf-zone-plan">IE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="IL"><input type="checkbox" class="cfwaf-country-check" value="IL"><?php echo WPWAF_Flags::img( 'IL' ); ?><div><div class="cfwaf-zone-name">Israel</div><div class="cfwaf-zone-plan">IL</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="IT"><input type="checkbox" class="cfwaf-country-check" value="IT"><?php echo WPWAF_Flags::img( 'IT' ); ?><div><div class="cfwaf-zone-name">Italy</div><div class="cfwaf-zone-plan">IT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="JM"><input type="checkbox" class="cfwaf-country-check" value="JM"><?php echo WPWAF_Flags::img( 'JM' ); ?><div><div class="cfwaf-zone-name">Jamaica</div><div class="cfwaf-zone-plan">JM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="JP"><input type="checkbox" class="cfwaf-country-check" value="JP"><?php echo WPWAF_Flags::img( 'JP' ); ?><div><div class="cfwaf-zone-name">Japan</div><div class="cfwaf-zone-plan">JP</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="JO"><input type="checkbox" class="cfwaf-country-check" value="JO"><?php echo WPWAF_Flags::img( 'JO' ); ?><div><div class="cfwaf-zone-name">Jordan</div><div class="cfwaf-zone-plan">JO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KZ"><input type="checkbox" class="cfwaf-country-check" value="KZ"><?php echo WPWAF_Flags::img( 'KZ' ); ?><div><div class="cfwaf-zone-name">Kazakhstan</div><div class="cfwaf-zone-plan">KZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KE"><input type="checkbox" class="cfwaf-country-check" value="KE"><?php echo WPWAF_Flags::img( 'KE' ); ?><div><div class="cfwaf-zone-name">Kenya</div><div class="cfwaf-zone-plan">KE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KI"><input type="checkbox" class="cfwaf-country-check" value="KI"><?php echo WPWAF_Flags::img( 'KI' ); ?><div><div class="cfwaf-zone-name">Kiribati</div><div class="cfwaf-zone-plan">KI</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KW"><input type="checkbox" class="cfwaf-country-check" value="KW"><?php echo WPWAF_Flags::img( 'KW' ); ?><div><div class="cfwaf-zone-name">Kuwait</div><div class="cfwaf-zone-plan">KW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KG"><input type="checkbox" class="cfwaf-country-check" value="KG"><?php echo WPWAF_Flags::img( 'KG' ); ?><div><div class="cfwaf-zone-name">Kyrgyzstan</div><div class="cfwaf-zone-plan">KG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LA"><input type="checkbox" class="cfwaf-country-check" value="LA"><?php echo WPWAF_Flags::img( 'LA' ); ?><div><div class="cfwaf-zone-name">Laos</div><div class="cfwaf-zone-plan">LA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LV"><input type="checkbox" class="cfwaf-country-check" value="LV"><?php echo WPWAF_Flags::img( 'LV' ); ?><div><div class="cfwaf-zone-name">Latvia</div><div class="cfwaf-zone-plan">LV</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LB"><input type="checkbox" class="cfwaf-country-check" value="LB"><?php echo WPWAF_Flags::img( 'LB' ); ?><div><div class="cfwaf-zone-name">Lebanon</div><div class="cfwaf-zone-plan">LB</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LS"><input type="checkbox" class="cfwaf-country-check" value="LS"><?php echo WPWAF_Flags::img( 'LS' ); ?><div><div class="cfwaf-zone-name">Lesotho</div><div class="cfwaf-zone-plan">LS</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LR"><input type="checkbox" class="cfwaf-country-check" value="LR"><?php echo WPWAF_Flags::img( 'LR' ); ?><div><div class="cfwaf-zone-name">Liberia</div><div class="cfwaf-zone-plan">LR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LY"><input type="checkbox" class="cfwaf-country-check" value="LY"><?php echo WPWAF_Flags::img( 'LY' ); ?><div><div class="cfwaf-zone-name">Libya</div><div class="cfwaf-zone-plan">LY</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LI"><input type="checkbox" class="cfwaf-country-check" value="LI"><?php echo WPWAF_Flags::img( 'LI' ); ?><div><div class="cfwaf-zone-name">Liechtenstein</div><div class="cfwaf-zone-plan">LI</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LT"><input type="checkbox" class="cfwaf-country-check" value="LT"><?php echo WPWAF_Flags::img( 'LT' ); ?><div><div class="cfwaf-zone-name">Lithuania</div><div class="cfwaf-zone-plan">LT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LU"><input type="checkbox" class="cfwaf-country-check" value="LU"><?php echo WPWAF_Flags::img( 'LU' ); ?><div><div class="cfwaf-zone-name">Luxembourg</div><div class="cfwaf-zone-plan">LU</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MG"><input type="checkbox" class="cfwaf-country-check" value="MG"><?php echo WPWAF_Flags::img( 'MG' ); ?><div><div class="cfwaf-zone-name">Madagascar</div><div class="cfwaf-zone-plan">MG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MW"><input type="checkbox" class="cfwaf-country-check" value="MW"><?php echo WPWAF_Flags::img( 'MW' ); ?><div><div class="cfwaf-zone-name">Malawi</div><div class="cfwaf-zone-plan">MW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MY"><input type="checkbox" class="cfwaf-country-check" value="MY"><?php echo WPWAF_Flags::img( 'MY' ); ?><div><div class="cfwaf-zone-name">Malaysia</div><div class="cfwaf-zone-plan">MY</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MV"><input type="checkbox" class="cfwaf-country-check" value="MV"><?php echo WPWAF_Flags::img( 'MV' ); ?><div><div class="cfwaf-zone-name">Maldives</div><div class="cfwaf-zone-plan">MV</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ML"><input type="checkbox" class="cfwaf-country-check" value="ML"><?php echo WPWAF_Flags::img( 'ML' ); ?><div><div class="cfwaf-zone-name">Mali</div><div class="cfwaf-zone-plan">ML</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MT"><input type="checkbox" class="cfwaf-country-check" value="MT"><?php echo WPWAF_Flags::img( 'MT' ); ?><div><div class="cfwaf-zone-name">Malta</div><div class="cfwaf-zone-plan">MT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MH"><input type="checkbox" class="cfwaf-country-check" value="MH"><?php echo WPWAF_Flags::img( 'MH' ); ?><div><div class="cfwaf-zone-name">Marshall Islands</div><div class="cfwaf-zone-plan">MH</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MR"><input type="checkbox" class="cfwaf-country-check" value="MR"><?php echo WPWAF_Flags::img( 'MR' ); ?><div><div class="cfwaf-zone-name">Mauritania</div><div class="cfwaf-zone-plan">MR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MU"><input type="checkbox" class="cfwaf-country-check" value="MU"><?php echo WPWAF_Flags::img( 'MU' ); ?><div><div class="cfwaf-zone-name">Mauritius</div><div class="cfwaf-zone-plan">MU</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MX"><input type="checkbox" class="cfwaf-country-check" value="MX"><?php echo WPWAF_Flags::img( 'MX' ); ?><div><div class="cfwaf-zone-name">Mexico</div><div class="cfwaf-zone-plan">MX</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="FM"><input type="checkbox" class="cfwaf-country-check" value="FM"><?php echo WPWAF_Flags::img( 'FM' ); ?><div><div class="cfwaf-zone-name">Micronesia</div><div class="cfwaf-zone-plan">FM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MD"><input type="checkbox" class="cfwaf-country-check" value="MD"><?php echo WPWAF_Flags::img( 'MD' ); ?><div><div class="cfwaf-zone-name">Moldova</div><div class="cfwaf-zone-plan">MD</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MC"><input type="checkbox" class="cfwaf-country-check" value="MC"><?php echo WPWAF_Flags::img( 'MC' ); ?><div><div class="cfwaf-zone-name">Monaco</div><div class="cfwaf-zone-plan">MC</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MN"><input type="checkbox" class="cfwaf-country-check" value="MN"><?php echo WPWAF_Flags::img( 'MN' ); ?><div><div class="cfwaf-zone-name">Mongolia</div><div class="cfwaf-zone-plan">MN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ME"><input type="checkbox" class="cfwaf-country-check" value="ME"><?php echo WPWAF_Flags::img( 'ME' ); ?><div><div class="cfwaf-zone-name">Montenegro</div><div class="cfwaf-zone-plan">ME</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MA"><input type="checkbox" class="cfwaf-country-check" value="MA"><?php echo WPWAF_Flags::img( 'MA' ); ?><div><div class="cfwaf-zone-name">Morocco</div><div class="cfwaf-zone-plan">MA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MZ"><input type="checkbox" class="cfwaf-country-check" value="MZ"><?php echo WPWAF_Flags::img( 'MZ' ); ?><div><div class="cfwaf-zone-name">Mozambique</div><div class="cfwaf-zone-plan">MZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MM"><input type="checkbox" class="cfwaf-country-check" value="MM"><?php echo WPWAF_Flags::img( 'MM' ); ?><div><div class="cfwaf-zone-name">Myanmar</div><div class="cfwaf-zone-plan">MM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NA"><input type="checkbox" class="cfwaf-country-check" value="NA"><?php echo WPWAF_Flags::img( 'NA' ); ?><div><div class="cfwaf-zone-name">Namibia</div><div class="cfwaf-zone-plan">NA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NR"><input type="checkbox" class="cfwaf-country-check" value="NR"><?php echo WPWAF_Flags::img( 'NR' ); ?><div><div class="cfwaf-zone-name">Nauru</div><div class="cfwaf-zone-plan">NR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NP"><input type="checkbox" class="cfwaf-country-check" value="NP"><?php echo WPWAF_Flags::img( 'NP' ); ?><div><div class="cfwaf-zone-name">Nepal</div><div class="cfwaf-zone-plan">NP</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NL"><input type="checkbox" class="cfwaf-country-check" value="NL"><?php echo WPWAF_Flags::img( 'NL' ); ?><div><div class="cfwaf-zone-name">Netherlands</div><div class="cfwaf-zone-plan">NL</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NZ"><input type="checkbox" class="cfwaf-country-check" value="NZ"><?php echo WPWAF_Flags::img( 'NZ' ); ?><div><div class="cfwaf-zone-name">New Zealand</div><div class="cfwaf-zone-plan">NZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NI"><input type="checkbox" class="cfwaf-country-check" value="NI"><?php echo WPWAF_Flags::img( 'NI' ); ?><div><div class="cfwaf-zone-name">Nicaragua</div><div class="cfwaf-zone-plan">NI</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NE"><input type="checkbox" class="cfwaf-country-check" value="NE"><?php echo WPWAF_Flags::img( 'NE' ); ?><div><div class="cfwaf-zone-name">Niger</div><div class="cfwaf-zone-plan">NE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NG"><input type="checkbox" class="cfwaf-country-check" value="NG"><?php echo WPWAF_Flags::img( 'NG' ); ?><div><div class="cfwaf-zone-name">Nigeria</div><div class="cfwaf-zone-plan">NG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KP"><input type="checkbox" class="cfwaf-country-check" value="KP"><?php echo WPWAF_Flags::img( 'KP' ); ?><div><div class="cfwaf-zone-name">North Korea</div><div class="cfwaf-zone-plan">KP</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="MK"><input type="checkbox" class="cfwaf-country-check" value="MK"><?php echo WPWAF_Flags::img( 'MK' ); ?><div><div class="cfwaf-zone-name">North Macedonia</div><div class="cfwaf-zone-plan">MK</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="NO"><input type="checkbox" class="cfwaf-country-check" value="NO"><?php echo WPWAF_Flags::img( 'NO' ); ?><div><div class="cfwaf-zone-name">Norway</div><div class="cfwaf-zone-plan">NO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="OM"><input type="checkbox" class="cfwaf-country-check" value="OM"><?php echo WPWAF_Flags::img( 'OM' ); ?><div><div class="cfwaf-zone-name">Oman</div><div class="cfwaf-zone-plan">OM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PK"><input type="checkbox" class="cfwaf-country-check" value="PK"><?php echo WPWAF_Flags::img( 'PK' ); ?><div><div class="cfwaf-zone-name">Pakistan</div><div class="cfwaf-zone-plan">PK</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PW"><input type="checkbox" class="cfwaf-country-check" value="PW"><?php echo WPWAF_Flags::img( 'PW' ); ?><div><div class="cfwaf-zone-name">Palau</div><div class="cfwaf-zone-plan">PW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PS"><input type="checkbox" class="cfwaf-country-check" value="PS"><?php echo WPWAF_Flags::img( 'PS' ); ?><div><div class="cfwaf-zone-name">Palestine</div><div class="cfwaf-zone-plan">PS</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PA"><input type="checkbox" class="cfwaf-country-check" value="PA"><?php echo WPWAF_Flags::img( 'PA' ); ?><div><div class="cfwaf-zone-name">Panama</div><div class="cfwaf-zone-plan">PA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PG"><input type="checkbox" class="cfwaf-country-check" value="PG"><?php echo WPWAF_Flags::img( 'PG' ); ?><div><div class="cfwaf-zone-name">Papua New Guinea</div><div class="cfwaf-zone-plan">PG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PY"><input type="checkbox" class="cfwaf-country-check" value="PY"><?php echo WPWAF_Flags::img( 'PY' ); ?><div><div class="cfwaf-zone-name">Paraguay</div><div class="cfwaf-zone-plan">PY</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PE"><input type="checkbox" class="cfwaf-country-check" value="PE"><?php echo WPWAF_Flags::img( 'PE' ); ?><div><div class="cfwaf-zone-name">Peru</div><div class="cfwaf-zone-plan">PE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PH"><input type="checkbox" class="cfwaf-country-check" value="PH"><?php echo WPWAF_Flags::img( 'PH' ); ?><div><div class="cfwaf-zone-name">Philippines</div><div class="cfwaf-zone-plan">PH</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PL"><input type="checkbox" class="cfwaf-country-check" value="PL"><?php echo WPWAF_Flags::img( 'PL' ); ?><div><div class="cfwaf-zone-name">Poland</div><div class="cfwaf-zone-plan">PL</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="PT"><input type="checkbox" class="cfwaf-country-check" value="PT"><?php echo WPWAF_Flags::img( 'PT' ); ?><div><div class="cfwaf-zone-name">Portugal</div><div class="cfwaf-zone-plan">PT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="QA"><input type="checkbox" class="cfwaf-country-check" value="QA"><?php echo WPWAF_Flags::img( 'QA' ); ?><div><div class="cfwaf-zone-name">Qatar</div><div class="cfwaf-zone-plan">QA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="RO"><input type="checkbox" class="cfwaf-country-check" value="RO"><?php echo WPWAF_Flags::img( 'RO' ); ?><div><div class="cfwaf-zone-name">Romania</div><div class="cfwaf-zone-plan">RO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="RU"><input type="checkbox" class="cfwaf-country-check" value="RU"><?php echo WPWAF_Flags::img( 'RU' ); ?><div><div class="cfwaf-zone-name">Russia</div><div class="cfwaf-zone-plan">RU</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="RW"><input type="checkbox" class="cfwaf-country-check" value="RW"><?php echo WPWAF_Flags::img( 'RW' ); ?><div><div class="cfwaf-zone-name">Rwanda</div><div class="cfwaf-zone-plan">RW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KN"><input type="checkbox" class="cfwaf-country-check" value="KN"><?php echo WPWAF_Flags::img( 'KN' ); ?><div><div class="cfwaf-zone-name">Saint Kitts &amp; Nevis</div><div class="cfwaf-zone-plan">KN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LC"><input type="checkbox" class="cfwaf-country-check" value="LC"><?php echo WPWAF_Flags::img( 'LC' ); ?><div><div class="cfwaf-zone-name">Saint Lucia</div><div class="cfwaf-zone-plan">LC</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="VC"><input type="checkbox" class="cfwaf-country-check" value="VC"><?php echo WPWAF_Flags::img( 'VC' ); ?><div><div class="cfwaf-zone-name">Saint Vincent</div><div class="cfwaf-zone-plan">VC</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="WS"><input type="checkbox" class="cfwaf-country-check" value="WS"><?php echo WPWAF_Flags::img( 'WS' ); ?><div><div class="cfwaf-zone-name">Samoa</div><div class="cfwaf-zone-plan">WS</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SM"><input type="checkbox" class="cfwaf-country-check" value="SM"><?php echo WPWAF_Flags::img( 'SM' ); ?><div><div class="cfwaf-zone-name">San Marino</div><div class="cfwaf-zone-plan">SM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ST"><input type="checkbox" class="cfwaf-country-check" value="ST"><?php echo WPWAF_Flags::img( 'ST' ); ?><div><div class="cfwaf-zone-name">Sao Tome &amp; Principe</div><div class="cfwaf-zone-plan">ST</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SA"><input type="checkbox" class="cfwaf-country-check" value="SA"><?php echo WPWAF_Flags::img( 'SA' ); ?><div><div class="cfwaf-zone-name">Saudi Arabia</div><div class="cfwaf-zone-plan">SA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SN"><input type="checkbox" class="cfwaf-country-check" value="SN"><?php echo WPWAF_Flags::img( 'SN' ); ?><div><div class="cfwaf-zone-name">Senegal</div><div class="cfwaf-zone-plan">SN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="RS"><input type="checkbox" class="cfwaf-country-check" value="RS"><?php echo WPWAF_Flags::img( 'RS' ); ?><div><div class="cfwaf-zone-name">Serbia</div><div class="cfwaf-zone-plan">RS</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SC"><input type="checkbox" class="cfwaf-country-check" value="SC"><?php echo WPWAF_Flags::img( 'SC' ); ?><div><div class="cfwaf-zone-name">Seychelles</div><div class="cfwaf-zone-plan">SC</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SL"><input type="checkbox" class="cfwaf-country-check" value="SL"><?php echo WPWAF_Flags::img( 'SL' ); ?><div><div class="cfwaf-zone-name">Sierra Leone</div><div class="cfwaf-zone-plan">SL</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SG"><input type="checkbox" class="cfwaf-country-check" value="SG"><?php echo WPWAF_Flags::img( 'SG' ); ?><div><div class="cfwaf-zone-name">Singapore</div><div class="cfwaf-zone-plan">SG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SK"><input type="checkbox" class="cfwaf-country-check" value="SK"><?php echo WPWAF_Flags::img( 'SK' ); ?><div><div class="cfwaf-zone-name">Slovakia</div><div class="cfwaf-zone-plan">SK</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SI"><input type="checkbox" class="cfwaf-country-check" value="SI"><?php echo WPWAF_Flags::img( 'SI' ); ?><div><div class="cfwaf-zone-name">Slovenia</div><div class="cfwaf-zone-plan">SI</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SB"><input type="checkbox" class="cfwaf-country-check" value="SB"><?php echo WPWAF_Flags::img( 'SB' ); ?><div><div class="cfwaf-zone-name">Solomon Islands</div><div class="cfwaf-zone-plan">SB</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SO"><input type="checkbox" class="cfwaf-country-check" value="SO"><?php echo WPWAF_Flags::img( 'SO' ); ?><div><div class="cfwaf-zone-name">Somalia</div><div class="cfwaf-zone-plan">SO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ZA"><input type="checkbox" class="cfwaf-country-check" value="ZA"><?php echo WPWAF_Flags::img( 'ZA' ); ?><div><div class="cfwaf-zone-name">South Africa</div><div class="cfwaf-zone-plan">ZA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="KR"><input type="checkbox" class="cfwaf-country-check" value="KR"><?php echo WPWAF_Flags::img( 'KR' ); ?><div><div class="cfwaf-zone-name">South Korea</div><div class="cfwaf-zone-plan">KR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SS"><input type="checkbox" class="cfwaf-country-check" value="SS"><?php echo WPWAF_Flags::img( 'SS' ); ?><div><div class="cfwaf-zone-name">South Sudan</div><div class="cfwaf-zone-plan">SS</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ES"><input type="checkbox" class="cfwaf-country-check" value="ES"><?php echo WPWAF_Flags::img( 'ES' ); ?><div><div class="cfwaf-zone-name">Spain</div><div class="cfwaf-zone-plan">ES</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="LK"><input type="checkbox" class="cfwaf-country-check" value="LK"><?php echo WPWAF_Flags::img( 'LK' ); ?><div><div class="cfwaf-zone-name">Sri Lanka</div><div class="cfwaf-zone-plan">LK</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SD"><input type="checkbox" class="cfwaf-country-check" value="SD"><?php echo WPWAF_Flags::img( 'SD' ); ?><div><div class="cfwaf-zone-name">Sudan</div><div class="cfwaf-zone-plan">SD</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SR"><input type="checkbox" class="cfwaf-country-check" value="SR"><?php echo WPWAF_Flags::img( 'SR' ); ?><div><div class="cfwaf-zone-name">Suriname</div><div class="cfwaf-zone-plan">SR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SE"><input type="checkbox" class="cfwaf-country-check" value="SE"><?php echo WPWAF_Flags::img( 'SE' ); ?><div><div class="cfwaf-zone-name">Sweden</div><div class="cfwaf-zone-plan">SE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="CH"><input type="checkbox" class="cfwaf-country-check" value="CH"><?php echo WPWAF_Flags::img( 'CH' ); ?><div><div class="cfwaf-zone-name">Switzerland</div><div class="cfwaf-zone-plan">CH</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="SY"><input type="checkbox" class="cfwaf-country-check" value="SY"><?php echo WPWAF_Flags::img( 'SY' ); ?><div><div class="cfwaf-zone-name">Syria</div><div class="cfwaf-zone-plan">SY</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TW"><input type="checkbox" class="cfwaf-country-check" value="TW"><?php echo WPWAF_Flags::img( 'TW' ); ?><div><div class="cfwaf-zone-name">Taiwan</div><div class="cfwaf-zone-plan">TW</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TJ"><input type="checkbox" class="cfwaf-country-check" value="TJ"><?php echo WPWAF_Flags::img( 'TJ' ); ?><div><div class="cfwaf-zone-name">Tajikistan</div><div class="cfwaf-zone-plan">TJ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TZ"><input type="checkbox" class="cfwaf-country-check" value="TZ"><?php echo WPWAF_Flags::img( 'TZ' ); ?><div><div class="cfwaf-zone-name">Tanzania</div><div class="cfwaf-zone-plan">TZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TH"><input type="checkbox" class="cfwaf-country-check" value="TH"><?php echo WPWAF_Flags::img( 'TH' ); ?><div><div class="cfwaf-zone-name">Thailand</div><div class="cfwaf-zone-plan">TH</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TL"><input type="checkbox" class="cfwaf-country-check" value="TL"><?php echo WPWAF_Flags::img( 'TL' ); ?><div><div class="cfwaf-zone-name">Timor-Leste</div><div class="cfwaf-zone-plan">TL</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TG"><input type="checkbox" class="cfwaf-country-check" value="TG"><?php echo WPWAF_Flags::img( 'TG' ); ?><div><div class="cfwaf-zone-name">Togo</div><div class="cfwaf-zone-plan">TG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TO"><input type="checkbox" class="cfwaf-country-check" value="TO"><?php echo WPWAF_Flags::img( 'TO' ); ?><div><div class="cfwaf-zone-name">Tonga</div><div class="cfwaf-zone-plan">TO</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TT"><input type="checkbox" class="cfwaf-country-check" value="TT"><?php echo WPWAF_Flags::img( 'TT' ); ?><div><div class="cfwaf-zone-name">Trinidad &amp; Tobago</div><div class="cfwaf-zone-plan">TT</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TN"><input type="checkbox" class="cfwaf-country-check" value="TN"><?php echo WPWAF_Flags::img( 'TN' ); ?><div><div class="cfwaf-zone-name">Tunisia</div><div class="cfwaf-zone-plan">TN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TR"><input type="checkbox" class="cfwaf-country-check" value="TR"><?php echo WPWAF_Flags::img( 'TR' ); ?><div><div class="cfwaf-zone-name">Turkey</div><div class="cfwaf-zone-plan">TR</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TM"><input type="checkbox" class="cfwaf-country-check" value="TM"><?php echo WPWAF_Flags::img( 'TM' ); ?><div><div class="cfwaf-zone-name">Turkmenistan</div><div class="cfwaf-zone-plan">TM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="TV"><input type="checkbox" class="cfwaf-country-check" value="TV"><?php echo WPWAF_Flags::img( 'TV' ); ?><div><div class="cfwaf-zone-name">Tuvalu</div><div class="cfwaf-zone-plan">TV</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="UG"><input type="checkbox" class="cfwaf-country-check" value="UG"><?php echo WPWAF_Flags::img( 'UG' ); ?><div><div class="cfwaf-zone-name">Uganda</div><div class="cfwaf-zone-plan">UG</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="UA"><input type="checkbox" class="cfwaf-country-check" value="UA"><?php echo WPWAF_Flags::img( 'UA' ); ?><div><div class="cfwaf-zone-name">Ukraine</div><div class="cfwaf-zone-plan">UA</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="AE"><input type="checkbox" class="cfwaf-country-check" value="AE"><?php echo WPWAF_Flags::img( 'AE' ); ?><div><div class="cfwaf-zone-name">United Arab Emirates</div><div class="cfwaf-zone-plan">AE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="GB"><input type="checkbox" class="cfwaf-country-check" value="GB"><?php echo WPWAF_Flags::img( 'GB' ); ?><div><div class="cfwaf-zone-name">United Kingdom</div><div class="cfwaf-zone-plan">GB</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="US"><input type="checkbox" class="cfwaf-country-check" value="US"><?php echo WPWAF_Flags::img( 'US' ); ?><div><div class="cfwaf-zone-name">United States</div><div class="cfwaf-zone-plan">US</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="UY"><input type="checkbox" class="cfwaf-country-check" value="UY"><?php echo WPWAF_Flags::img( 'UY' ); ?><div><div class="cfwaf-zone-name">Uruguay</div><div class="cfwaf-zone-plan">UY</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="UZ"><input type="checkbox" class="cfwaf-country-check" value="UZ"><?php echo WPWAF_Flags::img( 'UZ' ); ?><div><div class="cfwaf-zone-name">Uzbekistan</div><div class="cfwaf-zone-plan">UZ</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="VU"><input type="checkbox" class="cfwaf-country-check" value="VU"><?php echo WPWAF_Flags::img( 'VU' ); ?><div><div class="cfwaf-zone-name">Vanuatu</div><div class="cfwaf-zone-plan">VU</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="VE"><input type="checkbox" class="cfwaf-country-check" value="VE"><?php echo WPWAF_Flags::img( 'VE' ); ?><div><div class="cfwaf-zone-name">Venezuela</div><div class="cfwaf-zone-plan">VE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="VN"><input type="checkbox" class="cfwaf-country-check" value="VN"><?php echo WPWAF_Flags::img( 'VN' ); ?><div><div class="cfwaf-zone-name">Vietnam</div><div class="cfwaf-zone-plan">VN</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="YE"><input type="checkbox" class="cfwaf-country-check" value="YE"><?php echo WPWAF_Flags::img( 'YE' ); ?><div><div class="cfwaf-zone-name">Yemen</div><div class="cfwaf-zone-plan">YE</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ZM"><input type="checkbox" class="cfwaf-country-check" value="ZM"><?php echo WPWAF_Flags::img( 'ZM' ); ?><div><div class="cfwaf-zone-name">Zambia</div><div class="cfwaf-zone-plan">ZM</div></div></div>
+					<div class="cfwaf-zone-item" data-cc="ZW"><input type="checkbox" class="cfwaf-country-check" value="ZW"><?php echo WPWAF_Flags::img( 'ZW' ); ?><div><div class="cfwaf-zone-name">Zimbabwe</div><div class="cfwaf-zone-plan">ZW</div></div></div>
 					<div id="cfwaf-country-empty" style="display:none;grid-column:1/-1;text-align:center;padding:24px;color:#6b7280;font-size:13px;">No countries match your search.</div>
 				</div>
 
@@ -835,7 +859,7 @@
 						<h4>VPN Providers</h4>
 						<label class="cfwaf-check-label cfwaf-select-all-label">
 							<input type="checkbox" data-setting="rule5.challenge_all_vpn" id="cfwaf-vpn-all">
-							<strong>Challenge All VPN Connections</strong> &mdash; Apply managed challenge to all known VPN providers below
+							<strong>Challenge All VPN Connections</strong>: apply a managed challenge to all known VPN providers below
 						</label>
 						<div class="cfwaf-checkbox-grid" style="margin-top:10px">
 							<label class="cfwaf-check-label"><input type="checkbox" data-setting="rule5.challenge_nordvpn" class="cfwaf-vpn-check"> NordVPN</label>
@@ -887,7 +911,7 @@
 			<div class="cfwaf-deploy-panel" id="cfwaf-deploy-panel" style="display:none">
 				<div class="cfwaf-deploy-panel-header">
 					<h3><span class="dashicons dashicons-upload"></span> Select Sites to Deploy To</h3>
-					<button class="cfwaf-btn cfwaf-btn-ghost-dark" id="cfwaf-deploy-close">&#10005; Cancel</button>
+					<button class="cfwaf-btn cfwaf-btn-ghost-dark" id="cfwaf-deploy-close"><?php echo WPWAF_Icons::svg( 'x' ); ?> Cancel</button>
 				</div>
 
 				<div id="cfwaf-deploy-loading" class="cfwaf-loading-state">
@@ -909,7 +933,7 @@
 						<label class="cfwaf-check-label cfwaf-select-all-label">
 							<input type="checkbox" id="cfwaf-select-all-zones"> <strong>Select All Zones</strong>
 						</label>
-						<input type="search" id="cfwaf-zone-search" class="cfwaf-input cfwaf-search-input" placeholder="&#128269; Filter zones&hellip;">
+						<input type="search" id="cfwaf-zone-search" class="cfwaf-input cfwaf-search-input" placeholder="Filter zones&hellip;">
 					</div>
 					<div class="cfwaf-zones-grid" id="cfwaf-zones-grid"></div>
 					<div class="cfwaf-deploy-rules-summary" id="cfwaf-deploy-summary"></div>
@@ -922,7 +946,7 @@
 					</div>
 					<div id="cfwaf-deploy-results"></div>
 					<div class="cfwaf-deploy-footer">
-						<p class="cfwaf-deploy-save-reminder">&#9888; The deploy uses the settings on this screen, saved or not.</p>
+						<p class="cfwaf-deploy-save-reminder"><?php echo WPWAF_Icons::svg( 'alert' ); ?> The deploy uses the settings on this screen, saved or not.</p>
 						<button class="cfwaf-btn cfwaf-btn-deploy cfwaf-btn-large" id="cfwaf-confirm-deploy" disabled>
 							<span class="dashicons dashicons-upload"></span> Deploy to Selected Zones
 						</button>
@@ -1006,7 +1030,7 @@
 							<ul>
 								<li>Reduces server load from aggressive crawlers that don&rsquo;t respect crawl limits</li>
 								<li>Prevents bandwidth consumption from unauthorized SEO tools</li>
-								<li>Blocks common penetration testing tools (Nikto, SQLMap, Masscan, Nmap)</li>
+								<li>Blocks common penetration testing tools (Nikto, SQLMap, Masscan, Nmap) and curl scripts</li>
 								<li>Protects sensitive WordPress paths (xmlrpc, wp-config, wp-json, install.php)</li>
 								<li>Hides WordPress version info by blocking readme.html and license.txt</li>
 								<li>Blocks probes for exposed files (.env, .git, composer files, debug.log, phpunit, server-status)</li>
@@ -1019,7 +1043,8 @@
 								<li>Verified bots such as Ahrefs, SEMrush, Yandex, Sogou and Baidu are skipped by Rule 1 before this rule runs. To block one, turn off &ldquo;Allow every Cloudflare verified bot&rdquo; and its category in Rule 1</li>
 								<li>If you use the WordPress REST API (wp-json), don&rsquo;t enable that path protection</li>
 								<li>Some WordPress plugins or mobile apps may require XML-RPC access</li>
-								<li>Monitor your Event logs after implementing &mdash; some legitimate bots may be caught</li>
+								<li>If the site is an API or webhook host that people call with curl, list those hostnames under &ldquo;Except these hostnames&rdquo; or turn off curl blocking</li>
+								<li>Monitor your Event logs after implementing, as some legitimate bots may be caught</li>
 							</ul>
 
 							<h4><span class="dashicons dashicons-lightbulb"></span> Recommendation</h4>
@@ -1050,6 +1075,7 @@
 							<h4><span class="dashicons dashicons-yes-alt"></span> Key Benefits</h4>
 							<ul>
 								<li>Blocks or challenges automated attacks from web hosting providers where malicious scripts often run</li>
+								<li>Always blocks three hosting networks known for WordPress exploit and secrets-scanning traffic, even when the main host list is off</li>
 								<li>Prevents TOR-based attacks while optionally allowing legitimate TOR users</li>
 								<li>Blocks path traversal, SQL injection, legacy CGI paths, other CMSs&rsquo; login probes and XSS patterns site-wide</li>
 								<li>Reduces fraudulent transactions and spam registrations</li>
@@ -1097,7 +1123,7 @@
 								<li>Helps prevent credential stuffing and brute force attempts</li>
 								<li>Can limit spam and bot registrations from contact forms</li>
 								<li>Adds geographic protection if your site only serves specific countries</li>
-								<li>Uses Managed Challenge &mdash; legitimate visitors pass through transparently</li>
+								<li>Uses Managed Challenge, so legitimate visitors pass through transparently</li>
 							</ul>
 						</div>
 						<div class="cfwaf-detail-col">
@@ -1145,7 +1171,7 @@
 						<div class="cfwaf-detail-col">
 							<h4><span class="dashicons dashicons-warning"></span> Important Considerations</h4>
 							<ul>
-								<li>Legitimate visitors may use VPNs &mdash; monitor the Challenge Solve Rate (low CSR = good)</li>
+								<li>Legitimate visitors may use VPNs, so monitor the Challenge Solve Rate (low CSR = good)</li>
 								<li>For higher security, consider using a Cloudflare Configuration Rule to set &ldquo;I&rsquo;m Under Attack&rdquo; mode on wp-login.php</li>
 								<li>For the highest security, use Cloudflare Access to protect wp-login.php and wp-admin instead</li>
 							</ul>
@@ -1210,14 +1236,14 @@
 				<div class="cfwaf-credits-col">
 					<h4>Credits</h4>
 					<ul>
-						<li><a href="https://webagencyhero.com/" target="_blank"><strong>WebAgencyHero</strong></a> &mdash; Troy Glancy, for creating the original &ldquo;5 Cloudflare WAF rules&rdquo; that formed the foundation of this tool.</li>
-						<li><strong>URSA6</strong> &mdash; Michael Bourne, for building <a href="https://wafrules.com" target="_blank">wafrules.com</a> and making broad changes and security adjustments to the rules.</li>
-						<li><a href="https://www.nahnuplugins.com" target="_blank"><strong>Nahnu Plugins</strong></a> &mdash; Plugin development, UI enhancements, country picker, and one-click API deployment.</li>
+						<li><a href="https://webagencyhero.com/" target="_blank"><strong>WebAgencyHero</strong></a>: Troy Glancy, for creating the original &ldquo;5 Cloudflare WAF rules&rdquo; that formed the foundation of this tool.</li>
+						<li><strong>URSA6</strong>: Michael Bourne, for building <a href="https://wafrules.com" target="_blank">wafrules.com</a> and making broad changes and security adjustments to the rules.</li>
+						<li><a href="https://www.nahnuplugins.com" target="_blank"><strong>Nahnu Plugins</strong></a>: plugin development, UI enhancements, country picker, and one-click API deployment.</li>
 					</ul>
 				</div>
 				<div class="cfwaf-credits-disclaimer">
 					<strong>Trademark Notice:</strong> Cloudflare is a registered trademark of Cloudflare, Inc. This plugin is not affiliated with, endorsed by, or sponsored by Cloudflare, Inc. in any way.<br><br>
-					<strong>Disclaimer:</strong> This plugin is provided &ldquo;as is&rdquo; without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. The creators and contributors are not responsible for any damage, data loss, security incidents, or other issues arising from the installation, configuration, or use of this plugin or the WAF rules it deploys. WAF rules interact directly with your live Cloudflare configuration &mdash; always test thoroughly in a staging environment before applying to production. Monitor your Cloudflare Security Events log closely after deployment and watch for false positives. By using this plugin you accept full responsibility for your Cloudflare WAF configuration.
+					<strong>Disclaimer:</strong> This plugin is provided &ldquo;as is&rdquo; without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. The creators and contributors are not responsible for any damage, data loss, security incidents, or other issues arising from the installation, configuration, or use of this plugin or the WAF rules it deploys. WAF rules interact directly with your live Cloudflare configuration. Always test thoroughly in a staging environment before applying to production. Monitor your Cloudflare Security Events log closely after deployment and watch for false positives. By using this plugin you accept full responsibility for your Cloudflare WAF configuration.
 				</div>
 			</div>
 		</div>

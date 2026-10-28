@@ -6,7 +6,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Builds the five Cloudflare WAF rule expressions.
  *
- * Matches the wafrules.com ruleset of October 21, 2026 (WPWAF_Service_IPs::RULES_DATE).
+ * Matches the wafrules.com ruleset of October 24, 2026 (WPWAF_Service_IPs::RULES_DATE).
  * Plugin extras on top of that ruleset: custom user agents and custom
  * expressions in Rule 1, the optional wp-cron.php block in Rule 2, and a
  * multi-country picker in Rule 4.
@@ -66,7 +66,6 @@ class WPWAF_Rule_Builder {
 	private const RULE4_SAFE = '"Search Engine Crawler" "Search Engine Optimization" "Monitoring & Analytics" "Advertising & Marketing" "Page Preview" "Academic Research" "Security" "Accessibility" "Webhooks" "Feed Fetcher"';
 
 	private const LETS_ENCRYPT  = '(starts_with(http.request.uri.path, "/.well-known/acme-challenge/"))';
-	private const WPU_MONITORS  = '(ip.src.asnum eq 14061 and http.user_agent contains "WPUmbrella+" and http.request.method in {"GET" "HEAD"} and not http.request.uri.path contains "." and http.request.uri.query eq "")';
 	private const FLYINGPRESS   = '(http.user_agent contains "FlyingPress (+https://flyingpress.com)" and http.request.method eq "GET")';
 	private const APPLE_PREVIEW = '(http.user_agent contains "facebookexternalhit" and http.request.method eq "GET")';
 
@@ -130,7 +129,6 @@ class WPWAF_Rule_Builder {
 				'allow_patchstack'             => false,
 				'allow_managewp'               => false,
 				'allow_wpumbrella'             => false,
-				'allow_wpumbrella_do_monitors' => true,
 				'allow_gosweetspot'            => false,
 				// Narrow expression matches.
 				'allow_flyingpress'            => false,
@@ -159,14 +157,17 @@ class WPWAF_Rule_Builder {
 				'block_masscan'         => true,
 				'block_nmap'            => true,
 				'block_xmlrpc'          => true,
-				'block_wpconfig'        => false,
+				'block_wpconfig'        => true,
 				// wp-json is needed by the block editor, WooCommerce and mobile apps.
 				'block_wpjson'          => false,
-				'block_wpinstall'       => false,
+				'block_wpinstall'       => true,
 				'block_wlwmanifest'     => true,
 				'block_readme'          => true,
 				'block_license'         => true,
 				'block_sensitive_paths' => true,
+				// curl user agents, except on the hostnames listed (for API and webhook hosts).
+				'block_curl'            => true,
+				'curl_host_exceptions'  => [],
 				// Plugin extra, off by default: breaks sites whose server cron calls wp-cron.php over HTTP.
 				'block_wpcron'          => false,
 			],
@@ -187,6 +188,10 @@ class WPWAF_Rule_Builder {
 				'block_alibaba'         => true,
 				'block_hostroyale'      => true,
 				'block_cloudvider'      => true,
+				// Attack hosting networks: stay in the rule even when the host list is off.
+				'block_techoff'         => true,
+				'block_bucklog'         => true,
+				'block_tcdatacenter'    => true,
 				'block_tor'             => true,
 				'action'                => 'block',
 				// Exploit URI patterns, matched from any IP.
@@ -267,6 +272,8 @@ class WPWAF_Rule_Builder {
 			$r1['allow_user_agents'] = $uas;
 			$s['rule1'] = $r1;
 		}
+		// October 24, 2026: the interim WP Umbrella DigitalOcean clause was removed.
+		if ( isset( $s['rule1'] ) && is_array( $s['rule1'] ) ) unset( $s['rule1']['allow_wpumbrella_do_monitors'] );
 
 		$r2 = isset( $s['rule2'] ) && is_array( $s['rule2'] ) ? $s['rule2'] : null;
 		$r3 = isset( $s['rule3'] ) && is_array( $s['rule3'] ) ? $s['rule3'] : [];
@@ -328,11 +335,14 @@ class WPWAF_Rule_Builder {
 	}
 
 	/**
-	 * True when settings still use the shape from before the October 2026 ruleset.
+	 * True when settings are older than the current ruleset: the shape from
+	 * before October 2026, or saved before the October 24, 2026 options (curl
+	 * blocking and the attack hosting networks, which start on, as on wafrules.com).
 	 */
 	public static function needs_migration( array $s ): bool {
-		if ( isset( $s['rule1'] ) && is_array( $s['rule1'] ) && ! array_key_exists( 'include_client_bot', $s['rule1'] ) ) return true;
-		if ( isset( $s['rule2'] ) && is_array( $s['rule2'] ) && ( array_key_exists( 'block_sqli_sleep', $s['rule2'] ) || array_key_exists( 'block_path_traversal', $s['rule2'] ) ) ) return true;
+		if ( isset( $s['rule1'] ) && is_array( $s['rule1'] ) && ( ! array_key_exists( 'include_client_bot', $s['rule1'] ) || array_key_exists( 'allow_wpumbrella_do_monitors', $s['rule1'] ) ) ) return true;
+		if ( isset( $s['rule2'] ) && is_array( $s['rule2'] ) && ( array_key_exists( 'block_sqli_sleep', $s['rule2'] ) || array_key_exists( 'block_path_traversal', $s['rule2'] ) || ! array_key_exists( 'block_curl', $s['rule2'] ) ) ) return true;
+		if ( isset( $s['rule3'] ) && is_array( $s['rule3'] ) && ! array_key_exists( 'block_techoff', $s['rule3'] ) ) return true;
 		return false;
 	}
 
@@ -377,6 +387,8 @@ class WPWAF_Rule_Builder {
 			array_map( static fn( $e ) => trim( wp_unslash( (string) $e ) ), $out['rule1']['custom_expressions'] ),
 			static fn( $e ) => $e !== ''
 		) );
+
+		$out['rule2']['curl_host_exceptions'] = self::normalize_hostnames( $out['rule2']['curl_host_exceptions'] );
 
 		$out['rule3']['action'] = $out['rule3']['action'] === 'managed_challenge' ? 'managed_challenge' : 'block';
 
@@ -473,7 +485,6 @@ class WPWAF_Rule_Builder {
 		if ( $ips ) $parts[] = '(ip.src in {' . implode( ' ', $ips ) . '})';
 
 		if ( ! empty( $s['allow_letsencrypt'] ) ) $parts[] = self::LETS_ENCRYPT;
-		if ( ! empty( $s['allow_wpumbrella'] ) && ! empty( $s['allow_wpumbrella_do_monitors'] ) ) $parts[] = self::WPU_MONITORS;
 		if ( ! empty( $s['allow_flyingpress'] ) ) $parts[] = self::FLYINGPRESS;
 		if ( ! empty( $s['allow_apple_messages'] ) ) $parts[] = self::APPLE_PREVIEW;
 
@@ -530,13 +541,21 @@ class WPWAF_Rule_Builder {
 		if ( ! empty( $s['block_sensitive_paths'] ) ) {
 			foreach ( [ '/.env', '/.git', 'composer.json', 'composer.lock', 'debug.log', 'phpunit', 'server-status' ] as $t ) $p[] = self::lc( $path, $t );
 		}
+		if ( ! empty( $s['block_curl'] ) ) {
+			$curl  = 'lower(http.user_agent) contains "curl/"';
+			$hosts = self::normalize_hostnames( (array) ( $s['curl_host_exceptions'] ?? [] ) );
+			$p[]   = $hosts
+				? '(' . $curl . ' and not http.host in {' . implode( ' ', array_map( static fn( $h ) => '"' . $h . '"', $hosts ) ) . '})'
+				: '(' . $curl . ')';
+		}
 		if ( ! empty( $s['block_wpcron'] ) ) $p[] = self::lc( $path, 'wp-cron.php' );
 
 		return implode( ' or ', $p );
 	}
 
 	private static function build_rule3_expr( array $s ): string {
-		$p = [];
+		$p    = [];
+		$asns = [];
 
 		if ( ! empty( $s['block_hosts'] ) ) {
 			$asn_map = [
@@ -555,13 +574,17 @@ class WPWAF_Rule_Builder {
 				'block_hostroyale' => [ 207990 ],
 				'block_cloudvider' => [ 62240 ],
 			];
-			$asns = [];
 			foreach ( $asn_map as $key => $nums ) {
 				if ( ! empty( $s[ $key ] ) ) $asns = array_merge( $asns, $nums );
 			}
-			if ( $asns ) {
-				$p[] = '(ip.src.asnum in {' . implode( ' ', $asns ) . '} and not cf.client.bot and not http.request.uri.path contains "acme-challenge")';
-			}
+		}
+		// Attack hosting networks apply even when the main host list is off.
+		foreach ( [ 'block_techoff' => 48090, 'block_bucklog' => 211590, 'block_tcdatacenter' => 218785 ] as $key => $num ) {
+			if ( ! empty( $s[ $key ] ) ) $asns[] = $num;
+		}
+		$asns = array_values( array_unique( $asns ) );
+		if ( $asns ) {
+			$p[] = '(ip.src.asnum in {' . implode( ' ', $asns ) . '} and not cf.client.bot and not http.request.uri.path contains "acme-challenge")';
 		}
 		if ( ! empty( $s['block_tor'] ) ) $p[] = '(ip.src.country in {"T1"})';
 
@@ -651,6 +674,28 @@ class WPWAF_Rule_Builder {
 	 * @param array<int,mixed> $list
 	 * @return array{accepted: string[], invalid: string[]}
 	 */
+	/**
+	 * Hostnames for the curl exceptions, as wafrules.com reads them: split on
+	 * spaces, commas and new lines, lower-cased, trailing dots removed, IP
+	 * addresses and anything with a port or invalid label dropped, no repeats.
+	 *
+	 * @param string[] $list Lines or tokens as entered.
+	 * @return string[]
+	 */
+	public static function normalize_hostnames( array $list ): array {
+		$out = [];
+		foreach ( $list as $item ) {
+			foreach ( preg_split( '/[\s,]+/', (string) $item ) ?: [] as $h ) {
+				$h = rtrim( strtolower( trim( $h ) ), '.' );
+				if ( $h === '' || in_array( $h, $out, true ) ) continue;
+				if ( strlen( $h ) > 253 || str_contains( $h, ':' ) || preg_match( '/^(?:\d{1,3}\.){3}\d{1,3}$/', $h ) ) continue;
+				if ( ! preg_match( '/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/', $h ) ) continue;
+				$out[] = $h;
+			}
+		}
+		return $out;
+	}
+
 	public static function normalize_ips( array $list ): array {
 		$seen = [];
 		$bad  = [];

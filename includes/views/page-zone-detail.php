@@ -136,7 +136,7 @@ asort( $wpwaf_others );
 				$wpwaf_rp_url  = admin_url( 'admin.php?page=wpwafmanager-reports' );
 				if ( $wpwaf_clients ) :
 					foreach ( array_slice( $wpwaf_clients, 0, 3 ) as $wpwaf_c ) : ?>
-			<a class="cfwaf-zd-btn" href="<?php echo esc_url( add_query_arg( [ 'client' => $wpwaf_c['id'], 'send' => '1' ], $wpwaf_rp_url ) ); ?>" title="<?php echo esc_attr( $wpwaf_c['monthly'] ? 'Gets a monthly report automatically' : 'Reports sent by hand' ); ?>">✉ Send report to <?php echo esc_html( $wpwaf_c['name'] ); ?></a>
+			<a class="cfwaf-zd-btn" href="<?php echo esc_url( add_query_arg( [ 'client' => $wpwaf_c['id'], 'send' => '1' ], $wpwaf_rp_url ) ); ?>" title="<?php echo esc_attr( $wpwaf_c['monthly'] ? 'Gets a monthly report automatically' : 'Reports sent by hand' ); ?>"><?php echo WPWAF_Icons::svg( 'mail' ); ?> Send report to <?php echo esc_html( $wpwaf_c['name'] ); ?></a>
 					<?php endforeach;
 				else : ?>
 			<a class="cfwaf-zd-btn" href="<?php echo esc_url( add_query_arg( [ 'zone' => $zone_id, 'zname' => (string) ( $zone['name'] ?? '' ) ], $wpwaf_rp_url ) ); ?>">+ Add a client for this site</a>
@@ -155,8 +155,8 @@ asort( $wpwaf_others );
 			<button type="button" data-range="<?php echo esc_attr( $wpwaf_key ); ?>" aria-pressed="<?php echo $wpwaf_key === $range ? 'true' : 'false'; ?>"><?php echo esc_html( $wpwaf_label ); ?></button>
 			<?php endforeach; ?>
 		</div>
-		<button type="button" class="cfwaf-zd-btn" id="cfwaf-zd-refresh">↻ Refresh</button>
-		<button type="button" class="cfwaf-zd-btn" id="cfwaf-zd-csv" disabled>⬇ CSV</button>
+		<button type="button" class="cfwaf-zd-btn" id="cfwaf-zd-refresh"><?php echo WPWAF_Icons::svg( 'refresh' ); ?> Refresh</button>
+		<button type="button" class="cfwaf-zd-btn" id="cfwaf-zd-csv" disabled><?php echo WPWAF_Icons::svg( 'download' ); ?> CSV</button>
 		<span class="cfwaf-zd-meta" id="cfwaf-zd-meta"></span>
 	</div>
 
@@ -167,6 +167,7 @@ asort( $wpwaf_others );
 </div>
 
 <?php if ( $has_creds ) : ?>
+<?php WPWAF_Flags::print_script(); ?>
 <script>
 'use strict';
 (function(){
@@ -214,9 +215,10 @@ function country(code){
   if (!/^[A-Z]{2}$/.test(code) || code === 'XX') return 'Unknown';
   let name = code;
   try { name = regionNames ? regionNames.of(code) : code; } catch (e) { name = code; }
-  const flag = String.fromCodePoint(...[...code].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-  return flag + ' ' + name;
+  return name;
 }
+// Flag image for a country row; a blank spacer for Tor and unknown keeps names aligned.
+function flagIcon(r){ return window.wpwafFlag ? window.wpwafFlag(r.key, true) : ''; }
 // Friendlier names for Cloudflare's IP class and threat labels; unknown values show as sent.
 const IP_CLASS = {clean:'Clean', badHost:'Known bad host', tor:'Tor', searchEngine:'Search engine', whitelist:'Allowlisted', greylist:'Greylisted', monitoringService:'Monitoring service', securityScanner:'Security scanner', backupService:'Backup service', mobilePlatform:'Mobile platform', noRecord:'No record', unknown:'Unknown'};
 const THREAT = {'bad.ip':'Bad IP reputation', 'user.ban.ip':'Blocked by your IP rules'};
@@ -341,7 +343,7 @@ function bars(rows, opts){
     const v = Number(r[vk]) || 0;
     const share = total > 0 ? ' · ' + pct(v / total * 100) : '';
     const label = opts.label ? opts.label(r) : r.key;
-    return '<li class="cfwaf-zd-bar" title="' + esc(label + ': ' + full(v)) + '"><span class="cfwaf-zd-bar-label' + (opts.mono ? ' mono' : '') + '">' + esc(label) + '</span>'
+    return '<li class="cfwaf-zd-bar" title="' + esc(label + ': ' + full(v)) + '"><span class="cfwaf-zd-bar-label' + (opts.mono ? ' mono' : '') + '">' + (opts.icon ? opts.icon(r) : '') + esc(label) + '</span>'
       + '<span class="cfwaf-zd-bar-value">' + esc(opts.fmt ? opts.fmt(v) : num(v)) + share + '</span>'
       + '<span class="cfwaf-zd-bar-track"><span class="cfwaf-zd-bar-fill' + (opts.red ? ' red' : '') + '" style="width:' + (v / max * 100).toFixed(1) + '%"></span></span></li>';
   }).join('') + '</ul>';
@@ -428,9 +430,9 @@ function render(){
       const statusRows = Object.keys(statusGroups).sort().map(k => ({key:k, requests:statusGroups[k]}));
       const STATUS_HINT = {'2xx':'Success', '3xx':'Redirect', '4xx':'Client error', '5xx':'Server error', '1xx':'Informational'};
       html += '<div class="cfwaf-zd-section-title">Audience</div><div class="cfwaf-zd-grid3">'
-        + card('Top countries', 'Requests by visitor country', bars(tr.countries, {label:r => country(r.key)}))
+        + card('Top countries', 'Requests by visitor country', bars(tr.countries, {label:r => country(r.key), icon:flagIcon}))
         + card('Browsers', 'Page views by browser', bars(tr.browsers, {value:'page_views'}))
-        + card('Threats by country', 'Where threats came from', bars((tr.countries || []).filter(r => r.threats > 0).sort((a,b) => b.threats - a.threats), {value:'threats', label:r => country(r.key), red:true, empty:'No threats in this period.'}))
+        + card('Threats by country', 'Where threats came from', bars((tr.countries || []).filter(r => r.threats > 0).sort((a,b) => b.threats - a.threats), {value:'threats', label:r => country(r.key), icon:flagIcon, red:true, empty:'No threats in this period.'}))
         + '</div><div class="cfwaf-zd-section-title">Responses</div><div class="cfwaf-zd-grid3">'
         + card('Status codes', 'Responses grouped by type', bars(statusRows, {label:r => r.key + ' ' + (STATUS_HINT[r.key] || '')}) + '<div style="margin-top:12px;">' + bars(tr.statuses, {label:r => 'HTTP ' + r.key, limit:8}) + '</div>')
         + card('Content types', 'What Cloudflare served', bars(tr.content_types, {label:r => r.key || 'other'}))
@@ -472,7 +474,7 @@ function render(){
       + card('Which feature acted', 'Events by Cloudflare security feature', bars(sec.by_source, {value:'count'}))
       + card('Top paths', 'Most targeted paths', bars(sec.by_path, {value:'count', mono:true}))
       + card('Top IP addresses', 'Most active sources', bars(sec.by_ip, {value:'count', mono:true}))
-      + card('Countries', 'Events by country', bars(sec.by_country, {value:'count', label:r => country(r.key)}))
+      + card('Countries', 'Events by country', bars(sec.by_country, {value:'count', label:r => country(r.key), icon:flagIcon}))
       + '</div>';
   } else {
     html += '<div class="cfwaf-zd-unavail">' + esc(sec.message || 'Not available for this zone.') + '</div>';

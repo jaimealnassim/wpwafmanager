@@ -55,9 +55,9 @@ $ajax_url     = admin_url( 'admin-ajax.php' );
 
 /* Proxy toggle */
 .cfwaf-proxy-toggle { display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:none; border:none; padding:0; font-size:12px; }
-.cfwaf-proxy-icon { font-size:18px; transition:opacity .15s; }
-.cfwaf-proxy-icon.proxied   { opacity:1; filter:none; }
-.cfwaf-proxy-icon.unproxied { opacity:.4; filter:grayscale(1); }
+.cfwaf-proxy-icon { font-size:18px; display:inline-flex; transition:opacity .15s; }
+.cfwaf-proxy-icon.proxied   { color:#F38020; opacity:1; }
+.cfwaf-proxy-icon.unproxied { color:#9ca3af; opacity:1; }
 .cfwaf-proxy-label { color:var(--dns-muted); font-size:11px; }
 
 /* TTL */
@@ -143,8 +143,8 @@ $ajax_url     = admin_url( 'admin-ajax.php' );
 			</select>
 			<select id="cfwaf-dns-proxy-filter" class="cfwaf-dns-filter">
 				<option value="">All proxy states</option>
-				<option value="1">☁ Proxied</option>
-				<option value="0">⊘ DNS only</option>
+				<option value="1">Proxied</option>
+				<option value="0">DNS only</option>
 			</select>
 			<span class="cfwaf-dns-count" id="cfwaf-dns-count"></span>
 		</div>
@@ -241,7 +241,7 @@ $ajax_url     = admin_url( 'admin-ajax.php' );
 				<!-- Proxy toggle -->
 				<div class="cfwaf-proxy-field" id="cfwaf-dns-proxy-wrap">
 					<input type="checkbox" id="cfwaf-dns-proxied">
-					<label for="cfwaf-dns-proxied">☁ Proxy through Cloudflare (orange cloud)</label>
+					<label for="cfwaf-dns-proxied"><?php echo WPWAF_Icons::svg( 'cloud' ); ?> Proxy through Cloudflare (orange cloud)</label>
 					<span class="cfwaf-proxy-hint">Enables CDN, DDoS protection, and hides origin IP</span>
 				</div>
 
@@ -300,10 +300,10 @@ let deletingId  = '';
 
 function qs(sel){ return document.querySelector(sel); }
 function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
-function toast(msg, ok=true){
+function toast(msg, ok=true, icon){
 	const el = document.createElement('div');
 	el.className = 'cfwaf-dns-toast ' + (ok?'ok':'err');
-	el.textContent = msg;
+	if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
 	document.body.appendChild(el);
 	setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 3000);
 }
@@ -356,7 +356,7 @@ function loadRecords(){
 
 function showError(msg){
 	const el = qs('#cfwaf-dns-error');
-	el.textContent = '⚠ ' + msg;
+	wpwafSetText(el, 'alert', msg);
 	el.style.display = '';
 }
 
@@ -401,7 +401,7 @@ function renderTable(){
 		const canProxy = PROXYABLE.includes(r.type);
 		const proxyHTML = canProxy
 			? `<button class="cfwaf-proxy-toggle" data-id="${r.id}" data-proxied="${r.proxied?'1':'0'}" title="${r.proxied?'Proxied: click to disable':'DNS only: click to enable proxy'}">
-				<span class="cfwaf-proxy-icon ${r.proxied?'proxied':'unproxied'}">☁</span>
+				<span class="cfwaf-proxy-icon ${r.proxied?'proxied':'unproxied'}">${wpwafIcon('cloud')}</span>
 				<span class="cfwaf-proxy-label">${r.proxied?'Proxied':'DNS only'}</span>
 			   </button>`
 			: `<span class="cfwaf-proxy-label" style="color:#d1d5db">-</span>`;
@@ -417,7 +417,7 @@ function renderTable(){
 			<td>
 				<div class="cfwaf-dns-actions">
 					<button class="cfwaf-dns-btn cfwaf-dns-btn-secondary cfwaf-dns-btn-sm cfwaf-edit-btn" data-id="${r.id}">Edit</button>
-					<button class="cfwaf-dns-btn cfwaf-dns-btn-danger cfwaf-dns-btn-sm cfwaf-delete-btn" data-id="${r.id}" data-name="${r.name}">✕</button>
+					<button class="cfwaf-dns-btn cfwaf-dns-btn-danger cfwaf-dns-btn-sm cfwaf-delete-btn" data-id="${r.id}" data-name="${r.name}" aria-label="Delete record" title="Delete">${wpwafIcon('x')}</button>
 				</div>
 			</td>
 		</tr>`;
@@ -431,7 +431,7 @@ function renderTable(){
 			btn.disabled = true;
 			ajax('wpwaf_dns_toggle_proxy',{zone_id:currentZone,record_id:id,proxied:nowProxied?'1':'0'},(res)=>{
 				btn.disabled = false;
-				if(res.success){ loadRecords(); toast(nowProxied?'☁ Proxy enabled':'⊘ Proxy disabled'); }
+				if(res.success){ loadRecords(); toast(nowProxied?'Proxy enabled':'Proxy disabled', true, nowProxied?'cloud':'cloud-off'); }
 				else toast('Failed: '+(res.data?.message||'error'),false);
 			});
 		});
@@ -584,13 +584,13 @@ qs('#cfwaf-dns-modal-save')?.addEventListener('click',()=>{
 		saveBtn.disabled = false;
 		saveBtn.textContent = editingId ? 'Save Changes' : 'Save Record';
 		if(!res.success){
-			errEl.textContent = '⚠ ' + (res.data?.message||'Save failed');
+			wpwafSetText(errEl, 'alert', (res.data?.message||'Save failed'));
 			errEl.style.display = '';
 			return;
 		}
 		closeModal();
 		loadRecords();
-		toast(editingId ? '✓ Record updated' : '✓ Record created');
+		toast(editingId ? 'Record updated' : 'Record created');
 	});
 });
 
@@ -605,7 +605,7 @@ qs('#cfwaf-dns-delete-confirm')?.addEventListener('click',()=>{
 	ajax('wpwaf_dns_delete',{zone_id:currentZone,record_id:deletingId},(res)=>{
 		btn.disabled=false; btn.textContent='Delete';
 		qs('#cfwaf-dns-delete-modal').style.display='none';
-		if(res.success){ loadRecords(); toast('✓ Record deleted'); }
+		if(res.success){ loadRecords(); toast('Record deleted'); }
 		else toast('Failed: '+(res.data?.message||'error'),false);
 		deletingId='';
 	});

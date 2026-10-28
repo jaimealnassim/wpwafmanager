@@ -178,7 +178,7 @@ $wpwaf_rp_boot = [
 	<div class="wpwaf-rp-card">
 		<div class="wpwaf-rp-card-head">
 			<div>
-				<h2>👥 Clients</h2>
+				<h2><?php echo WPWAF_Icons::svg( 'users' ); ?> Clients</h2>
 				<div class="wpwaf-rp-card-sub">Each client is linked to their sites. Times use the site's timezone (<span id="wpwaf-rp-tz"></span>).</div>
 			</div>
 			<button type="button" class="wpwaf-rp-btn wpwaf-rp-btn--primary" id="wpwaf-rp-new">+ Add client</button>
@@ -279,7 +279,7 @@ $wpwaf_rp_boot = [
 	<div class="wpwaf-rp-card">
 		<div class="wpwaf-rp-card-head">
 			<div>
-				<h2>🎨 Branding</h2>
+				<h2><?php echo WPWAF_Icons::svg( 'palette' ); ?> Branding</h2>
 				<div class="wpwaf-rp-card-sub">Every client report goes out under your agency's name. The plugin is never mentioned.</div>
 			</div>
 			<button type="button" class="wpwaf-rp-btn" id="wpwaf-rp-brand-preview">Preview with sample data</button>
@@ -340,7 +340,7 @@ $wpwaf_rp_boot = [
 	<div class="wpwaf-rp-card">
 		<div class="wpwaf-rp-card-head">
 			<div>
-				<h2>🧾 Send log</h2>
+				<h2><?php echo WPWAF_Icons::svg( 'receipt' ); ?> Send log</h2>
 				<div class="wpwaf-rp-card-sub">The last 20 sends, including tests.</div>
 			</div>
 		</div>
@@ -421,10 +421,10 @@ let sendingId  = null;        // client id open in the Send report dialog
 const qs  = (s,c) => (c||document).querySelector(s);
 const qsa = (s,c) => Array.from((c||document).querySelectorAll(s));
 function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function toast(msg, ok=true){
+function toast(msg, ok=true, icon){
   const el = document.createElement('div');
   el.className = 'wpwaf-rp-toast ' + (ok ? 'ok' : 'err');
-  el.textContent = msg;
+  if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, ok ? 3000 : 6000);
 }

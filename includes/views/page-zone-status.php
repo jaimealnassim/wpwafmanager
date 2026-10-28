@@ -190,7 +190,7 @@ a.cfwaf-zs-card{display:block;text-decoration:none;color:inherit;}
 	<!-- Zone picker -->
 	<div class="cfwaf-zs-zone-picker">
 		<div class="cfwaf-zs-zone-picker-header" id="cfwaf-zs-zone-picker-toggle">
-			<h3>🌐 Zones to Sync <span class="cfwaf-zs-zone-count" id="cfwaf-zs-zone-count-label">
+			<h3><?php echo WPWAF_Icons::svg( 'globe' ); ?> Zones to Sync <span class="cfwaf-zs-zone-count" id="cfwaf-zs-zone-count-label">
 				<?php echo empty( $allowed_zones ) ? '' : '· ' . count( $allowed_zones ) . ' selected'; ?>
 			</span></h3>
 			<span class="cfwaf-zs-picker-chevron" id="cfwaf-zs-picker-chevron">▼ Configure</span>
@@ -215,7 +215,7 @@ a.cfwaf-zs-card{display:block;text-decoration:none;color:inherit;}
 	if ( empty( $display_cache ) ) :
 	?>
 		<div class="cfwaf-zs-no-data">
-			<p style="font-size:28px;margin:0 0 8px;">📡</p>
+			<p style="font-size:28px;margin:0 0 8px;color:#9ca3af;"><?php echo WPWAF_Icons::svg( 'satellite' ); ?></p>
 			<p style="font-size:15px;font-weight:700;margin:0 0 6px;color:var(--zs-dark);">No data yet</p>
 			<p style="margin:0;font-size:13px;"><?php echo empty( $allowed_zones )
 				? 'Click <strong>Sync Now</strong> to fetch analytics for every zone in this account. To monitor only some zones, open <strong>Zones to Sync</strong> above first.'
@@ -298,10 +298,10 @@ const NONCE       = <?php echo wp_json_encode( $nonce ); ?>;
 const AJAX_URL    = <?php echo wp_json_encode( $ajax_url ); ?>;
 const SAVED_ZONES = <?php echo wp_json_encode( $allowed_zones ); ?>;
 
-function toast(msg, ok=true){
+function toast(msg, ok=true, icon){
 	const el = document.createElement('div');
 	el.className = 'cfwaf-zs-toast ' + (ok?'ok':'err');
-	el.textContent = msg;
+	if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
 	document.body.appendChild(el);
 	setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},3000);
 }
@@ -408,7 +408,7 @@ document.getElementById('cfwaf-zs-save-zones')?.addEventListener('click', functi
 	const fd = saveZonesPayload({enabled:enabled?'1':'0',sync_interval:interval,days_analytics:days});
 	fetch(AJAX_URL,{method:'POST',body:fd}).then(r=>r.json()).then(res=>{
 		self.disabled=false; self.textContent='Save Zone Selection';
-		if (res.success){ toast('✓ Zone selection saved. Click Sync Now to apply'); updateZoneCountLabel(); }
+		if (res.success){ toast('Zone selection saved. Click Sync Now to apply'); updateZoneCountLabel(); }
 		else toast('Failed: '+(res.data?.message||'error'),false);
 	}).catch(()=>{self.disabled=false; self.textContent='Save Zone Selection';});
 });
@@ -424,7 +424,7 @@ document.getElementById('cfwaf-zs-save-settings')?.addEventListener('click', fun
 	fetch(AJAX_URL,{method:'POST',body:fd}).then(r=>r.json()).then(res=>{
 		self.disabled=false; self.textContent='Save';
 		if (res.success){
-			toast('✓ Settings saved');
+			toast('Settings saved');
 			const ns = res.data?.next_sync||0;
 			const el = document.getElementById('cfwaf-zs-next-sync-info');
 			if (el && ns){ const diff=Math.round((ns*1000-Date.now())/60000); el.textContent=diff>0?'Next sync in ~'+diff+'m':'Sync pending…'; }
@@ -440,7 +440,7 @@ document.getElementById('cfwaf-zs-sync-now')?.addEventListener('click', function
 	ajax('wpwaf_zone_status_sync',{},(res)=>{
 		self.disabled=false;
 		self.innerHTML='<span class="dashicons dashicons-update" style="font-size:14px;width:14px;height:14px;margin-top:1px;"></span> Sync Now';
-		if(res.success){ toast('✓ Sync complete, refreshing…'); setTimeout(()=>location.reload(),1000); }
+		if(res.success){ toast('Sync complete, refreshing…'); setTimeout(()=>location.reload(),1000); }
 		else toast('Sync failed: '+(res.data?.message||'error'),false);
 	});
 });

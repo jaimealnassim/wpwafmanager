@@ -141,12 +141,12 @@ $active_id = WPWAF_Accounts::active_id();
   <div class="wpwaf-er-howto">
     <div style="background:#fff;border:2px solid var(--er-border);border-radius:8px;padding:14px 16px;">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--er-muted);margin-bottom:6px;">STEP 1: ONE TIME SETUP</div>
-      <div style="font-size:13px;font-weight:700;color:var(--er-dark);margin-bottom:4px;">📬 Add &amp; verify your inbox</div>
+      <div style="font-size:13px;font-weight:700;color:var(--er-dark);margin-bottom:4px;"><?php echo WPWAF_Icons::svg( 'inbox' ); ?> Add &amp; verify your inbox</div>
       <div style="font-size:12px;color:var(--er-muted);">Go to <strong>Destination Addresses</strong> tab → enter your Gmail or any inbox → Cloudflare emails you a verification link → click it.</div>
     </div>
     <div style="background:#fff;border:2px solid var(--er-border);border-radius:8px;padding:14px 16px;">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--er-muted);margin-bottom:6px;">STEP 2: CREATE RULES</div>
-      <div style="font-size:13px;font-weight:700;color:var(--er-dark);margin-bottom:4px;">📋 Set up forwarding</div>
+      <div style="font-size:13px;font-weight:700;color:var(--er-dark);margin-bottom:4px;"><?php echo WPWAF_Icons::svg( 'clipboard' ); ?> Set up forwarding</div>
       <div style="font-size:12px;color:var(--er-muted);">Go to <strong>Forwarding Rules</strong> tab → pick a zone → click <strong>+ Add Rule</strong> → choose which address on your domain forwards to your verified inbox.</div>
     </div>
   </div>
@@ -157,7 +157,7 @@ $active_id = WPWAF_Accounts::active_id();
     <select id="wpwaf-er-account-select" class="wpwaf-er-account-select">
       <?php foreach ( $accounts as $acc ) : ?>
       <option value="<?php echo esc_attr( $acc['id'] ); ?>" <?php selected( $acc['id'], $active_id ); ?>>
-        <?php echo esc_html( $acc['label'] ?? 'Unnamed' ); ?> &mdash; <?php echo esc_html( $acc['auth_method'] === 'key' ? 'Email + Key' : 'API Token' ); ?>
+        <?php echo esc_html( $acc['label'] ?? 'Unnamed' ); ?> (<?php echo esc_html( $acc['auth_method'] === 'key' ? 'Email + Key' : 'API Token' ); ?>)
       </option>
       <?php endforeach; ?>
     </select>
@@ -165,8 +165,8 @@ $active_id = WPWAF_Accounts::active_id();
 
   <!-- Tabs -->
   <div class="wpwaf-er-tabs">
-    <button class="wpwaf-er-tab active" data-panel="rules">📋 Forwarding Rules</button>
-    <button class="wpwaf-er-tab" data-panel="addresses" id="wpwaf-er-tab-addresses">📬 Destination Addresses <span id="wpwaf-er-addr-count-badge" style="background:#FF6A00;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:4px;display:none;"></span></button>
+    <button class="wpwaf-er-tab active" data-panel="rules"><?php echo WPWAF_Icons::svg( 'clipboard' ); ?> Forwarding Rules</button>
+    <button class="wpwaf-er-tab" data-panel="addresses" id="wpwaf-er-tab-addresses"><?php echo WPWAF_Icons::svg( 'inbox' ); ?> Destination Addresses <span id="wpwaf-er-addr-count-badge" style="background:#FF6A00;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:4px;display:none;"></span></button>
   </div>
 
   <!-- ── Tab: Forwarding Rules ──────────────────────────────────────────────── -->
@@ -176,13 +176,13 @@ $active_id = WPWAF_Accounts::active_id();
       <select id="wpwaf-er-zone" class="wpwaf-er-select">
         <option value="">Select a zone</option>
       </select>
-      <button class="wpwaf-er-btn wpwaf-er-btn-ghost" id="wpwaf-er-sync-btn" disabled title="Reload rules and catch-all from Cloudflare">↻ Sync</button>
+      <button class="wpwaf-er-btn wpwaf-er-btn-ghost" id="wpwaf-er-sync-btn" disabled title="Reload rules and catch-all from Cloudflare"><?php echo WPWAF_Icons::svg( 'refresh' ); ?> Sync</button>
       <button class="wpwaf-er-btn wpwaf-er-btn-primary" id="wpwaf-er-add-btn" disabled>+ Add Rule</button>
     </div>
 
     <div id="wpwaf-er-sync-notice" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:8px;">
-      <span>⚠</span>
-      <span>Data is loaded from Cloudflare when you select a zone. If you've made changes outside this plugin, click <strong>↻ Sync</strong> to refresh. Always sync after making changes to see the latest state.</span>
+      <span><?php echo WPWAF_Icons::svg( 'alert' ); ?></span>
+      <span>Data is loaded from Cloudflare when you select a zone. If you've made changes outside this plugin, click <strong>Sync</strong> to refresh. Always sync after making changes to see the latest state.</span>
     </div>
     <div class="wpwaf-er-status-bar" id="wpwaf-er-status-bar" style="display:none;">
       <div id="wpwaf-er-status-text" class="wpwaf-er-status-off">
@@ -194,7 +194,7 @@ $active_id = WPWAF_Accounts::active_id();
     <div id="wpwaf-er-table-wrap" style="display:none;">
       <!-- Email setup card -->
       <div style="background:#fff;border:1px solid var(--er-border);border-radius:8px;padding:20px;margin-bottom:12px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">📧 Email Forwarding Setup</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;"><?php echo WPWAF_Icons::svg( 'mail' ); ?> Email Forwarding Setup</div>
         <div style="font-size:12px;color:var(--er-muted);margin-bottom:18px;">Set a specific address on your domain (e.g. <code>info@yourdomain.com</code>) and choose where it forwards to.</div>
 
         <!-- Address row -->
@@ -273,8 +273,8 @@ $active_id = WPWAF_Accounts::active_id();
 
     <div class="wpwaf-er-addr-panel">
       <div class="wpwaf-er-addr-header">
-        <h3>📬 Destination Addresses</h3>
-        <button class="wpwaf-er-btn wpwaf-er-btn-ghost wpwaf-er-btn-sm" id="wpwaf-er-refresh-addrs">↻ Refresh</button>
+        <h3><?php echo WPWAF_Icons::svg( 'inbox' ); ?> Destination Addresses</h3>
+        <button class="wpwaf-er-btn wpwaf-er-btn-ghost wpwaf-er-btn-sm" id="wpwaf-er-refresh-addrs"><?php echo WPWAF_Icons::svg( 'refresh' ); ?> Refresh</button>
       </div>
       <div id="wpwaf-er-addr-list" class="wpwaf-er-addr-list">
         <div class="wpwaf-er-loading"><span class="wpwaf-er-spinner"></span> Loading…</div>
@@ -350,11 +350,11 @@ let allAddresses    = [];
 
 function qs(s){ return document.querySelector(s); }
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function toast(msg, ok){
+function toast(msg, ok, icon){
   ok = ok !== false;
   var el = document.createElement('div');
   el.className = 'wpwaf-er-toast ' + (ok ? 'ok' : 'err');
-  el.textContent = msg;
+  if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(function(){ el.remove(); }, 300); }, 3500);
 }
@@ -448,12 +448,12 @@ function updateDomainSuffixes(){
 
 qs('#wpwaf-er-sync-btn').addEventListener('click', function(){
   if(!currentZone) return;
-  this.textContent = '↻ Syncing…';
+  this.innerHTML = wpwafIconText('refresh', 'Syncing…');
   this.disabled = true;
   var btn = this;
   // Re-run full load then restore button
   loadZone();
-  setTimeout(function(){ btn.textContent = '↻ Sync'; btn.disabled = false; toast('✓ Data refreshed from Cloudflare'); }, 1500);
+  setTimeout(function(){ btn.innerHTML = wpwafIconText('refresh', 'Sync'); btn.disabled = false; toast('Data refreshed from Cloudflare'); }, 1500);
 });
 
 function loadZone(){
@@ -504,7 +504,7 @@ qs('#wpwaf-er-toggle-btn').addEventListener('click', function(){
   var btn = this;
   ajax('wpwaf_email_routing_toggle', {zone_id:currentZone, enable:routingEnabled?'0':'1'}, function(res){
     btn.disabled = false;
-    if(res.success){ routingEnabled = !routingEnabled; updateStatusBar(); toast(routingEnabled ? '✓ Email Routing enabled' : '✓ Disabled'); }
+    if(res.success){ routingEnabled = !routingEnabled; updateStatusBar(); toast(routingEnabled ? 'Email Routing enabled' : 'Disabled'); }
     else toast('Failed: ' + (res.data ? res.data.message : 'error'), false);
   });
 });
@@ -550,7 +550,7 @@ qs('#wpwaf-er-catchall-save').addEventListener('click', function(){
   var dest       = qs('#wpwaf-er-catchall-dest') ? qs('#wpwaf-er-catchall-dest').value.trim() : '';
   var catchAllOn = qs('#wpwaf-er-catchall-enabled') ? qs('#wpwaf-er-catchall-enabled').checked : false;
   var msgEl      = qs('#wpwaf-er-catchall-msg');
-  if(!dest && (catchAllOn || local)){ msgEl.textContent = '⚠ Select a verified destination inbox'; msgEl.style.color = '#dc2626'; return; }
+  if(!dest && (catchAllOn || local)){ wpwafSetText(msgEl, 'alert', 'Select a verified destination inbox'); msgEl.style.color = '#dc2626'; return; }
   msgEl.textContent = '';
   this.disabled = true;
   this.textContent = 'Saving…';
@@ -561,7 +561,7 @@ qs('#wpwaf-er-catchall-save').addEventListener('click', function(){
   // That leaves a catch-all set up in Cloudflare (a Worker, say) alone.
   var updateCatchAll = catchAllOn || loadedCatchAll.on;
   var total  = (updateCatchAll ? 1 : 0) + ((local && currentZoneName) ? 1 : 0);
-  if(!total){ msgEl.textContent = '⚠ Enter an address on your domain, or turn on Catch-All'; msgEl.style.color = '#dc2626'; btn.disabled = false; btn.textContent = 'Save'; return; }
+  if(!total){ wpwafSetText(msgEl, 'alert', 'Enter an address on your domain, or turn on Catch-All'); msgEl.style.color = '#dc2626'; btn.disabled = false; btn.textContent = 'Save'; return; }
 
   function finish(){
     done++;
@@ -569,14 +569,14 @@ qs('#wpwaf-er-catchall-save').addEventListener('click', function(){
     btn.disabled = false;
     btn.textContent = 'Save';
     if(errors.length){
-      msgEl.textContent = '⚠ ' + errors.join('; ');
+      wpwafSetText(msgEl, 'alert', errors.join('; '));
       msgEl.style.color = '#dc2626';
     } else {
-      msgEl.textContent = '✓ Saved';
+      wpwafSetText(msgEl, 'check', 'Saved');
       msgEl.style.color = '#059669';
       setTimeout(function(){ msgEl.textContent = ''; }, 3000);
       loadRules();
-      toast('✓ Email routing saved');
+      toast('Email routing saved');
     }
   }
 
@@ -671,7 +671,7 @@ function loadRules(){
         this.textContent = '…';
         var delBtn = this;
         ajax('wpwaf_email_rule_delete', {zone_id:currentZone, rule_id:ruleId}, function(res){
-          if(res.success){ loadRules(); toast('✓ Rule deleted'); }
+          if(res.success){ loadRules(); toast('Rule deleted'); }
           else {
             delBtn.disabled = false; delBtn.textContent = 'Delete';
             toast('Delete failed: ' + (res.data ? res.data.message : 'error') + '. Try deleting in the Cloudflare dashboard.', false);
@@ -716,7 +716,7 @@ function openModal(){
       if(addrTab) addrTab.classList.add('active');
       if(addrPanel) addrPanel.classList.add('active');
       loadAddresses();
-      toast('👆 First add a destination address, then create rules');
+      toast('First add a destination address, then create rules', true, 'info');
     }, 300);
   }
   qs('#wpwaf-er-modal').style.display = 'flex';
@@ -739,8 +739,8 @@ qs('#wpwaf-er-modal-save').addEventListener('click', function(){
   ajax('wpwaf_email_rule_create', {zone_id:currentZone, from:from, to:to, name:name, action_type:'forward'}, function(res){
     btn.disabled = false;
     btn.textContent = 'Add Rule';
-    if(!res.success){ errEl.textContent = '⚠ ' + (res.data ? res.data.message : 'Failed'); errEl.style.display = ''; return; }
-    closeModal(); loadRules(); toast('✓ Forwarding rule created');
+    if(!res.success){ wpwafSetText(errEl, 'alert', (res.data ? res.data.message : 'Failed')); errEl.style.display = ''; return; }
+    closeModal(); loadRules(); toast('Forwarding rule created');
   });
 });
 
@@ -760,7 +760,7 @@ function loadAddresses(){
       return '<div class="wpwaf-er-addr-row">'
         + '<span class="wpwaf-er-addr-email">' + escHtml(a.email) + '</span>'
         + '<span class="wpwaf-er-addr-badge ' + (a.verified ? 'verified' : 'pending') + '">'
-        + (a.verified ? '✓ Verified' : '⏳ Pending, check your inbox') + '</span>'
+        + (a.verified ? wpwafIconText('check', 'Verified') : wpwafIconText('hourglass', 'Pending, check your inbox')) + '</span>'
         + '</div>';
     }).join('');
   });
@@ -771,7 +771,7 @@ qs('#wpwaf-er-refresh-addrs').addEventListener('click', loadAddresses);
 qs('#wpwaf-er-add-addr-btn').addEventListener('click', function(){
   var email = qs('#wpwaf-er-new-addr').value.trim();
   var msgEl = qs('#wpwaf-er-addr-msg');
-  if(!email){ msgEl.textContent = '⚠ Enter a valid email address.'; msgEl.style.color = '#b91c1c'; msgEl.style.display = ''; return; }
+  if(!email){ wpwafSetText(msgEl, 'alert', 'Enter a valid email address.'); msgEl.style.color = '#b91c1c'; msgEl.style.display = ''; return; }
   this.disabled = true;
   this.textContent = 'Sending…';
   var btn  = this;
@@ -782,11 +782,11 @@ qs('#wpwaf-er-add-addr-btn').addEventListener('click', function(){
     btn.textContent = 'Add & Send Verification';
     if(res.success){
       qs('#wpwaf-er-new-addr').value = '';
-      msgEl.textContent = '✓ Verification email sent to ' + email + '. Click the link, then refresh.';
+      wpwafSetText(msgEl, 'check', 'Verification email sent to ' + email + '. Click the link, then refresh.');
       msgEl.style.color = '#059669'; msgEl.style.display = '';
       loadAddresses();
     } else {
-      msgEl.textContent = '⚠ ' + (res.data ? res.data.message : 'Failed');
+      wpwafSetText(msgEl, 'alert', (res.data ? res.data.message : 'Failed'));
       msgEl.style.color = '#b91c1c'; msgEl.style.display = '';
     }
   });

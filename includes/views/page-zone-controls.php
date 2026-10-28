@@ -133,10 +133,10 @@ $ajax_url = admin_url( 'admin-ajax.php' );
   <!-- Emergency Under Attack banner -->
   <div class="cfwaf-zc-attack-bar">
     <div class="cfwaf-zc-attack-bar-text">
-      <strong>⚡ Under Attack Mode</strong>
+      <strong><?php echo WPWAF_Icons::svg( 'zap' ); ?> Under Attack Mode</strong>
       <span>Enable JS challenge for ALL zones instantly. Use during active DDoS attacks</span>
     </div>
-    <button class="cfwaf-zc-attack-all-btn" id="cfwaf-zc-attack-all-on">⚡ Enable on All Zones</button>
+    <button class="cfwaf-zc-attack-all-btn" id="cfwaf-zc-attack-all-on"><?php echo WPWAF_Icons::svg( 'zap' ); ?> Enable on All Zones</button>
   </div>
 
   <!-- Controls bar -->
@@ -208,10 +208,10 @@ const PURGE_DONE = { urls:'URLs', hosts:'hostnames', prefixes:'prefixes', tags:'
 
 function qs(s,ctx){ return (ctx||document).querySelector(s); }
 function esc(v){ return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function toast(msg, ok=true){
+function toast(msg, ok=true, icon){
   const el = document.createElement('div');
   el.className = 'cfwaf-zc-toast ' + (ok?'ok':'err');
-  el.textContent = msg;
+  if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 3000);
 }
@@ -258,7 +258,7 @@ function cardHTML(z){
     <!-- Under Attack -->
     <div class="cfwaf-zc-attack-row safe" id="zc-attack-row-${z.id}">
       <div>
-        <div class="cfwaf-zc-attack-label" id="zc-attack-label-${z.id}">⚡ Under Attack Mode <span class="cfwaf-zc-attack-sub">Off</span></div>
+        <div class="cfwaf-zc-attack-label" id="zc-attack-label-${z.id}">${wpwafIcon('zap')} Under Attack Mode <span class="cfwaf-zc-attack-sub">Off</span></div>
       </div>
       <label class="cfwaf-zc-switch" title="Toggle Under Attack Mode">
         <input type="checkbox" class="cfwaf-zc-attack-toggle" data-zone="${z.id}">
@@ -267,7 +267,7 @@ function cardHTML(z){
     </div>
     <!-- Dev Mode -->
     <div class="cfwaf-zc-devmode-row">
-      <div class="cfwaf-zc-devmode-label">🔧 Development Mode</div>
+      <div class="cfwaf-zc-devmode-label">${wpwafIcon('wrench')} Development Mode</div>
       <label class="cfwaf-zc-switch green" title="Toggle Development Mode">
         <input type="checkbox" class="cfwaf-zc-devmode-toggle" data-zone="${z.id}">
         <span class="cfwaf-zc-switch-slider"></span>
@@ -278,7 +278,7 @@ function cardHTML(z){
       <div>
         <div class="cfwaf-zc-section-label">Cache Purge</div>
         <div class="cfwaf-zc-purge-row">
-          <button class="cfwaf-zc-btn cfwaf-zc-btn-purge cfwaf-zc-purge-all" data-zone="${z.id}">🗑 Purge Everything</button>
+          <button class="cfwaf-zc-btn cfwaf-zc-btn-purge cfwaf-zc-purge-all" data-zone="${z.id}">${wpwafIcon('trash')} Purge Everything</button>
           <button class="cfwaf-zc-btn cfwaf-zc-btn-ghost cfwaf-zc-purge-urls-toggle" data-zone="${z.id}" aria-expanded="false">More options</button>
         </div>
         <div class="cfwaf-zc-purge-more" id="zc-url-row-${z.id}">
@@ -298,7 +298,7 @@ function cardHTML(z){
       <!-- Zone Settings -->
       <div>
         <button class="cfwaf-zc-settings-toggle" data-zone="${z.id}">
-          <span>⚙ Zone Settings</span>
+          <span>${wpwafIcon('settings')} Zone Settings</span>
           <span class="cfwaf-zc-chevron">▼</span>
         </button>
         <div class="cfwaf-zc-settings-body" id="zc-settings-${z.id}"></div>
@@ -322,7 +322,7 @@ function initCard(zoneId, zoneName){
       if (res.success){
         zoneState[zoneId] = Object.assign({}, zoneState[zoneId], {attack:on});
         updateAttackUI(zoneId, on);
-        toast(on ? '⚡ Under Attack enabled on ' + zoneName : '✓ Under Attack disabled on ' + zoneName, !on || true);
+        toast(on ? 'Under Attack enabled on ' + zoneName : 'Under Attack disabled on ' + zoneName, true, on ? 'zap' : 'check');
       } else {
         this.checked = !on;
         toast('Failed: ' + (res.data?.message||'error'), false);
@@ -337,7 +337,7 @@ function initCard(zoneId, zoneName){
     this.disabled = true;
     ajax('wpwaf_zone_setting_update', {zone_id:zoneId, key:'development_mode', value: on ? 'on' : 'off'}, (res) => {
       this.disabled = false;
-      if (res.success){ zoneState[zoneId] = Object.assign({}, zoneState[zoneId], {dev:on}); toast((on ? '🔧 Dev mode on' : '✓ Dev mode off') + ': ' + zoneName); }
+      if (res.success){ zoneState[zoneId] = Object.assign({}, zoneState[zoneId], {dev:on}); toast((on ? 'Dev mode on' : 'Dev mode off') + ': ' + zoneName, true, on ? 'wrench' : 'check'); }
       else { this.checked = !on; toast('Failed: ' + (res.data?.message||'error'), false); }
     });
   });
@@ -345,11 +345,11 @@ function initCard(zoneId, zoneName){
   // Purge everything
   qs('.cfwaf-zc-purge-all', card)?.addEventListener('click', function(){
     if (!confirm('Purge ALL cache for ' + zoneName + '?')) return;
-    this.disabled = true; this.textContent = '⏳ Purging…';
+    this.disabled = true; this.innerHTML = wpwafIconText('hourglass', 'Purging…');
     const btn = this;
     ajax('wpwaf_purge_cache', {zone_id:zoneId, mode:'all'}, (res) => {
-      btn.disabled = false; btn.textContent = '🗑 Purge Everything';
-      res.success ? toast('✓ Cache purged: ' + zoneName) : toast('Failed: ' + (res.data?.message||'error'), false);
+      btn.disabled = false; btn.innerHTML = wpwafIconText('trash', 'Purge Everything');
+      res.success ? toast('Cache purged: ' + zoneName) : toast('Failed: ' + (res.data?.message||'error'), false);
     });
   });
 
@@ -378,7 +378,7 @@ function initCard(zoneId, zoneName){
     const btn = this;
     ajax('wpwaf_purge_cache', {zone_id:zoneId, mode, items}, (res) => {
       btn.disabled = false; btn.textContent = 'Purge';
-      res.success ? toast('✓ ' + (res.data?.count || '') + ' ' + (PURGE_DONE[mode] || 'items') + ' purged: ' + zoneName) : toast('Failed: ' + (res.data?.message||'error'), false);
+      res.success ? toast((res.data?.count || '') + ' ' + (PURGE_DONE[mode] || 'items') + ' purged: ' + zoneName) : toast('Failed: ' + (res.data?.message||'error'), false);
     });
   });
 
@@ -445,27 +445,27 @@ function settingsHTML(zoneId, s){
   const emailObf = s['email_obfuscation'] || 'off';
 
   return [
-    row('🔒 SSL Mode', 'Encryption mode between visitors and Cloudflare',
+    row(wpwafIconText('lock', 'SSL Mode'), 'Encryption mode between visitors and Cloudflare',
       sel('ssl', [['off','Off'],['flexible','Flexible'],['full','Full'],['strict','Full (Strict)']], ssl)),
     row('↗ Always Use HTTPS', 'Redirect all HTTP to HTTPS',
       tog('always_use_https', alwaysHttps, 'green')),
-    row('🗄 Cache Level', 'How query strings affect caching of static files',
+    row(wpwafIconText('database', 'Cache Level'), 'How query strings affect caching of static files',
       sel('cache_level', [['aggressive','Standard'],['simplified','Ignore query string'],['basic','No query string']], cacheLevel)),
-    row('⏱ Browser Cache TTL', 'How long browsers should cache resources',
+    row(wpwafIconText('timer', 'Browser Cache TTL'), 'How long browsers should cache resources',
       sel('browser_cache_ttl', [['1800','30 min'],['3600','1 hr'],['7200','2 hrs'],['14400','4 hrs'],['28800','8 hrs'],['57600','16 hrs'],['86400','1 day'],['604800','1 week'],['2592000','1 month']], bct)),
-    row('🚀 Rocket Loader', 'Async JS loading to improve page speed',
+    row(wpwafIconText('rocket', 'Rocket Loader'), 'Async JS loading to improve page speed',
       tog('rocket_loader', rocketLoader, 'green')),
-    row('🔗 Hotlink Protection', 'Block image hotlinking from other sites',
+    row(wpwafIconText('link', 'Hotlink Protection'), 'Block image hotlinking from other sites',
       tog('hotlink_protection', hotlink, 'green')),
-    row('✉ Email Obfuscation', 'Hide email addresses from scrapers',
+    row(wpwafIconText('mail', 'Email Obfuscation'), 'Hide email addresses from scrapers',
       tog('email_obfuscation', emailObf, 'green')),
-    row('🌐 Smart Tiered Cache', 'Fewer requests to your server by caching through one upper-tier data center',
+    row(wpwafIconText('globe', 'Smart Tiered Cache'), 'Fewer requests to your server by caching through one upper-tier data center',
       s.__tiered === null || s.__tiered === undefined
         ? '<span class="cfwaf-zc-setting-hint">Unavailable</span>'
         : `<label class="cfwaf-zc-switch green"><input type="checkbox" class="cfwaf-zc-tiered-toggle" data-zone="${zoneId}" ${s.__tiered==='on'?'checked':''}><span class="cfwaf-zc-switch-slider"></span></label>`),
     '<div class="cfwaf-zc-setting-group">Security headers</div>',
-    managedRow(zoneId, s.__managed, 'add_security_headers', '🛡 Add security headers', 'Adds X-Content-Type-Options, X-Frame-Options, Referrer-Policy and more'),
-    managedRow(zoneId, s.__managed, 'remove_x-powered-by_header', '🙈 Remove X-Powered-By', 'Hides the PHP version your server reports'),
+    managedRow(zoneId, s.__managed, 'add_security_headers', wpwafIconText('shield', 'Add security headers'), 'Adds X-Content-Type-Options, X-Frame-Options, Referrer-Policy and more'),
+    managedRow(zoneId, s.__managed, 'remove_x-powered-by_header', wpwafIconText('eye-off', 'Remove X-Powered-By'), 'Hides the PHP version your server reports'),
     '<div class="cfwaf-zc-setting-note"><strong>Security Level:</strong> Cloudflare retired the Low, Medium and High levels in 2025 and now uses this setting only for Under Attack mode. Use the Under Attack switch at the top of this card.</div>',
   ].join('');
 }
@@ -495,7 +495,7 @@ function wireSettings(zoneId, body){
         this.disabled = false;
         if (res.success){
           this.dataset.prev = value;
-          toast('✓ ' + key.replace(/_/g,' ') + ' updated');
+          toast(key.replace(/_/g,' ') + ' updated');
         } else {
           this.value = this.dataset.prev; // put back what Cloudflare still has
           toast('Failed: ' + (res.data?.message||'error'), false);
@@ -510,7 +510,7 @@ function wireSettings(zoneId, body){
       this.disabled = true;
       ajax('wpwaf_zone_setting_update', {zone_id:zoneId, key, value}, (res) => {
         this.disabled = false;
-        res.success ? toast('✓ ' + key.replace(/_/g,' ') + ' ' + value) : (this.checked=!this.checked, toast('Failed: '+(res.data?.message||'error'),false));
+        res.success ? toast(key.replace(/_/g,' ') + ' ' + value) : (this.checked=!this.checked, toast('Failed: '+(res.data?.message||'error'),false));
       });
     });
   });
@@ -521,7 +521,7 @@ function wireSettings(zoneId, body){
       this.disabled = true;
       ajax('wpwaf_zone_tiered_cache', {zone_id:zoneId, value: on ? '1' : '0'}, (res) => {
         this.disabled = false;
-        res.success ? toast('✓ Smart Tiered Cache ' + (on ? 'on' : 'off')) : (this.checked=!on, toast('Failed: '+(res.data?.message||'error'),false));
+        res.success ? toast('Smart Tiered Cache ' + (on ? 'on' : 'off')) : (this.checked=!on, toast('Failed: '+(res.data?.message||'error'),false));
       });
     });
   });
@@ -532,7 +532,7 @@ function wireSettings(zoneId, body){
       this.disabled = true;
       ajax('wpwaf_zone_managed_header', {zone_id:zoneId, transform:this.dataset.transform, value: on ? '1' : '0'}, (res) => {
         this.disabled = false;
-        res.success ? toast('✓ ' + (this.dataset.transform === 'add_security_headers' ? 'Security headers' : 'X-Powered-By removal') + ' ' + (on ? 'on' : 'off'))
+        res.success ? toast((this.dataset.transform === 'add_security_headers' ? 'Security headers' : 'X-Powered-By removal') + ' ' + (on ? 'on' : 'off'))
                     : (this.checked=!on, toast('Failed: '+(res.data?.message||'error'),false));
       });
     });
@@ -545,7 +545,7 @@ qs('#cfwaf-zc-attack-all-on')?.addEventListener('click', function(){
   if (!allZones.length){ toast('Load zones first', false); return; }
   const count = allZones.length;
   if (!confirm('Enable Under Attack Mode on ALL ' + count + ' zones? This will challenge every visitor on every domain.')) return;
-  this.disabled = true; this.textContent = '⏳ Enabling…';
+  this.disabled = true; this.innerHTML = wpwafIconText('hourglass', 'Enabling…');
   const btn = this;
   let done = 0, failed = 0;
   allZones.forEach(z => {
@@ -554,8 +554,8 @@ qs('#cfwaf-zc-attack-all-on')?.addEventListener('click', function(){
       else failed++;
       if (done + failed === count){
         btn.disabled = false;
-        btn.textContent = '✓ Enabled on ' + done + '/' + count;
-        toast('⚡ Under Attack enabled on ' + done + ' zone' + (done!==1?'s':''), failed===0);
+        btn.innerHTML = wpwafIconText('check', 'Enabled on ' + done + '/' + count);
+        toast('Under Attack enabled on ' + done + ' zone' + (done!==1?'s':''), failed===0, failed===0 ? 'zap' : 'x');
       }
     });
   });

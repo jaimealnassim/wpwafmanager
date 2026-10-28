@@ -14,13 +14,13 @@
 
 ### WAF Rules Builder
 
-Five pre-configured, battle-tested security rules deployable in one click, based on the [wafrules.com](https://wafrules.com) ruleset (last updated October 21, 2026):
+Five pre-configured, battle-tested security rules deployable in one click, based on the [wafrules.com](https://wafrules.com) ruleset (last updated October 24, 2026):
 
 | Rule | Action | Purpose |
 |------|--------|---------|
 | Allow Good Bots | Skip | Every Cloudflare verified bot (or chosen categories), services matched by their published IP lists (ManageWP, WP Umbrella, ShortPixel, Patchstack and more), Let's Encrypt + your server IPs, custom user agents and expressions |
-| Block Aggressive Crawlers & WordPress Paths | Block | Aggressive crawlers, exploit scanners (SQLMap, Nikto, Masscan), sensitive WP paths and exposed files |
-| Block or Challenge Web Hosts / TOR & Exploit URIs | Block or Managed Challenge | Cloud hosting ASNs (DigitalOcean, Vultr, Hetzner, OVH and more), TOR exit nodes and six exploit URI groups (SQL injection, file inclusion, XSS and more) |
+| Block Aggressive Crawlers & WordPress Paths | Block | Aggressive crawlers, exploit scanners (SQLMap, Nikto, Masscan), curl scripts (with hostname exceptions), sensitive WP paths and exposed files |
+| Block or Challenge Web Hosts / TOR & Exploit URIs | Block or Managed Challenge | Cloud hosting ASNs (DigitalOcean, Vultr, Hetzner, OVH and more), three attack hosting networks, TOR exit nodes and six exploit URI groups (SQL injection, file inclusion, XSS and more) |
 | Challenge Large Providers / Country | Managed Challenge | AWS EC2, Google Cloud, Azure and the countries you pick |
 | Challenge VPN Connections & wp-login | Managed Challenge | NordVPN, ExpressVPN, Surfshark, other VPN providers + WordPress login |
 
@@ -157,7 +157,7 @@ Manage Cloudflare Email Routing (free on all plans) directly from WordPress:
 
 - **Admin Bar Quick Purge**: toggle on/off, pick which zone to purge, choose instant AJAX purge or navigate to Zone Controls
 - **Zone Status**: auto-sync toggle and interval, default time range
-- **Access Control**: minimum WordPress role picker (Administrator through Subscriber) with ⚠ warnings below admin
+- **Access Control**: minimum WordPress role picker (Administrator through Subscriber) with warnings below admin
 - **User Access**: choose exactly which administrators can see the plugin; everyone else sees no menu, widget, admin bar button or plugin listing
 - **Menu Display**: show/hide Security Events, Email Routing, and the WP Dashboard widget
 - **Keep data on uninstall**: on by default; when off, all plugin data is removed on plugin delete
@@ -328,24 +328,24 @@ wpwafmanager/
 
 | Feature | Free (GitHub) | Pro ([wpwafmanager.com](https://wpwafmanager.com)) |
 |---------|:---:|:---:|
-| WAF Rules Builder | ✅ | ✅ |
-| DNS Manager | ✅ | ✅ |
-| Zone Status | ✅ | ✅ |
-| Clients & Reports | ✅ | ✅ |
-| Zone Controls | ✅ | ✅ |
-| Bot Control | ✅ | ✅ |
-| SSL & Insights | ✅ | ✅ |
-| Alerts & Health | ✅ | ✅ |
-| Turnstile | ✅ | ✅ |
-| Page Rules | ✅ | ✅ |
-| IP Access Rules | ✅ | ✅ |
-| Security Events | ✅ | ✅ |
-| Email Routing | ✅ | ✅ |
-| Multi-account | ✅ | ✅ |
-| Dashboard widget | ✅ | ✅ |
-| Plugin Settings | ✅ | ✅ |
-| Automatic WP updates | ❌ | ✅ |
-| Priority support | ❌ | ✅ |
+| WAF Rules Builder | Yes | Yes |
+| DNS Manager | Yes | Yes |
+| Zone Status | Yes | Yes |
+| Clients & Reports | Yes | Yes |
+| Zone Controls | Yes | Yes |
+| Bot Control | Yes | Yes |
+| SSL & Insights | Yes | Yes |
+| Alerts & Health | Yes | Yes |
+| Turnstile | Yes | Yes |
+| Page Rules | Yes | Yes |
+| IP Access Rules | Yes | Yes |
+| Security Events | Yes | Yes |
+| Email Routing | Yes | Yes |
+| Multi-account | Yes | Yes |
+| Dashboard widget | Yes | Yes |
+| Plugin Settings | Yes | Yes |
+| Automatic WP updates | No | Yes |
+| Priority support | No | Yes |
 
 ---
 

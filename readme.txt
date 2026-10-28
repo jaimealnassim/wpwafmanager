@@ -4,7 +4,7 @@ Tags: waf, firewall, cloudflare, security, turnstile
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.25
+Stable tag: 1.0.26
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,11 +16,11 @@ Manage Cloudflare from WordPress: WAF rules, DNS, bots, SSL, cache, alerts, Turn
 
 = WAF Rules Builder =
 
-Deploy five pre-configured, battle-tested security rules to any Cloudflare zone in one click, based on the open-source [wafrules.com](https://wafrules.com) ruleset (last updated October 21, 2026):
+Deploy five pre-configured, battle-tested security rules to any Cloudflare zone in one click, based on the open-source [wafrules.com](https://wafrules.com) ruleset (last updated October 24, 2026):
 
 * **Allow Good Bots**: Allow every Cloudflare verified bot or only the categories you pick, services matched by their published IP lists (ManageWP, WP Umbrella, ShortPixel, Patchstack and more), Let's Encrypt, your server IPs, custom user agents and Cloudflare expressions
-* **Block Aggressive Crawlers & WordPress Paths**: Block aggressive crawlers, exploit scanners (SQLMap, Nikto, Masscan, Nmap), and sensitive WordPress paths (xmlrpc.php, wp-config.php, install.php)
-* **Block or Challenge Web Hosts / TOR & Exploit URIs**: Block or challenge traffic from cloud hosting ASNs (DigitalOcean, Vultr, Hetzner, OVH, Contabo, and more) and TOR exit nodes, and block six groups of exploit URIs
+* **Block Aggressive Crawlers & WordPress Paths**: Block aggressive crawlers, exploit scanners (SQLMap, Nikto, Masscan, Nmap), curl scripts (with hostname exceptions for API hosts), and sensitive WordPress paths (xmlrpc.php, wp-config.php, install.php)
+* **Block or Challenge Web Hosts / TOR & Exploit URIs**: Block or challenge traffic from cloud hosting ASNs (DigitalOcean, Vultr, Hetzner, OVH, Contabo, and more), three attack hosting networks and TOR exit nodes, and block six groups of exploit URIs
 * **Challenge Large Providers / Country**: Managed challenge for AWS EC2, Google Cloud, and Azure traffic and the countries you pick
 * **Challenge VPN Connections & wp-login**: Managed challenge for NordVPN, ExpressVPN, Surfshark, and other VPN providers plus the WordPress login page
 
@@ -257,6 +257,9 @@ Zone Status starts with no zones selected and auto-sync off. This prevents surpr
 Full changelog at https://www.wpwafmanager.com/changelog/
 
 == Upgrade Notice ==
+
+= 1.0.26 =
+WAF rules updated to the October 24, 2026 wafrules.com release: curl blocking in Rule 2, three attack hosting networks in Rule 3 and the latest WP Umbrella IPs. Saved settings are updated automatically. Redeploy to your zones to apply them.
 
 = 1.0.25 =
 WAF rules updated to the October 21, 2026 wafrules.com release. Your saved rule settings and profiles are moved to the new layout automatically. Redeploy to your zones to apply the new rules.

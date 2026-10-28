@@ -3,7 +3,7 @@
  * Plugin Name:       WP WAF Manager
  * Plugin URI:        https://wpwafmanager.com
  * Description:       Manage Cloudflare from WordPress: WAF rules, DNS, bots, SSL, cache, alerts, Turnstile, Page Rules migration, IP rules and email routing across every client zone.
- * Version:           1.0.25
+ * Version:           1.0.26
  * Requires at least: 6.0
  * Tested up to:      7.1
  * Requires PHP:      8.0
@@ -41,7 +41,7 @@ if ( defined( 'WPWAF_VERSION' ) ) {
 	return;
 }
 
-define( 'WPWAF_VERSION', '1.0.25' );
+define( 'WPWAF_VERSION', '1.0.26' );
 define( 'WPWAF_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'WPWAF_URL',     plugin_dir_url( __FILE__ ) );
 
@@ -77,6 +77,8 @@ require_once WPWAF_DIR . 'includes/class-profiles.php';
 require_once WPWAF_DIR . 'includes/class-domain-profiles.php';
 require_once WPWAF_DIR . 'includes/class-access.php';
 require_once WPWAF_DIR . 'includes/class-zone-flares.php';
+require_once WPWAF_DIR . 'includes/class-flags.php';
+require_once WPWAF_DIR . 'includes/class-icons.php';
 require_once WPWAF_DIR . 'includes/class-module.php';
 require_once WPWAF_DIR . 'includes/class-bots.php';
 require_once WPWAF_DIR . 'includes/class-ssl-insights.php';
@@ -111,11 +113,11 @@ add_action( 'admin_bar_menu', static function ( WP_Admin_Bar $bar ): void {
 		? '#'
 		: admin_url( 'admin.php?page=wpwafmanager-zone-controls' );
 
-	$label = $zone_name ? '🗑 Purge: ' . $zone_name : '🗑 Purge CF Cache';
+	$label = $zone_name ? 'Purge: ' . $zone_name : 'Purge CF Cache';
 
 	$bar->add_node( [
 		'id'    => 'wpwaf-purge',
-		'title' => esc_html( $label ),
+		'title' => WPWAF_Icons::text( 'trash', $label ),
 		'href'  => $href,
 		'meta'  => [
 			'title'       => 'WP WAF Manager: Quick Cache Purge',
@@ -137,12 +139,15 @@ $wpwaf_admin_bar_purge_js = static function (): void {
 	if ( ! WPWAF_Accounts::active() ) return;
 
 	$zone_name = WPWAF_Settings::get( 'admin_bar_zone_name', '' );
-	$label     = $zone_name ? '🗑 Purge: ' . $zone_name : '🗑 Purge CF Cache';
+	$label     = $zone_name ? 'Purge: ' . $zone_name : 'Purge CF Cache';
 	$data = [
 		'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 		'nonce'   => wp_create_nonce( 'wpwaf_nonce' ),
 		'zoneId'  => $zone_id,
-		'label'   => $label,
+		'label'   => WPWAF_Icons::text( 'trash', $label ),
+		'busy'    => WPWAF_Icons::text( 'hourglass', 'Purging…' ),
+		'done'    => WPWAF_Icons::text( 'check', 'Cache Purged' ),
+		'failed'  => WPWAF_Icons::text( 'x', 'Failed' ),
 	];
 	$json = wp_json_encode( $data );
 	?>
@@ -154,7 +159,7 @@ $wpwaf_admin_bar_purge_js = static function (): void {
 		btn.setAttribute('href','#');
 		btn.addEventListener('click',function(e){
 			e.preventDefault();
-			btn.textContent='Purging\u2026';
+			btn.innerHTML=d.busy;
 			var fd=new FormData();
 			fd.append('action','wpwaf_purge_cache');
 			fd.append('nonce',d.nonce);
@@ -163,12 +168,12 @@ $wpwaf_admin_bar_purge_js = static function (): void {
 			fetch(d.ajaxUrl,{method:'POST',body:fd})
 				.then(function(r){return r.json();})
 				.then(function(r){
-					btn.textContent=r.success?'Cache Purged':'Failed';
-					setTimeout(function(){btn.textContent=d.label;},3000);
+					btn.innerHTML=r.success?d.done:d.failed;
+					setTimeout(function(){btn.innerHTML=d.label;},3000);
 				})
 				.catch(function(){
-					btn.textContent='Failed';
-					setTimeout(function(){btn.textContent=d.label;},3000);
+					btn.innerHTML=d.failed;
+					setTimeout(function(){btn.innerHTML=d.label;},3000);
 				});
 		});
 	})();

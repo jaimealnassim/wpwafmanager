@@ -77,9 +77,9 @@
 	<div class="cfwaf-zones-header">
 		<div class="cfwaf-zones-meta">
 			<span class="cfwaf-zones-count" id="cfwaf-zones-count">Loading&hellip;</span>
-			<input type="search" id="cfwaf-zones-search" class="cfwaf-zones-search" placeholder="&#128269; Filter zones&hellip;" style="display:none;">
+			<input type="search" id="cfwaf-zones-search" class="cfwaf-zones-search" placeholder="Filter zones&hellip;" style="display:none;">
 		</div>
-		<button type="button" id="cfwaf-zones-refresh" class="cfwaf-btn cfwaf-btn-sm">&#8635; Refresh</button>
+		<button type="button" id="cfwaf-zones-refresh" class="cfwaf-btn cfwaf-btn-sm"><?php echo WPWAF_Icons::svg( 'refresh' ); ?> Refresh</button>
 	</div>
 
 	<div id="cfwaf-zones-loading" style="padding:60px;text-align:center;color:#9ca3af;">
@@ -297,7 +297,7 @@
 				if (errEl) {
 					errEl.style.display = '';
 					const msg = (res.data && res.data.message) || 'Unknown error';
-					errEl.innerHTML = '<div class="cfwaf-zn-notice cfwaf-zn-notice--error"><strong>\u2717 Could not load zones.</strong><br>' + esc(msg) + '</div>';
+					errEl.innerHTML = '<div class="cfwaf-zn-notice cfwaf-zn-notice--error"><strong>' + window.wpwafIcon('x') + ' Could not load zones.</strong><br>' + esc(msg) + '</div>';
 				}
 				return;
 			}

@@ -252,10 +252,10 @@ const selected = new Set();
 
 function qs(s,ctx){ return (ctx||document).querySelector(s); }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function toast(msg, ok=true){
+function toast(msg, ok=true, icon){
   const el = document.createElement('div');
   el.className = 'wpwaf-bt-toast ' + (ok ? 'ok' : 'err');
-  el.textContent = msg;
+  if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3200);
 }
@@ -474,7 +474,7 @@ function saveZoneField(el){
 
 /* ── Bulk apply ───────────────────────────────────────────────────────────── */
 function resultRow(name, ok, msg){
-  return `<div class="wpwaf-bt-result ${ok ? 'ok' : 'err'}"><span class="wpwaf-bt-result-icon">${ok ? '&#10003;' : '&#10005;'}</span><div style="min-width:0;"><div class="wpwaf-bt-result-zone">${esc(name)}</div><div class="wpwaf-bt-result-msg">${esc(msg)}</div></div></div>`;
+  return `<div class="wpwaf-bt-result ${ok ? 'ok' : 'err'}"><span class="wpwaf-bt-result-icon">${wpwafIcon(ok ? 'check' : 'x')}</span><div style="min-width:0;"><div class="wpwaf-bt-result-zone">${esc(name)}</div><div class="wpwaf-bt-result-msg">${esc(msg)}</div></div></div>`;
 }
 async function applyBulk(){
   const changes = bulkChanges();

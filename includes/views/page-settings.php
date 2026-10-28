@@ -16,7 +16,7 @@ $s        = $settings; // passed from render_settings_page()
 .wpwaf-st-section{background:#fff;border:1px solid var(--st-border);border-radius:10px;margin-bottom:20px;overflow:hidden;}
 .wpwaf-st-section-header{padding:14px 20px;border-bottom:1px solid var(--st-border);display:flex;align-items:center;gap:10px;}
 .wpwaf-st-section-header h2{margin:0;font-size:14px;font-weight:700;color:var(--st-dark);}
-.wpwaf-st-section-icon{font-size:18px;line-height:1;}
+.wpwaf-st-section-icon{font-size:18px;line-height:1;display:inline-flex;color:#FF6A00;}
 .wpwaf-st-section-body{padding:0;}
 .wpwaf-st-row{display:grid;grid-template-columns:240px 1fr;align-items:start;gap:16px;padding:16px 20px;border-bottom:1px solid #f1f3f5;}
 .wpwaf-st-row:last-child{border-bottom:none;}
@@ -62,7 +62,7 @@ $s        = $settings; // passed from render_settings_page()
 .wpwaf-st-role-option{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:2px solid var(--st-border);border-radius:8px;cursor:pointer;transition:all .12s;}
 .wpwaf-st-role-option:has(input:checked){border-color:var(--st-orange);background:#fff8f5;}
 .wpwaf-st-role-option input{margin-top:3px;accent-color:var(--st-orange);flex-shrink:0;width:16px;height:16px;}
-.wpwaf-st-role-icon{font-size:18px;line-height:1;flex-shrink:0;margin-top:1px;}
+.wpwaf-st-role-icon{font-size:18px;line-height:1;flex-shrink:0;margin-top:1px;display:inline-flex;color:#6b7280;}
 .wpwaf-st-role-info{display:flex;flex-direction:column;gap:2px;}
 .wpwaf-st-role-info strong{font-size:13px;color:var(--st-dark);}
 .wpwaf-st-role-info span{font-size:11px;color:var(--st-muted);}
@@ -100,7 +100,7 @@ $s        = $settings; // passed from render_settings_page()
   <!-- ── Admin Bar ──────────────────────────────────────────────────────────── -->
   <div class="wpwaf-st-section">
     <div class="wpwaf-st-section-header">
-      <span class="wpwaf-st-section-icon">🔧</span>
+      <span class="wpwaf-st-section-icon"><?php echo WPWAF_Icons::svg( 'wrench' ); ?></span>
       <h2>Admin Bar Quick Purge</h2>
     </div>
     <div class="wpwaf-st-section-body">
@@ -159,7 +159,7 @@ $s        = $settings; // passed from render_settings_page()
   <!-- ── Zone Analytics ────────────────────────────────────────────────────── -->
   <div class="wpwaf-st-section">
     <div class="wpwaf-st-section-header">
-      <span class="wpwaf-st-section-icon">📊</span>
+      <span class="wpwaf-st-section-icon"><?php echo WPWAF_Icons::svg( 'chart' ); ?></span>
       <h2>Zone Analytics</h2>
     </div>
     <div class="wpwaf-st-section-body">
@@ -223,7 +223,7 @@ $s        = $settings; // passed from render_settings_page()
   <!-- ── Access Control ────────────────────────────────────────────────────── -->
   <div class="wpwaf-st-section">
     <div class="wpwaf-st-section-header">
-      <span class="wpwaf-st-section-icon">🔒</span>
+      <span class="wpwaf-st-section-icon"><?php echo WPWAF_Icons::svg( 'lock' ); ?></span>
       <h2>Access Control</h2>
     </div>
     <div class="wpwaf-st-section-body">
@@ -231,11 +231,11 @@ $s        = $settings; // passed from render_settings_page()
       <?php
       $current_role = $s['minimum_role'] ?? 'administrator';
       $roles = [
-        'administrator' => [ 'label' => 'Administrator',  'desc' => 'Full site admin access',            'icon' => '🛡', 'warn' => false ],
-        'editor'        => [ 'label' => 'Editor',         'desc' => 'Can manage all posts and pages',    'icon' => '✏️', 'warn' => true  ],
-        'author'        => [ 'label' => 'Author',         'desc' => 'Can publish their own posts',       'icon' => '📝', 'warn' => true  ],
-        'contributor'   => [ 'label' => 'Contributor',    'desc' => 'Can write but not publish',         'icon' => '👤', 'warn' => true  ],
-        'subscriber'    => [ 'label' => 'Subscriber',     'desc' => 'Registered users only',             'icon' => '👁', 'warn' => true  ],
+        'administrator' => [ 'label' => 'Administrator',  'desc' => 'Full site admin access',            'icon' => 'shield', 'warn' => false ],
+        'editor'        => [ 'label' => 'Editor',         'desc' => 'Can manage all posts and pages',    'icon' => 'pencil', 'warn' => true  ],
+        'author'        => [ 'label' => 'Author',         'desc' => 'Can publish their own posts',       'icon' => 'file-text', 'warn' => true  ],
+        'contributor'   => [ 'label' => 'Contributor',    'desc' => 'Can write but not publish',         'icon' => 'user', 'warn' => true  ],
+        'subscriber'    => [ 'label' => 'Subscriber',     'desc' => 'Registered users only',             'icon' => 'eye', 'warn' => true  ],
       ];
       ?>
       <div class="wpwaf-st-row">
@@ -250,12 +250,12 @@ $s        = $settings; // passed from render_settings_page()
               <input type="radio" name="st-minimum-role" value="<?php echo esc_attr( $role_key ); ?>"
                      id="st-role-<?php echo esc_attr( $role_key ); ?>"
                      <?php checked( $current_role, $role_key ); ?>>
-              <span class="wpwaf-st-role-icon"><?php echo $role['icon']; ?></span>
+              <span class="wpwaf-st-role-icon"><?php echo WPWAF_Icons::svg( $role['icon'] ); ?></span>
               <span class="wpwaf-st-role-info">
                 <strong><?php echo esc_html( $role['label'] ); ?></strong>
                 <span><?php echo esc_html( $role['desc'] ); ?></span>
                 <?php if ( $role['warn'] ) : ?>
-                <span class="wpwaf-st-role-warn">⚠ Not recommended for security plugins</span>
+                <span class="wpwaf-st-role-warn"><?php echo WPWAF_Icons::svg( 'alert' ); ?> Not recommended for security plugins</span>
                 <?php endif; ?>
               </span>
             </label>
@@ -305,7 +305,7 @@ $s        = $settings; // passed from render_settings_page()
   <!-- ── User Access ───────────────────────────────────────────────────────── -->
   <div class="wpwaf-st-section">
     <div class="wpwaf-st-section-header">
-      <span class="wpwaf-st-section-icon">👥</span>
+      <span class="wpwaf-st-section-icon"><?php echo WPWAF_Icons::svg( 'users' ); ?></span>
       <h2>User Access</h2>
     </div>
     <div class="wpwaf-st-section-body">
@@ -362,7 +362,7 @@ $s        = $settings; // passed from render_settings_page()
   <!-- ── Menu Display ──────────────────────────────────────────────────────── -->
   <div class="wpwaf-st-section">
     <div class="wpwaf-st-section-header">
-      <span class="wpwaf-st-section-icon">📋</span>
+      <span class="wpwaf-st-section-icon"><?php echo WPWAF_Icons::svg( 'clipboard' ); ?></span>
       <h2>Menu Display</h2>
     </div>
     <div class="wpwaf-st-section-body">
@@ -514,10 +514,10 @@ qs('#wpwaf-st-test-conn')?.addEventListener('click', function(){
     btn.disabled = false; btn.textContent = 'Test Connection';
     if (r.success) {
       res.style.color = '#059669';
-      res.textContent = '✓ Connected: ' + r.data.account + ' · ' + r.data.zone_count + ' zone' + (r.data.zone_count !== 1 ? 's' : '');
+      wpwafSetText(res, 'check', 'Connected: ' + r.data.account + ' · ' + r.data.zone_count + ' zone' + (r.data.zone_count !== 1 ? 's' : ''));
     } else {
       res.style.color = '#dc2626';
-      res.textContent = '✗ ' + (r.data?.message || 'Connection failed');
+      wpwafSetText(res, 'x', (r.data?.message || 'Connection failed'));
     }
   });
 });
@@ -554,9 +554,9 @@ qs('#wpwaf-save-access-users')?.addEventListener('click', function(){
   ajax('wpwaf_save_access_users', { user_ids: JSON.stringify(ids) }, (res) => {
     btn.disabled = false; btn.textContent = 'Save Access Settings';
     if (res.success){
-      msg.textContent = '✓ Access settings saved'; msg.className = 'wpwaf-st-save-msg ok';
+      wpwafSetText(msg, 'check', 'Access settings saved'); msg.className = 'wpwaf-st-save-msg ok';
     } else {
-      msg.textContent = '✗ ' + (res.data?.message || 'Save failed'); msg.className = 'wpwaf-st-save-msg err';
+      wpwafSetText(msg, 'x', (res.data?.message || 'Save failed')); msg.className = 'wpwaf-st-save-msg err';
     }
   });
 });
@@ -593,12 +593,12 @@ qs('#wpwaf-st-save')?.addEventListener('click', function(){
     btn.disabled    = false;
     btn.textContent = 'Save Settings';
     if (res.success){
-      msg.textContent = '✓ Settings saved';
+      wpwafSetText(msg, 'check', 'Settings saved');
       msg.className   = 'wpwaf-st-save-msg ok';
       // Reload after short delay so admin bar / menu changes take effect
       setTimeout(() => window.location.reload(), 800);
     } else {
-      msg.textContent = '✗ ' + (res.data?.message || 'Save failed');
+      wpwafSetText(msg, 'x', (res.data?.message || 'Save failed'));
       msg.className   = 'wpwaf-st-save-msg err';
     }
   });

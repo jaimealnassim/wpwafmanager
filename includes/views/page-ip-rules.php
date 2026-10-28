@@ -134,7 +134,7 @@ $active_id = WPWAF_Accounts::active_id();
 		<select id="cfwaf-ip-account-select" class="cfwaf-ip-account-select">
 			<?php foreach ( $accounts as $acc ) : ?>
 			<option value="<?php echo esc_attr( $acc['id'] ); ?>" <?php selected( $acc['id'], $active_id ); ?>>
-				<?php echo esc_html( $acc['label'] ?? 'Unnamed' ); ?> &mdash; <?php echo esc_html( $acc['auth_method'] === 'key' ? 'Email + Key' : 'API Token' ); ?>
+				<?php echo esc_html( $acc['label'] ?? 'Unnamed' ); ?> (<?php echo esc_html( $acc['auth_method'] === 'key' ? 'Email + Key' : 'API Token' ); ?>)
 			</option>
 			<?php endforeach; ?>
 		</select>
@@ -170,11 +170,11 @@ $active_id = WPWAF_Accounts::active_id();
 		<input type="search" id="cfwaf-ip-search" class="cfwaf-ip-search" placeholder="Search IP, country, note…">
 		<div class="cfwaf-ip-filter-tabs" id="cfwaf-ip-filter-tabs" role="tablist">
 			<button class="cfwaf-ip-filter-tab active" data-mode="" role="tab">All</button>
-			<button class="cfwaf-ip-filter-tab" data-mode="whitelist" role="tab">✅ Allow</button>
-			<button class="cfwaf-ip-filter-tab" data-mode="block" role="tab">🚫 Block</button>
-			<button class="cfwaf-ip-filter-tab" data-mode="managed_challenge" role="tab">🛡️ Managed Challenge</button>
-			<button class="cfwaf-ip-filter-tab" data-mode="challenge" role="tab">⚠️ Challenge</button>
-			<button class="cfwaf-ip-filter-tab" data-mode="js_challenge" role="tab">🔒 JS Challenge</button>
+			<button class="cfwaf-ip-filter-tab" data-mode="whitelist" role="tab"><?php echo WPWAF_Icons::svg( 'circle-check' ); ?> Allow</button>
+			<button class="cfwaf-ip-filter-tab" data-mode="block" role="tab"><?php echo WPWAF_Icons::svg( 'ban' ); ?> Block</button>
+			<button class="cfwaf-ip-filter-tab" data-mode="managed_challenge" role="tab"><?php echo WPWAF_Icons::svg( 'shield' ); ?> Managed Challenge</button>
+			<button class="cfwaf-ip-filter-tab" data-mode="challenge" role="tab"><?php echo WPWAF_Icons::svg( 'alert' ); ?> Challenge</button>
+			<button class="cfwaf-ip-filter-tab" data-mode="js_challenge" role="tab"><?php echo WPWAF_Icons::svg( 'lock' ); ?> JS Challenge</button>
 		</div>
 		<span class="cfwaf-ip-count" id="cfwaf-ip-count"></span>
 	</div>
@@ -270,6 +270,7 @@ $active_id = WPWAF_Accounts::active_id();
 	<?php endif; ?>
 </div>
 
+<?php WPWAF_Flags::print_script(); ?>
 <script>
 'use strict';
 (function(){
@@ -285,10 +286,10 @@ let editingId       = '';
 
 function qs(s){ return document.querySelector(s); }
 function qsa(s){ return Array.from(document.querySelectorAll(s)); }
-function toast(msg, ok=true){
+function toast(msg, ok=true, icon){
 	const el = document.createElement('div');
 	el.className = 'cfwaf-ip-toast ' + (ok?'ok':'err');
-	el.textContent = msg;
+	if (window.wpwafToastBody) el.innerHTML = wpwafToastBody(msg, ok, icon); else el.textContent = msg;
 	document.body.appendChild(el);
 	setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },3000);
 }
@@ -302,7 +303,7 @@ function ajax(action, data, cb){
 function showError(msg){
 	const el = qs('#cfwaf-ip-error');
 	if (!el) return;
-	el.textContent = '⚠ ' + msg;
+	wpwafSetText(el, 'alert', msg);
 	el.style.display = '';
 }
 
@@ -381,11 +382,11 @@ qs('#cfwaf-ip-search')?.addEventListener('input', renderTable);
 
 // ── Render ────────────────────────────────────────────────────────────────────
 const MODE_LABELS = {
-	whitelist:    { label:'Allow',        cls:'whitelist',   icon:'✅' },
-	block:        { label:'Block',         cls:'block',       icon:'🚫' },
-	managed_challenge: { label:'Managed Challenge', cls:'challenge', icon:'🛡️' },
-	challenge:    { label:'Challenge',     cls:'challenge',   icon:'⚠️' },
-	js_challenge: { label:'JS Challenge',  cls:'js_challenge',icon:'🔒' },
+	whitelist:    { label:'Allow',        cls:'whitelist',   icon:'circle-check' },
+	block:        { label:'Block',         cls:'block',       icon:'ban' },
+	managed_challenge: { label:'Managed Challenge', cls:'challenge', icon:'shield' },
+	challenge:    { label:'Challenge',     cls:'challenge',   icon:'alert' },
+	js_challenge: { label:'JS Challenge',  cls:'js_challenge',icon:'lock' },
 };
 const TARGET_LABELS = { ip:'IP', ip_range:'CIDR', country:'Country', asn:'ASN' };
 
@@ -422,14 +423,14 @@ function renderTable(){
 		const added  = fmtDate(r.created_on);
 		return `<tr>
 			<td><span class="cfwaf-ip-target">${escHtml(TARGET_LABELS[target]||target)}</span></td>
-			<td><span class="cfwaf-ip-value">${escHtml(value)}</span></td>
-			<td><span class="cfwaf-ip-mode ${escHtml(m.cls)}">${m.icon} ${escHtml(m.label)}</span></td>
+			<td><span class="cfwaf-ip-value">${target === 'country' && window.wpwafFlag ? window.wpwafFlag(value) : ''}${escHtml(value)}</span></td>
+			<td><span class="cfwaf-ip-mode ${escHtml(m.cls)}">${wpwafIcon(m.icon)} ${escHtml(m.label)}</span></td>
 			<td class="cfwaf-ip-note">${escHtml(note)}</td>
 			<td style="font-size:11px;color:var(--ip-muted);white-space:nowrap;">${escHtml(added)}</td>
 			<td>
 				<div style="display:flex;gap:4px;">
 					<button class="cfwaf-ip-btn cfwaf-ip-btn-edit cfwaf-ip-edit-btn" data-id="${escHtml(r.id)}">Edit</button>
-					<button class="cfwaf-ip-btn cfwaf-ip-btn-danger cfwaf-ip-del-btn" data-id="${escHtml(r.id)}" data-value="${escHtml(value)}">✕</button>
+					<button class="cfwaf-ip-btn cfwaf-ip-btn-danger cfwaf-ip-del-btn" data-id="${escHtml(r.id)}" data-value="${escHtml(value)}" aria-label="Delete rule" title="Delete">${wpwafIcon('x')}</button>
 				</div>
 			</td>
 		</tr>`;
@@ -534,14 +535,14 @@ qs('#cfwaf-ip-modal-save')?.addEventListener('click', () => {
 	if (editingId) {
 		ajax('wpwaf_ip_rules_update', {account_id:accountId, plugin_account_id:pluginAccountId, rule_id:editingId, mode, note}, (res) => {
 			saveBtn.disabled=false; saveBtn.textContent='Save Changes';
-			if (!res.success){ errEl.textContent='⚠ '+(res.data?.message||'Save failed'); errEl.style.display=''; return; }
-			closeModal(); loadRules(); toast('✓ Rule updated');
+			if (!res.success){ wpwafSetText(errEl, 'alert', (res.data?.message||'Save failed')); errEl.style.display=''; return; }
+			closeModal(); loadRules(); toast('Rule updated');
 		});
 	} else {
 		ajax('wpwaf_ip_rules_create', {account_id:accountId, plugin_account_id:pluginAccountId, mode, target, value, note}, (res) => {
 			saveBtn.disabled=false; saveBtn.textContent='Add Rule';
-			if (!res.success){ errEl.textContent='⚠ '+(res.data?.message||'Create failed'); errEl.style.display=''; return; }
-			closeModal(); loadRules(); toast('✓ Rule created');
+			if (!res.success){ wpwafSetText(errEl, 'alert', (res.data?.message||'Create failed')); errEl.style.display=''; return; }
+			closeModal(); loadRules(); toast('Rule created');
 		});
 	}
 });
@@ -550,7 +551,7 @@ qs('#cfwaf-ip-modal-save')?.addEventListener('click', () => {
 function deleteRule(id, value){
 	if (!confirm(`Delete rule for "${value}"? This applies to all zones immediately.`)) return;
 	ajax('wpwaf_ip_rules_delete', {account_id:accountId, plugin_account_id:pluginAccountId, rule_id:id}, (res) => {
-		if (res.success){ loadRules(); toast('✓ Rule deleted'); }
+		if (res.success){ loadRules(); toast('Rule deleted'); }
 		else toast('Failed: '+(res.data?.message||'error'), false);
 	});
 }
