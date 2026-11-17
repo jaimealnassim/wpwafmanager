@@ -1,0 +1,105 @@
+/* WP WAF Manager: IP Access Rules screen. Enqueued by WPWAF_Admin::enqueue_assets(). */
+:root{--ip-orange:#FF6A00;--ip-border:#e2e6ea;--ip-bg:#f8f9fb;--ip-dark:#1a1a2e;--ip-muted:#6b7280;}
+.cfwaf-ip-wrap{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:1100px;padding:24px 20px;color:var(--ip-dark);}
+.cfwaf-ip-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.cfwaf-ip-header h1{font-size:22px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;}
+.cfwaf-ip-header h1 .dashicons{color:var(--ip-orange);font-size:24px;width:24px;height:24px;}
+.cfwaf-ip-header-sub{font-size:12px;color:var(--ip-muted);margin-top:3px;}
+.cfwaf-ip-no-creds{background:#fff8f5;border:1px solid #fcd9c0;border-radius:8px;padding:20px 24px;color:#92400e;}
+.cfwaf-ip-notice{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 16px;font-size:13px;color:#1e40af;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start;}
+.cfwaf-ip-notice strong{font-weight:700;}
+.cfwaf-ip-notice-warn{background:#fff8f5;border-color:#fcd9c0;color:#92400e;}
+
+/* Toolbar */
+.cfwaf-ip-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.cfwaf-ip-search{padding:7px 12px;border:1px solid var(--ip-border);border-radius:6px;font-size:13px;width:240px;}
+.cfwaf-ip-search:focus{outline:none;border-color:var(--ip-orange);}
+.cfwaf-ip-filter-tabs{display:flex;border:1px solid var(--ip-border);border-radius:6px;overflow:hidden;}
+.cfwaf-ip-filter-tab{padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;border:none;color:var(--ip-muted);transition:all .15s;}
+.cfwaf-ip-filter-tab.active{background:var(--ip-dark);color:#fff;}
+.cfwaf-ip-count{margin-left:auto;font-size:12px;color:var(--ip-muted);}
+.cfwaf-ip-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.cfwaf-ip-btn-primary{background:var(--ip-orange);color:#fff;}
+.cfwaf-ip-btn-primary:hover{background:#d95500;}
+.cfwaf-ip-btn-secondary{background:#fff;color:var(--ip-dark);border:1px solid var(--ip-border);}
+.cfwaf-ip-btn-secondary:hover{background:var(--ip-bg);}
+.cfwaf-ip-btn-danger{background:none;border:1px solid #fecaca;color:#e53e3e;padding:4px 10px;font-size:11px;border-radius:5px;}
+.cfwaf-ip-btn-danger:hover{background:#fee2e2;}
+.cfwaf-ip-btn-edit{background:none;border:1px solid var(--ip-border);color:var(--ip-dark);padding:4px 10px;font-size:11px;border-radius:5px;}
+.cfwaf-ip-btn-edit:hover{background:var(--ip-bg);}
+.cfwaf-ip-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Table */
+.cfwaf-ip-table-wrap{background:#fff;border:1px solid var(--ip-border);border-radius:8px;overflow:hidden;}
+.cfwaf-ip-table{width:100%;border-collapse:collapse;font-size:13px;}
+.cfwaf-ip-table th{background:var(--ip-bg);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ip-muted);border-bottom:1px solid var(--ip-border);white-space:nowrap;}
+.cfwaf-ip-table td{padding:10px 14px;border-bottom:1px solid #f1f3f5;vertical-align:middle;}
+.cfwaf-ip-table tr:last-child td{border-bottom:none;}
+.cfwaf-ip-table tr:hover td{background:#fafbfc;}
+
+/* Mode badges */
+.cfwaf-ip-mode{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;}
+.cfwaf-ip-mode.whitelist{background:#d1fae5;color:#065f46;}
+.cfwaf-ip-mode.block{background:#fee2e2;color:#b91c1c;}
+.cfwaf-ip-mode.challenge{background:#fef3c7;color:#92400e;}
+.cfwaf-ip-mode.js_challenge{background:#e0f2fe;color:#0369a1;}
+
+/* Target type badge */
+.cfwaf-ip-target{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569;margin-right:4px;}
+
+/* Value cell */
+.cfwaf-ip-value{font-family:monospace;font-size:13px;font-weight:600;}
+
+/* Note */
+.cfwaf-ip-note{font-size:11px;color:var(--ip-muted);font-style:italic;}
+
+/* States */
+.cfwaf-ip-loading{text-align:center;padding:40px;color:var(--ip-muted);}
+.cfwaf-ip-empty{text-align:center;padding:40px;color:var(--ip-muted);font-style:italic;}
+.cfwaf-ip-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,106,0,.3);border-top-color:var(--ip-orange);border-radius:50%;animation:ip-spin .6s linear infinite;vertical-align:middle;}
+@keyframes ip-spin{to{transform:rotate(360deg);}}
+.cfwaf-ip-error{background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:12px 16px;color:#b91c1c;font-size:13px;margin-bottom:16px;}
+
+/* Modal */
+.cfwaf-ip-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.cfwaf-ip-modal{background:#fff;border-radius:10px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.cfwaf-ip-modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--ip-border);}
+.cfwaf-ip-modal-header h3{margin:0;font-size:16px;font-weight:700;}
+.cfwaf-ip-modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ip-muted);line-height:1;padding:4px;}
+.cfwaf-ip-modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
+.cfwaf-ip-modal-footer{padding:14px 20px;border-top:1px solid var(--ip-border);display:flex;gap:8px;justify-content:flex-end;}
+.cfwaf-ip-field{display:flex;flex-direction:column;gap:4px;}
+.cfwaf-ip-field label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ip-muted);}
+.cfwaf-ip-field input,.cfwaf-ip-field select,.cfwaf-ip-field textarea{padding:8px 10px;border:1px solid var(--ip-border);border-radius:6px;font-size:13px;color:var(--ip-dark);background:#fff;width:100%;box-sizing:border-box;}
+.cfwaf-ip-field input:focus,.cfwaf-ip-field select:focus,.cfwaf-ip-field textarea:focus{outline:none;border-color:var(--ip-orange);box-shadow:0 0 0 2px rgba(255,106,0,.12);}
+.cfwaf-ip-field-hint{font-size:11px;color:var(--ip-muted);margin-top:2px;}
+.cfwaf-ip-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.cfwaf-ip-country-note{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;color:#92400e;font-size:12px;line-height:1.5;}
+.cfwaf-ip-modal-error{background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:10px 14px;color:#b91c1c;font-size:13px;}
+
+/* Mode selector */
+.cfwaf-ip-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cfwaf-ip-mode-option{position:relative;}
+.cfwaf-ip-mode-option input{position:absolute;opacity:0;width:0;height:0;}
+.cfwaf-ip-mode-option label{display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--ip-border);border-radius:7px;cursor:pointer;transition:all .12s;font-size:13px;font-weight:600;}
+.cfwaf-ip-mode-option input:checked+label{border-color:var(--ip-orange);background:#fff8f5;}
+.cfwaf-ip-mode-option label:hover{border-color:#d1d5db;}
+.cfwaf-ip-mode-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.cfwaf-ip-mode-dot.whitelist{background:#059669;}
+.cfwaf-ip-mode-dot.block{background:#dc2626;}
+.cfwaf-ip-mode-dot.challenge{background:#d97706;}
+.cfwaf-ip-mode-dot.js_challenge{background:#0284c7;}
+
+/* Toast */
+.cfwaf-ip-toast{position:fixed;bottom:24px;right:24px;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;color:#fff;z-index:999999;}
+.cfwaf-ip-toast.ok{background:#059669;}.cfwaf-ip-toast.err{background:#dc2626;}
+/* Account selector bar */
+.cfwaf-ip-account-bar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--ip-border);border-radius:8px;padding:12px 16px;margin-bottom:16px;}
+.cfwaf-ip-account-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ip-muted);white-space:nowrap;}
+.cfwaf-ip-account-select{flex:1;padding:7px 10px;border:1px solid var(--ip-border);border-radius:6px;font-size:13px;color:var(--ip-dark);background:#fff;cursor:pointer;max-width:480px;}
+.cfwaf-ip-account-select:focus{outline:none;border-color:var(--ip-orange);box-shadow:0 0 0 2px rgba(255,106,0,.12);}
+/* Permission & API error notices */
+.cfwaf-ip-perm-notice{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 16px;font-size:13px;color:#1e40af;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+.cfwaf-ip-perm-notice ul{margin:8px 0 0;padding-left:18px;}
+.cfwaf-ip-perm-notice li{margin-bottom:4px;font-size:12px;}
+.cfwaf-ip-api-error{border-radius:8px;padding:14px 16px;font-size:13px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}

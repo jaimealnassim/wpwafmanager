@@ -1,0 +1,8 @@
+/* WP WAF Manager: WAF Rules screen, after admin.css. Enqueued by WPWAF_Admin::enqueue_assets(). */
+/* details/summary reset */
+.cfwaf-wrap details > summary { list-style: none; }
+.cfwaf-wrap details > summary::-webkit-details-marker { display: none; }
+.cfwaf-header-meta { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+.cfwaf-header-meta-updated { font-size: 11px; color: #6b7280; }
+.cfwaf-header-meta-updated a { color: #9ca3af; text-decoration: none; }
+.cfwaf-header-meta-updated a:hover { color: #fff; text-decoration: underline; }

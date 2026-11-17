@@ -1,0 +1,105 @@
+/* WP WAF Manager: Turnstile screen. Enqueued by WPWAF_Admin::enqueue_assets(). */
+:root{--ts-orange:#FF6A00;--ts-border:#e2e6ea;--ts-bg:#f8f9fb;--ts-dark:#1a1a2e;--ts-muted:#6b7280;--ts-green:#059669;--ts-red:#dc2626;}
+.wpwaf-ts-wrap{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ts-dark);}
+.wpwaf-ts-wrap *{box-sizing:border-box;}
+.wpwaf-ts-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.wpwaf-ts-header h1{font-size:22px;font-weight:700;margin:0;padding:0;display:flex;align-items:center;gap:8px;color:var(--ts-dark);line-height:1.3;}
+.wpwaf-ts-header h1 .dashicons{color:var(--ts-orange);font-size:24px;width:24px;height:24px;}
+.wpwaf-ts-header-sub{font-size:12px;color:var(--ts-muted);margin-top:3px;}
+.wpwaf-ts-notice{background:#fff8f5;border:1px solid #fcd9c0;border-radius:8px;padding:16px 20px;color:#92400e;font-size:13px;line-height:1.6;margin-bottom:16px;}
+.wpwaf-ts-notice--error{background:#fef2f2;border-color:#fca5a5;color:#7f1d1d;}
+.wpwaf-ts-notice--ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
+.wpwaf-ts-notice code{background:rgba(0,0,0,.05);padding:1px 5px;border-radius:4px;font-size:12px;overflow-wrap:anywhere;}
+
+/* Cards */
+.wpwaf-ts-card{background:#fff;border:1px solid var(--ts-border);border-radius:10px;margin-bottom:20px;overflow:hidden;}
+.wpwaf-ts-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--ts-border);}
+.wpwaf-ts-card-head h2{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;color:var(--ts-dark);}
+.wpwaf-ts-card-body{padding:16px 18px;}
+
+.wpwaf-ts-mono{font-family:SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;overflow-wrap:anywhere;}
+.wpwaf-ts-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.wpwaf-ts-chip{display:inline-block;padding:2px 8px;border-radius:20px;background:#f1f5f9;border:1px solid #e2e8f0;color:#334155;font-size:11px;font-weight:600;max-width:100%;overflow-wrap:anywhere;}
+
+/* Buttons and inputs */
+.wpwaf-ts-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap;text-decoration:none;}
+.wpwaf-ts-btn:hover{background:#f3f4f6;border-color:#9ca3af;}
+.wpwaf-ts-btn--primary{background:var(--ts-orange);border-color:var(--ts-orange);color:#fff;}
+.wpwaf-ts-btn--primary:hover{background:#e05c00;border-color:#e05c00;color:#fff;}
+.wpwaf-ts-btn--danger:hover{background:#fee2e2;border-color:#fca5a5;color:#b91c1c;}
+.wpwaf-ts-btn--sm{height:28px;padding:0 10px;font-size:11px;}
+.wpwaf-ts-btn:disabled{opacity:.5;cursor:not-allowed;}
+.wpwaf-ts-actions{display:flex;flex-wrap:wrap;gap:8px;}
+.wpwaf-ts-input,.wpwaf-ts-select,.wpwaf-ts-textarea{width:100%;max-width:100%;padding:7px 10px;border:1px solid var(--ts-border);border-radius:6px;font-size:13px;color:var(--ts-dark);background:#fff;}
+.wpwaf-ts-textarea{font-family:SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;resize:vertical;min-height:84px;}
+.wpwaf-ts-input:focus,.wpwaf-ts-select:focus,.wpwaf-ts-textarea:focus{outline:none;border-color:var(--ts-orange);box-shadow:0 0 0 2px rgba(255,106,0,.1);}
+.wpwaf-ts-field{margin-bottom:12px;}
+.wpwaf-ts-field>label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;}
+.wpwaf-ts-field-hint{font-size:11px;color:var(--ts-muted);margin-top:4px;line-height:1.5;}
+.wpwaf-ts-form{background:var(--ts-bg);border:1px solid var(--ts-border);border-radius:8px;padding:16px;margin-bottom:16px;}
+.wpwaf-ts-form-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px;}
+
+/* Toolbar + usage */
+.wpwaf-ts-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.wpwaf-ts-toolbar .wpwaf-ts-select{width:auto;min-width:220px;flex:0 1 320px;}
+.wpwaf-ts-usage{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ts-muted);margin-left:auto;}
+.wpwaf-ts-meter{width:110px;height:6px;border-radius:6px;background:#e5e7eb;overflow:hidden;}
+.wpwaf-ts-meter span{display:block;height:100%;background:var(--ts-orange);}
+.wpwaf-ts-meter.is-full span{background:var(--ts-red);}
+
+/* Widget table */
+.wpwaf-ts-table{width:100%;border-collapse:collapse;}
+.wpwaf-ts-table th{padding:9px 12px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;text-align:left;border-bottom:1px solid var(--ts-border);background:#f8f9fa;}
+.wpwaf-ts-table td{padding:11px 12px;font-size:13px;color:#374151;border-bottom:1px solid #f1f3f5;vertical-align:top;}
+.wpwaf-ts-table tbody tr:last-child td{border-bottom:none;}
+.wpwaf-ts-table td:first-child{width:26%;min-width:200px;}
+.wpwaf-ts-name{font-weight:700;color:#111;overflow-wrap:anywhere;}
+.wpwaf-ts-sub{font-size:11px;color:var(--ts-muted);margin-top:3px;}
+.wpwaf-ts-mode{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#eef2ff;color:#3730a3;white-space:nowrap;}
+.wpwaf-ts-count{font-size:11px;color:var(--ts-muted);margin-bottom:5px;}
+.wpwaf-ts-count.is-full{color:var(--ts-red);font-weight:600;}
+.wpwaf-ts-table td.wpwaf-ts-td-actions{text-align:right;}
+.wpwaf-ts-td-actions .wpwaf-ts-actions{justify-content:flex-end;}
+.wpwaf-ts-empty{text-align:center;padding:32px 16px;color:#9ca3af;font-size:13px;}
+
+/* Keys panel */
+.wpwaf-ts-keys-row td,.wpwaf-ts-edit-row td{background:var(--ts-bg);}
+.wpwaf-ts-keys{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:8px 12px;align-items:center;font-size:12px;}
+.wpwaf-ts-keys dt{color:var(--ts-muted);font-weight:600;}
+.wpwaf-ts-keys dd{margin:0;font-family:SFMono-Regular,Menlo,Consolas,monospace;background:#fff;border:1px solid var(--ts-border);border-radius:6px;padding:6px 9px;overflow-wrap:anywhere;min-width:0;}
+.wpwaf-ts-keys-note{font-size:11px;color:#92400e;margin-top:10px;line-height:1.5;}
+
+/* Help */
+.wpwaf-ts-help{font-size:12px;color:#374151;line-height:1.7;}
+.wpwaf-ts-help strong{color:var(--ts-dark);}
+.wpwaf-ts-perm{display:inline-block;font-family:SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:2px 8px;border-radius:5px;}
+
+/* Spinner + toast */
+.wpwaf-ts-spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,106,0,.3);border-top-color:var(--ts-orange);border-radius:50%;animation:wpwaf-ts-spin .6s linear infinite;vertical-align:-2px;}
+@keyframes wpwaf-ts-spin{to{transform:rotate(360deg);}}
+.wpwaf-ts-loading{padding:28px;text-align:center;color:var(--ts-muted);font-size:13px;}
+.wpwaf-ts-toast{position:fixed;bottom:24px;right:24px;max-width:min(420px,calc(100vw - 32px));padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;color:#fff;z-index:999999;box-shadow:0 6px 18px rgba(0,0,0,.15);line-height:1.5;}
+.wpwaf-ts-toast.ok{background:var(--ts-green);}.wpwaf-ts-toast.err{background:var(--ts-red);}
+
+@media (max-width:782px){
+  .wpwaf-ts-card-head,.wpwaf-ts-card-body{padding-left:14px;padding-right:14px;}
+  .wpwaf-ts-form-grid{grid-template-columns:minmax(0,1fr);}
+  .wpwaf-ts-toolbar .wpwaf-ts-select{flex:1 1 100%;min-width:0;width:100%;}
+  .wpwaf-ts-usage{margin-left:0;}
+  /* Widget table becomes stacked cards */
+  .wpwaf-ts-table thead{display:none;}
+  .wpwaf-ts-table,.wpwaf-ts-table tbody,.wpwaf-ts-table tr,.wpwaf-ts-table td{display:block;width:100%;}
+  .wpwaf-ts-table tr{border-bottom:1px solid var(--ts-border);padding:8px 0;}
+  .wpwaf-ts-table tbody tr:last-child{border-bottom:none;}
+  .wpwaf-ts-table td,.wpwaf-ts-table td:first-child{border-bottom:none;padding:5px 2px;min-width:0;width:100%;}
+  .wpwaf-ts-table td[data-label]:before{content:attr(data-label);display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin-bottom:3px;}
+  .wpwaf-ts-table td.wpwaf-ts-td-actions{text-align:left;}
+  .wpwaf-ts-td-actions .wpwaf-ts-actions{justify-content:flex-start;}
+  .wpwaf-ts-toast{left:16px;right:16px;bottom:16px;max-width:none;}
+}
+@media (max-width:480px){
+  .wpwaf-ts-keys{grid-template-columns:minmax(0,1fr) auto;}
+  .wpwaf-ts-keys dt{grid-column:1 / -1;margin-top:4px;}
+  .wpwaf-ts-actions .wpwaf-ts-btn{flex:1 1 auto;}
+  .wpwaf-ts-card-head .wpwaf-ts-btn{width:100%;}
+}

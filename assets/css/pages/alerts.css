@@ -1,0 +1,134 @@
+/* WP WAF Manager: Alerts & Health screen. Enqueued by WPWAF_Admin::enqueue_assets(). */
+:root{--al-orange:#FF6A00;--al-border:#e2e6ea;--al-bg:#f8f9fb;--al-dark:#1a1a2e;--al-muted:#6b7280;--al-green:#059669;--al-red:#dc2626;}
+.wpwaf-al-wrap{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--al-dark);}
+.wpwaf-al-wrap *{box-sizing:border-box;}
+.wpwaf-al-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.wpwaf-al-header h1{font-size:22px;font-weight:700;margin:0;padding:0;display:flex;align-items:center;gap:8px;color:var(--al-dark);line-height:1.3;}
+.wpwaf-al-header h1 .dashicons{color:var(--al-orange);font-size:24px;width:24px;height:24px;}
+.wpwaf-al-header-sub{font-size:12px;color:var(--al-muted);margin-top:3px;}
+.wpwaf-al-notice{background:#fff8f5;border:1px solid #fcd9c0;border-radius:8px;padding:14px 18px;color:#92400e;font-size:13px;line-height:1.6;margin-bottom:16px;}
+.wpwaf-al-notice--error{background:#fef2f2;border-color:#fca5a5;color:#7f1d1d;}
+.wpwaf-al-notice--info{background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;}
+.wpwaf-al-notice a{color:inherit;font-weight:600;}
+
+/* Tabs */
+.wpwaf-al-tabs{display:flex;border-bottom:2px solid var(--al-border);margin-bottom:20px;gap:0;overflow-x:auto;}
+.wpwaf-al-tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--al-muted);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;white-space:nowrap;}
+.wpwaf-al-tab:hover{color:var(--al-dark);}
+.wpwaf-al-tab.active{color:var(--al-orange);border-bottom-color:var(--al-orange);}
+.wpwaf-al-panel{display:none;}
+.wpwaf-al-panel.active{display:block;}
+
+/* Toolbar */
+.wpwaf-al-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.wpwaf-al-toolbar label{font-size:12px;font-weight:600;color:var(--al-muted);}
+.wpwaf-al-select,.wpwaf-al-input,.wpwaf-al-textarea{padding:7px 10px;border:1px solid var(--al-border);border-radius:6px;font-size:13px;color:var(--al-dark);background:#fff;max-width:100%;}
+.wpwaf-al-select{min-width:220px;}
+.wpwaf-al-wrap .wpwaf-al-input,.wpwaf-al-wrap .wpwaf-al-select{height:34px;min-height:34px;line-height:1.4;}
+.wpwaf-al-wrap .wpwaf-al-select{padding:0 28px 0 10px;}
+.wpwaf-al-input,.wpwaf-al-textarea{width:100%;}
+.wpwaf-al-textarea{resize:vertical;font-family:inherit;min-height:64px;}
+.wpwaf-al-select:focus,.wpwaf-al-input:focus,.wpwaf-al-textarea:focus{outline:none;border-color:var(--al-orange);box-shadow:0 0 0 2px rgba(255,106,0,.1);}
+
+/* Buttons */
+.wpwaf-al-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap;text-decoration:none;}
+.wpwaf-al-btn:hover{background:#f3f4f6;border-color:#9ca3af;}
+.wpwaf-al-btn--primary{background:var(--al-orange);border-color:var(--al-orange);color:#fff;}
+.wpwaf-al-btn--primary:hover{background:#d95500;border-color:#d95500;color:#fff;}
+.wpwaf-al-btn--danger:hover{background:#fee2e2;border-color:#fca5a5;color:#b91c1c;}
+.wpwaf-al-btn--sm{height:28px;padding:0 10px;font-size:11px;}
+.wpwaf-al-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Cards and sections */
+.wpwaf-al-section{background:#fff;border:1px solid var(--al-border);border-radius:10px;margin-bottom:20px;overflow:hidden;}
+.wpwaf-al-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--al-border);}
+.wpwaf-al-section-head h2{margin:0;font-size:14px;font-weight:700;color:var(--al-dark);}
+.wpwaf-al-section-sub{font-size:11px;color:var(--al-muted);margin-top:2px;}
+.wpwaf-al-section-body{padding:16px;}
+.wpwaf-al-empty{padding:28px 16px;text-align:center;color:#9ca3af;font-size:13px;}
+.wpwaf-al-loading{padding:28px 16px;text-align:center;color:var(--al-muted);font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;}
+
+/* Table */
+.wpwaf-al-table{width:100%;border-collapse:collapse;font-size:13px;}
+.wpwaf-al-table th{background:var(--al-bg);padding:9px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--al-muted);border-bottom:1px solid var(--al-border);white-space:nowrap;}
+.wpwaf-al-table td{padding:10px 14px;border-bottom:1px solid #f1f3f5;vertical-align:middle;}
+.wpwaf-al-table tr:last-child td{border-bottom:none;}
+.wpwaf-al-table tbody tr:hover td{background:#fafbfc;}
+.wpwaf-al-name{font-weight:600;color:#111;overflow-wrap:anywhere;}
+.wpwaf-al-meta{font-size:11px;color:var(--al-muted);margin-top:2px;overflow-wrap:anywhere;}
+.wpwaf-al-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;}
+.wpwaf-al-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;background:#f3f4f6;color:#4b5563;}
+.wpwaf-al-pill--ok{background:#d1fae5;color:#065f46;}
+.wpwaf-al-pill--bad{background:#fee2e2;color:#991b1b;}
+.wpwaf-al-pill--off{background:#f3f4f6;color:#6b7280;}
+.wpwaf-al-pill--pro{background:#fef3c7;color:#92400e;}
+.wpwaf-al-chip{display:inline-block;padding:1px 7px;border-radius:4px;font-size:11px;background:var(--al-bg);border:1px solid var(--al-border);margin:2px 4px 2px 0;overflow-wrap:anywhere;}
+
+/* Switch */
+.wpwaf-al-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;vertical-align:middle;}
+.wpwaf-al-switch input{opacity:0;width:0;height:0;}
+.wpwaf-al-slider{position:absolute;cursor:pointer;inset:0;background:#d1d5db;border-radius:24px;transition:.2s;}
+.wpwaf-al-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.wpwaf-al-switch input:checked+.wpwaf-al-slider{background:var(--al-orange);}
+.wpwaf-al-switch input:checked+.wpwaf-al-slider:before{transform:translateX(18px);}
+.wpwaf-al-switch input:disabled+.wpwaf-al-slider{opacity:.5;cursor:not-allowed;}
+
+/* Presets */
+.wpwaf-al-presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
+.wpwaf-al-preset{display:flex;flex-direction:column;gap:6px;text-align:left;padding:14px;border:1px solid var(--al-border);border-radius:10px;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s;font:inherit;color:inherit;min-width:0;}
+.wpwaf-al-preset:hover,.wpwaf-al-preset.active{border-color:var(--al-orange);box-shadow:0 4px 14px rgba(255,106,0,.08);}
+.wpwaf-al-preset-icon{font-size:20px;line-height:1;color:#FF6A00;display:inline-flex;}
+.wpwaf-al-preset-title{font-size:13px;font-weight:700;color:var(--al-dark);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.wpwaf-al-preset-desc{font-size:12px;color:var(--al-muted);line-height:1.5;}
+.wpwaf-al-other{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;}
+.wpwaf-al-other .wpwaf-al-select{flex:1 1 260px;min-width:0;}
+
+/* Form */
+.wpwaf-al-form{border-top:1px solid var(--al-border);margin-top:16px;padding-top:16px;display:none;}
+.wpwaf-al-form.open{display:block;}
+.wpwaf-al-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px;}
+.wpwaf-al-grid--3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.wpwaf-al-field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.wpwaf-al-field--full{grid-column:1/-1;}
+.wpwaf-al-field>label,.wpwaf-al-field-label{font-size:12px;font-weight:600;color:var(--al-dark);}
+.wpwaf-al-hint{font-size:11px;color:var(--al-muted);line-height:1.5;}
+.wpwaf-al-req{color:var(--al-red);}
+.wpwaf-al-checks{display:flex;flex-wrap:wrap;gap:6px 14px;max-height:180px;overflow:auto;padding:8px 10px;border:1px solid var(--al-border);border-radius:6px;background:var(--al-bg);}
+.wpwaf-al-check{display:inline-flex;align-items:center;gap:6px;font-size:12px;min-width:0;overflow-wrap:anywhere;}
+.wpwaf-al-form-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;}
+.wpwaf-al-inline{display:flex;align-items:center;gap:8px;font-size:12px;}
+
+/* Help box */
+.wpwaf-al-help{background:var(--al-bg);border:1px solid var(--al-border);border-radius:8px;margin-bottom:16px;font-size:12px;color:#374151;}
+.wpwaf-al-help summary{cursor:pointer;padding:10px 14px;font-weight:600;}
+.wpwaf-al-help-body{padding:0 14px 12px;line-height:1.6;}
+.wpwaf-al-help code{font-size:11px;background:#fff;border:1px solid var(--al-border);border-radius:4px;padding:1px 5px;overflow-wrap:anywhere;}
+
+/* Spinner and toast */
+.wpwaf-al-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,106,0,.3);border-top-color:var(--al-orange);border-radius:50%;animation:wpwaf-al-spin .6s linear infinite;}
+@keyframes wpwaf-al-spin{to{transform:rotate(360deg);}}
+.wpwaf-al-toast{position:fixed;bottom:24px;right:24px;max-width:calc(100vw - 48px);padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;color:#fff;z-index:999999;box-shadow:0 4px 16px rgba(0,0,0,.15);}
+.wpwaf-al-toast.ok{background:var(--al-green);}
+.wpwaf-al-toast.err{background:var(--al-red);}
+
+@media (max-width:782px){
+  .wpwaf-al-toolbar{align-items:stretch;}
+  .wpwaf-al-toolbar .wpwaf-al-select{flex:1 1 100%;min-width:0;}
+  .wpwaf-al-grid,.wpwaf-al-grid--3{grid-template-columns:1fr;}
+  .wpwaf-al-table thead{display:none;}
+  .wpwaf-al-table,.wpwaf-al-table tbody,.wpwaf-al-table tr,.wpwaf-al-table td{display:block;width:100%;}
+  .wpwaf-al-table tr{border-bottom:1px solid var(--al-border);padding:8px 0;}
+  .wpwaf-al-table tr:last-child{border-bottom:none;}
+  .wpwaf-al-table td{border-bottom:none;padding:4px 14px;}
+  .wpwaf-al-table td[data-label]:before{content:attr(data-label);display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--al-muted);margin-bottom:2px;}
+  .wpwaf-al-actions{justify-content:flex-start;}
+  .wpwaf-al-table td.wpwaf-al-td-inline{display:inline-block;width:auto;vertical-align:middle;}
+  .wpwaf-al-table td.wpwaf-al-td-inline[data-label]:before{display:none;}
+  .wpwaf-al-toast{left:12px;right:12px;bottom:12px;max-width:none;}
+}
+@media (max-width:480px){
+  .wpwaf-al-presets{grid-template-columns:1fr;}
+  .wpwaf-al-section-body{padding:12px;}
+  .wpwaf-al-form-foot .wpwaf-al-btn{flex:1 1 100%;}
+  .wpwaf-al-tab{padding:10px 12px;}
+}

@@ -1,0 +1,10 @@
+/* WP WAF Manager: Dashboard widget. */
+.wpwaf-dw{font-size:13px;}
+.wpwaf-dw-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;}
+.wpwaf-dw-row:last-child{border:none;}
+.wpwaf-dw-label{color:#666;}
+.wpwaf-dw-val{font-weight:600;color:#1a1a2e;}
+.wpwaf-dw-ok{color:#059669;}.wpwaf-dw-off{color:#6b7280;}
+.wpwaf-dw-links{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;}
+.wpwaf-dw-links a{font-size:12px;font-weight:600;text-decoration:none;color:#FF6A00;}
+.wpwaf-dw-links a:hover{text-decoration:underline;}

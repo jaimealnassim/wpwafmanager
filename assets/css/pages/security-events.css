@@ -1,0 +1,88 @@
+/* WP WAF Manager: Security Events screen. Enqueued by WPWAF_Admin::enqueue_assets(). */
+:root{--se-orange:#FF6A00;--se-border:#e2e6ea;--se-bg:#f8f9fb;--se-dark:#1a1a2e;--se-muted:#6b7280;}
+.cfwaf-se-wrap{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:1200px;padding:24px 20px;color:var(--se-dark);}
+.cfwaf-se-header{margin-bottom:20px;}
+.cfwaf-se-header h1{font-size:22px;font-weight:700;margin:0 0 3px;display:flex;align-items:center;gap:8px;}
+.cfwaf-se-header h1 .dashicons{color:var(--se-orange);font-size:24px;width:24px;height:24px;}
+.cfwaf-se-header-sub{font-size:12px;color:var(--se-muted);}
+.cfwaf-se-no-creds{background:#fff8f5;border:1px solid #fcd9c0;border-radius:8px;padding:20px 24px;color:#92400e;}
+.cfwaf-se-plan-notice{background:#faf5ff;border:1px solid #d8b4fe;border-radius:8px;padding:16px 18px;margin-bottom:16px;color:#6b21a8;font-size:13px;display:flex;gap:10px;align-items:flex-start;}.cfwaf-se-plan-notice strong{display:block;margin-bottom:4px;font-size:14px;}.cfwaf-se-plan-notice ul{margin:8px 0 0;padding-left:18px;font-size:12px;}.cfwaf-se-plan-notice li{margin-bottom:3px;}
+
+/* Controls bar */
+.cfwaf-se-controls{background:#fff;border:1px solid var(--se-border);border-radius:8px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.cfwaf-se-select{padding:7px 10px;border:1px solid var(--se-border);border-radius:6px;font-size:13px;color:var(--se-dark);background:#fff;cursor:pointer;}
+.cfwaf-se-select:focus{outline:none;border-color:var(--se-orange);}
+.cfwaf-se-zone-select{flex:1;min-width:200px;}
+.cfwaf-se-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.cfwaf-se-btn-primary{background:var(--se-orange);color:#fff;}
+.cfwaf-se-btn-primary:hover{background:#d95500;}
+.cfwaf-se-btn:disabled{opacity:.5;cursor:not-allowed;}
+.cfwaf-se-count-badge{margin-left:auto;font-size:12px;color:var(--se-muted);white-space:nowrap;}
+
+/* Filter tabs */
+.cfwaf-se-filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.cfwaf-se-filter-tab{padding:5px 12px;border:1px solid var(--se-border);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--se-muted);transition:all .12s;}
+.cfwaf-se-filter-tab:hover{border-color:#d1d5db;color:var(--se-dark);}
+.cfwaf-se-filter-tab.active{background:var(--se-dark);color:#fff;border-color:var(--se-dark);}
+
+/* Summary bar */
+.cfwaf-se-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+.cfwaf-se-summary-card{background:#fff;border:1px solid var(--se-border);border-radius:8px;padding:10px 14px;text-align:center;}
+.cfwaf-se-summary-num{font-size:22px;font-weight:800;color:var(--se-dark);line-height:1;}
+.cfwaf-se-summary-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--se-muted);margin-top:4px;}
+.cfwaf-se-summary-card.block .cfwaf-se-summary-num{color:#dc2626;}
+.cfwaf-se-summary-card.challenge .cfwaf-se-summary-num{color:#d97706;}
+.cfwaf-se-summary-card.jschallenge .cfwaf-se-summary-num{color:#0284c7;}
+.cfwaf-se-summary-card.managed .cfwaf-se-summary-num{color:#7c3aed;}
+.cfwaf-se-summary-card.allow .cfwaf-se-summary-num{color:#059669;}
+
+/* Table */
+.cfwaf-se-table-wrap{background:#fff;border:1px solid var(--se-border);border-radius:8px;overflow:hidden;}
+.cfwaf-se-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.cfwaf-se-table{width:100%;border-collapse:collapse;font-size:12px;}
+.cfwaf-se-table th{background:var(--se-bg);padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--se-muted);border-bottom:1px solid var(--se-border);white-space:nowrap;}
+.cfwaf-se-table td{padding:9px 12px;border-bottom:1px solid #f1f3f5;vertical-align:top;}
+.cfwaf-se-table tr:last-child td{border-bottom:none;}
+.cfwaf-se-table tr:hover td{background:#fafbfc;}
+
+/* Action badges */
+.cfwaf-se-action{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;}
+.cfwaf-se-action.block{background:#fee2e2;color:#b91c1c;}
+.cfwaf-se-action.challenge,.cfwaf-se-action.managed_challenge{background:#fef3c7;color:#92400e;}
+.cfwaf-se-action.js_challenge{background:#e0f2fe;color:#0369a1;}
+.cfwaf-se-action.allow,.cfwaf-se-action.skip{background:#d1fae5;color:#065f46;}
+.cfwaf-se-action.log{background:#f1f5f9;color:#475569;}
+
+/* IP + country */
+.cfwaf-se-ip{font-family:monospace;font-size:12px;font-weight:600;}
+.cfwaf-se-country{font-size:10px;color:var(--se-muted);}
+
+/* Path */
+.cfwaf-se-path{font-family:monospace;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* UA */
+.cfwaf-se-ua{font-size:11px;color:var(--se-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Source badge */
+.cfwaf-se-source{font-size:10px;padding:2px 6px;background:#f1f5f9;border-radius:4px;color:#475569;font-weight:600;}
+
+/* Time */
+.cfwaf-se-time{font-size:11px;color:var(--se-muted);white-space:nowrap;}
+
+/* Ray ID */
+.cfwaf-se-ray{font-family:monospace;font-size:10px;color:var(--se-muted);}
+
+/* States */
+.cfwaf-se-empty{text-align:center;padding:40px;color:var(--se-muted);}
+.cfwaf-se-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,106,0,.3);border-top-color:var(--se-orange);border-radius:50%;animation:se-spin .6s linear infinite;vertical-align:middle;}
+@keyframes se-spin{to{transform:rotate(360deg);}}
+.cfwaf-se-error{background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:12px 16px;color:#b91c1c;font-size:13px;margin-bottom:14px;}
+
+@media(max-width:660px){
+  .cfwaf-se-controls{flex-direction:column;align-items:stretch;}
+  .cfwaf-se-zone-select{min-width:0;}
+  .cfwaf-se-btn-primary{justify-content:center;}
+  .cfwaf-se-count-badge{margin-left:0;}
+  .cfwaf-se-table{min-width:700px;}
+  .cfwaf-se-table-scroll{-webkit-mask-image:linear-gradient(to right,black 85%,transparent 100%);mask-image:linear-gradient(to right,black 85%,transparent 100%);}
+}
